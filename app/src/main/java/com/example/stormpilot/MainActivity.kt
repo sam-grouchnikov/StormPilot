@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.stormpilot.pages.NavSkeleton
 import com.example.stormpilot.pages.WelcomePage
 import com.example.stormpilot.pages.SignIn
 import com.example.stormpilot.pages.SignUp
@@ -22,9 +23,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val controller = WindowInsetsControllerCompat(window, window.decorView)
-        controller.hide(WindowInsetsCompat.Type.systemBars())
         controller.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.show(WindowInsetsCompat.Type.statusBars())
+        controller.hide(WindowInsetsCompat.Type.navigationBars())
+
         enableEdgeToEdge()
         setContent {
             StormPilotApp()
@@ -53,14 +56,20 @@ fun StormPilotApp() {
 
         composable("signin") {
             SignIn(
-                onLogin = { navController.navigate("welcome") }
+                onLogin = { navController.navigate("skeleton") }
             )
         }
         composable("signup") {
             SignUp(
-                onLogin = { navController.navigate("welcome") }
+                onLogin = { navController.navigate("skeleton") }
             )
         }
+        composable("skeleton") {
+            NavSkeleton(
+
+            )
+        }
+
 
     }
 }

@@ -48,7 +48,7 @@ fun SignIn(onLogin: () -> Unit) {
     StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+            color = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
             Column(
                 modifier = Modifier
