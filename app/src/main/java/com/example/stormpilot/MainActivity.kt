@@ -14,6 +14,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.stormpilot.pages.WelcomePage
+import com.example.stormpilot.pages.SignIn
+import com.example.stormpilot.pages.SignUp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +46,19 @@ fun StormPilotApp() {
     ) {
         composable("welcome") {
             WelcomePage(
-                onSignInClick = { }
+                onSignInClick = { navController.navigate("signin") },
+                onSignUpClick = { navController.navigate("signup") }
+            )
+        }
+
+        composable("signin") {
+            SignIn(
+                onLogin = { navController.navigate("welcome") }
+            )
+        }
+        composable("signup") {
+            SignUp(
+                onLogin = { navController.navigate("welcome") }
             )
         }
 

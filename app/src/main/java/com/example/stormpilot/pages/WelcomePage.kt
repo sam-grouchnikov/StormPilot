@@ -38,7 +38,7 @@ import com.example.compose.StormPilotTheme
 
 
 @Composable
-fun WelcomePage(onSignInClick: () -> Unit) {
+fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
     val isDarkMode = remember {mutableStateOf(true)}
     StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
         Surface(
@@ -90,7 +90,7 @@ fun WelcomePage(onSignInClick: () -> Unit) {
                 Spacer(modifier = Modifier.weight(1f))
 
                 Button(
-                    onClick = onSignInClick,
+                    onClick = onSignUpClick,
                     modifier = Modifier.fillMaxWidth(0.81f).height(50.dp), // Button takes 80% width
                     shape = RoundedCornerShape(35.dp),
                     colors = ButtonDefaults.buttonColors(
