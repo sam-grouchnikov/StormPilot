@@ -1,6 +1,7 @@
 package com.example.stormpilot.pages.subnav
 
 import android.graphics.drawable.Icon
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,16 +11,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Flood
 import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Flood
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.LocalGasStation
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.SignalCellularAlt
 import androidx.compose.material.icons.outlined.Tornado
 import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Terminal
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -44,9 +54,13 @@ import com.example.compose.StormPilotTheme
         Column{
             LocationWidget("Greensburg, Kansas")
             Spacer(modifier = Modifier.height(15.dp))
-            AlertsWidget(flood = true, thunder = true, tornado = false)
+            AlertsWidget()
             Spacer(modifier = Modifier.height(10.dp))
             AtmosphereMetricsWidget()
+            Spacer(modifier = Modifier.height(15.dp))
+            ConnectivityWidget()
+            Spacer(modifier = Modifier.height(15.dp))
+            AssistanceWidget()
         }
     }
 }
@@ -80,7 +94,7 @@ import com.example.compose.StormPilotTheme
     }
 }
 
-@Composable fun AlertsWidget(flood: Boolean, thunder: Boolean, tornado: Boolean) {
+@Composable fun AlertsWidget() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,7 +185,153 @@ import com.example.compose.StormPilotTheme
             Text(
                 text = value,
                 fontSize = 15.sp
+            )
+        }
+    }
+}
+
+@Composable fun ConnectivityWidget() {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        var connectionHealthColor = Color(0xFFA5D396)
+        var connectionHealthValue = "Strong"
+        var areaColor = Color(0xFFC76F6F)
+        var areaValue = "Area of Low Coverage"
+        Column(
+            verticalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.padding(start = 25.dp, top = 20.dp, bottom = 20.dp)
+        ) {
+            Text(
+                text = "Connectivity Health",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium,
+                fontSize = 23.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row() {
+                Icon(
+                    imageVector = Icons.Outlined.SignalCellularAlt,
+                    contentDescription = null,
+                    tint = connectionHealthColor,
+                    modifier = Modifier.size(23.dp)
                 )
+                Spacer(modifier = Modifier.width(7.dp))
+                Text(
+                    text = "Current: $connectionHealthValue"
+                )
+            }
+            Spacer(modifier = Modifier.height(7.dp))
+            Row() {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = null,
+                    tint = areaColor,
+                    modifier = Modifier.size(23.dp)
+                )
+                Spacer(modifier = Modifier.width(7.dp))
+                Text(
+                    text = "$areaValue"
+                )
+            }
+        }
+    }
+}
+
+@Composable fun AssistanceWidget() {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(
+            verticalArrangement = Arrangement.SpaceAround,
+            modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 20.dp)
+        ) {
+            Row(modifier = Modifier.padding(start = 10.dp)) {
+                Text(
+                    text = "Nearby Assistance",
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 23.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(7.dp))
+            LocationSelector("gas", "QuikTrip @ Greensburg")
+            Spacer(modifier = Modifier.height(0.dp))
+            LocationSelector("gas", "Wellstar Arlington")
+        }
+    }
+}
+
+@Composable
+fun LocationSelector(type: String, location: String) {
+    var isSelected by remember { mutableStateOf(false) }
+
+    // 2. Dynamic colors based on selection state
+    val containerColor = if (isSelected) {
+        MaterialTheme.colorScheme.surfaceContainerHigh
+    } else {
+        MaterialTheme.colorScheme.surfaceContainer
+    }
+
+    Surface(
+        onClick = { isSelected = !isSelected }, // Toggle selection on click
+        shape = RoundedCornerShape(12.dp),
+        color = containerColor,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(top = 3.dp, start = 5.dp, bottom = 3.dp, end=15.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Left Side: Icon and Text
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.LocalGasStation,
+                    contentDescription = null,
+                    tint = Color(0xFFBDAAD5),
+                    modifier = Modifier.size(21.dp)
+                )
+                Spacer(modifier = Modifier.width(7.dp))
+                Column {
+                    Text(
+                        text = location,
+                        color = MaterialTheme.colorScheme.onSurface
+                        )
+                }
+            }
+
+            if (isSelected) {
+                FilledIconButton(
+                    onClick = { /* Handle car action here */ },
+                    modifier = Modifier
+                        .size(30.dp)
+                        .padding(all = 1.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.DirectionsCar,
+                        contentDescription = "Drive",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(21.dp)
+                    )
+                }
+            }
         }
     }
 }
