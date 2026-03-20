@@ -14,18 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.example.compose.StormPilotTheme
-import com.example.stormpilot.pages.subnav.RadarPage
+import com.example.stormpilot.pages.subnav.dashboard.RadarPage
 
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
     data object Radar : TabDest("graphs", "Graphs", Icons.Outlined.Radar)
