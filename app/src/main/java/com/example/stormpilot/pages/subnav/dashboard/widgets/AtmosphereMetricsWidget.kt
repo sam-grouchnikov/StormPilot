@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
         modifier = Modifier
             .padding(start = 0.dp, end = 0.dp, top = 5.dp),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
             modifier = Modifier.padding(all = 10.dp)

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.sp
             .fillMaxWidth()
             .padding(start = 20.dp, end = 20.dp, top = 20.dp),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

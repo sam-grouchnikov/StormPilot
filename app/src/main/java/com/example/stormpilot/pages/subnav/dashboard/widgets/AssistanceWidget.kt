@@ -38,11 +38,11 @@ import androidx.compose.ui.unit.sp
             .fillMaxWidth()
             .padding(start = 20.dp, end = 20.dp),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 20.dp)
+            modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 20.dp, end = 20.dp)
         ) {
             Row(modifier = Modifier.padding(start = 10.dp)) {
                 Text(
@@ -66,9 +66,9 @@ fun LocationSelector(type: String, location: String) {
 
     // 2. Dynamic colors based on selection state
     val containerColor = if (isSelected) {
-        MaterialTheme.colorScheme.surfaceContainerHigh
+        MaterialTheme.colorScheme.surfaceContainerHighest
     } else {
-        MaterialTheme.colorScheme.surfaceContainer
+        MaterialTheme.colorScheme.surfaceContainerHigh
     }
 
     Surface(

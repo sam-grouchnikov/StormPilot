@@ -23,6 +23,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.*
 import com.example.compose.StormPilotTheme
 import com.example.stormpilot.pages.subnav.dashboard.RadarPage
+import com.example.stormpilot.pages.subnav.maps.MapsPage
+
 
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
     data object Radar : TabDest("graphs", "Graphs", Icons.Outlined.Radar)
@@ -103,7 +105,7 @@ fun NavSkeleton() {
                     startDestination = TabDest.Nav.route,
                     modifier = Modifier.padding(innerPadding)
                 ) {
-                    composable(TabDest.Nav.route) { NavPage() }
+                    composable(TabDest.Nav.route) { MapsPage() }
                     composable(TabDest.Radar.route) { RadarPage() }
                     composable(TabDest.Settings.route) { SettingsPage() }
                 }
@@ -112,7 +114,6 @@ fun NavSkeleton() {
     }
 }
 
-@Composable fun NavPage() { PageCenter("Nav content") }
 @Composable fun SettingsPage() { PageCenter("Settings content") }
 
 
