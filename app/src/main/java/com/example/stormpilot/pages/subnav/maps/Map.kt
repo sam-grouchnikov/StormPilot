@@ -35,9 +35,6 @@ import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
-import org.maplibre.spatialk.geojson.Feature
-import org.maplibre.spatialk.geojson.FeatureCollection
-import org.maplibre.spatialk.geojson.Point
 import org.maplibre.spatialk.geojson.Position
 import kotlin.time.Duration.Companion.seconds
 
@@ -88,7 +85,7 @@ fun MapsPage() {
                 object : LocationCallback() {
                     override fun onLocationResult(result: LocationResult) {
                         result.lastLocation?.let { location ->
-                            userLocation = Position(location.latitude, location.longitude)
+                            userLocation = Position(location.longitude, location.latitude)
                         }
                     }
                 }
@@ -101,31 +98,19 @@ fun MapsPage() {
         }
     }
 
+    var hasInitialLocation by remember { mutableStateOf(false) }
+
     LaunchedEffect(userLocation) {
         userLocation?.let { location ->
-            cameraState.animateTo(
-                finalPosition = cameraState.position.copy(target = location, zoom = 16.0),
-                duration = 1.seconds,
-            )
+            if (!hasInitialLocation) {
+                hasInitialLocation = true
+                cameraState.animateTo(
+                    finalPosition = cameraState.position.copy(target = location, zoom = 16.0),
+                    duration = 1.seconds,
+                )
+            }
         }
     }
-
-    val userLocationFeatureCollection = remember(userLocation) {
-        val featureCollection =
-            userLocation?.let { location ->
-                FeatureCollection(
-                    features =
-                        listOf(
-                            Feature(
-                                geometry = Point(Position(location.latitude, location.longitude)),
-                            ),
-                        ),
-                )
-            } ?: FeatureCollection(features = emptyList())
-
-        GeoJsonData.Features(featureCollection)
-    }
-    val userLocationSource = rememberGeoJsonSource(userLocationFeatureCollection)
 
     StormPilotTheme(darkTheme = true) {
         MaplibreMap(
@@ -146,6 +131,31 @@ fun MapsPage() {
                 ),
             ),
         ) {
+            val userLocationFeatureCollection = remember(userLocation) {
+                val json = if (userLocation != null) {
+                    """
+        {
+          "type": "FeatureCollection",
+          "features": [{
+            "type": "Feature",
+            "geometry": {
+              "type": "Point",
+              "coordinates": [${userLocation!!.longitude}, ${userLocation!!.latitude}]
+            },
+            "properties": {}
+          }]
+        }
+        """.trimIndent()
+                } else {
+                    """{"type": "FeatureCollection", "features": []}"""
+                }
+                GeoJsonData.JsonString(json)
+            }
+
+            val userLocationSource = rememberGeoJsonSource(
+                data = userLocationFeatureCollection
+            )
+
             CircleLayer(
                 id = "user-location",
                 source = userLocationSource,
