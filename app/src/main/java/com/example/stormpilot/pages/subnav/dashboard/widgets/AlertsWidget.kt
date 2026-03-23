@@ -26,9 +26,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.example.stormpilot.ui.theme.WarningColorStates
 
 @Composable fun AlertsWidget() {
+    val stateColors = WarningColorStates()
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -48,11 +50,11 @@ import androidx.compose.ui.unit.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                WarningWidget(Icons.Outlined.Flood, "Flash Flood",  Color(0xFF104129), Color(0xFFA5D396))
+                WarningWidget(Icons.Outlined.Flood, "Flash Flood",  stateColors.flashFloodContainer, stateColors.flashFloodContents)
                 Spacer(modifier = Modifier.height(8.dp))
-                WarningWidget(Icons.Outlined.Bolt, "Severe Thunderstorm",  Color(0xFF5D3E10), Color(0xFFF7DE93))
+                WarningWidget(Icons.Outlined.Bolt, "Severe Thunderstorm",  stateColors.thunderstormContainer, stateColors.thunderstormContents)
                 Spacer(modifier = Modifier.height(8.dp))
-                WarningWidget(Icons.Outlined.Tornado, "Tornado (Warning)",  Color(0xFF822424), Color(0xFFFFC2C2))
+                WarningWidget(Icons.Outlined.Tornado, "Tornado (Warning)",  stateColors.disabledContainer, stateColors.disabledContents)
             }
         }
     }
