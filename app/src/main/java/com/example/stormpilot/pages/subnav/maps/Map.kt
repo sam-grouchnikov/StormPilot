@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -15,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -116,7 +116,7 @@ fun MapsPage() {
         MaplibreMap(
             baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/dark/en.json?key=64a5f0a9c35b4ca1"),
             cameraState = cameraState,
-            modifier = Modifier.padding(5.dp),
+            modifier = Modifier.padding(vertical = 5.dp, horizontal = 0.dp),
             options = MapOptions(
                 ornamentOptions = OrnamentOptions(
                     padding = PaddingValues(0.dp),
@@ -159,9 +159,9 @@ fun MapsPage() {
             CircleLayer(
                 id = "user-location",
                 source = userLocationSource,
-                color = const(Color(0xFF2E8BFF)),
-                radius = const(8.dp),
-                strokeColor = const(Color.White),
+                color = const(MaterialTheme.colorScheme.onPrimary),
+                radius = const(6.dp),
+                strokeColor = const(MaterialTheme.colorScheme.primary),
                 strokeWidth = const(3.dp),
             )
         }
