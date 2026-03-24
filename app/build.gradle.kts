@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.androidx.compose.animation.core)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.material3)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -62,5 +63,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.7")
     implementation("androidx.compose.ui:ui-text-google-fonts:1.10.4")
     implementation(libs.maplibre.compose)
+    implementation("com.google.android.material:material:1.11.0")
+
+    implementation("androidx.compose.material3:material3")
 
 }
