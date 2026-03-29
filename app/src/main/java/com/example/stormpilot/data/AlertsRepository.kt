@@ -4,8 +4,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.URL
+import javax.inject.Inject
 
-class AlertsRepository {
+class AlertsRepository @Inject constructor(){
 
     suspend fun fetchAlerts(latitude: Double, longitude: Double): Result<List<NwsAlert>> {
         return withContext(Dispatchers.IO) {

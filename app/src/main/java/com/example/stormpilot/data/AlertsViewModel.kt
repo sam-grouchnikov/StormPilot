@@ -1,20 +1,31 @@
 package com.example.stormpilot.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import android.location.Geocoder
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.data.AlertType
 import com.example.stormpilot.data.AlertsRepository
 import com.example.stormpilot.data.LocationRepository
 import com.example.stormpilot.data.NwsAlert
 import com.example.stormpilot.data.alertType
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
+import kotlin.math.abs
 
 data class AlertsUiState(
     val tornadoWarning: NwsAlert? = null,
@@ -35,13 +46,17 @@ data class AlertsUiState(
             || severeThunderstormWatch != null
 }
 
-class AlertsViewModel(application: Application) : AndroidViewModel(application) {
-
-    val locationRepository = LocationRepository(application)
-    private val alertsRepository = AlertsRepository()
+@HiltViewModel
+class AlertsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    val locationRepository: LocationRepository,
+    private val alertsRepository: AlertsRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlertsUiState())
     val uiState: StateFlow<AlertsUiState> = _uiState
+    private val _cityName = MutableStateFlow("Locating...")
+    val cityName: StateFlow<String> = _cityName.asStateFlow()
 
     private var fetchJob: Job? = null
 
@@ -49,6 +64,42 @@ class AlertsViewModel(application: Application) : AndroidViewModel(application) 
         locationRepository.startTracking()
         observeLocationChanges()
         startPeriodicRefresh()
+        observeLocationForCityName()
+    }
+
+    private suspend fun reverseGeocode(latitude: Double, longitude: Double): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val geocoder = Geocoder(context, Locale.getDefault())
+                // getFromLocation is a blocking call, hence Dispatchers.IO
+                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                val address = addresses?.firstOrNull()
+
+                // Return city and state (e.g., "Norman, OK")
+                if (address != null) {
+                    "${address.locality}, ${address.adminArea}"
+                } else null
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    private fun observeLocationForCityName() {
+        viewModelScope.launch {
+            locationRepository.location
+                .filterNotNull()
+                .distinctUntilChanged { old, new ->
+                    abs(old.latitude - new.latitude) < 0.01 &&
+                            abs(old.longitude - new.longitude) < 0.01
+                }
+                .collectLatest { loc ->
+                    val name = withContext(Dispatchers.IO) {
+                        reverseGeocode(loc.latitude, loc.longitude)
+                    }
+                    _cityName.value = name ?: "Unknown Area"
+                }
+        }
     }
 
     // Re-fetch alerts when the user moves significantly (0.05 degrees ≈ 5km)
@@ -72,6 +123,7 @@ class AlertsViewModel(application: Application) : AndroidViewModel(application) 
                 }
         }
     }
+
 
     // Also refresh every 5 minutes regardless of movement
     private fun startPeriodicRefresh() {
@@ -125,6 +177,8 @@ class AlertsViewModel(application: Application) : AndroidViewModel(application) 
                 }
         }
     }
+
+
 
     override fun onCleared() {
         super.onCleared()

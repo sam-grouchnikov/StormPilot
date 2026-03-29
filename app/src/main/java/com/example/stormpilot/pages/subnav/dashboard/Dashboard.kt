@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.compose.StormPilotTheme
 import com.example.stormpilot.pages.subnav.dashboard.widgets.AlertsWidget
 import com.example.stormpilot.pages.subnav.dashboard.widgets.AssistanceWidget
@@ -24,11 +25,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun RadarPage(
     // It's best practice to pass the ViewModel as a parameter
     // This makes the Composable easier to preview and test
-    viewModel: AlertsViewModel = viewModel()
+    viewModel: AlertsViewModel = hiltViewModel()
 ) {
     var isDarkMode by remember { mutableStateOf(true) }
 
-    val uiState by viewModel.uiState.collectAsState()
 
     StormPilotTheme(darkTheme = isDarkMode) {
         Column {

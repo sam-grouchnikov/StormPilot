@@ -12,7 +12,13 @@ import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class LocationRepository(private val context: Context) {
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+
+class LocationRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 

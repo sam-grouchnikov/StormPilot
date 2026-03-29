@@ -28,6 +28,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.viewmodel.AlertsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -37,17 +38,7 @@ import java.util.Locale
 @Composable
 fun LocationWidget(viewModel: AlertsViewModel) {
     val context = LocalContext.current
-    var locationText by remember { mutableStateOf("Locating…") }
-
-    LaunchedEffect(Unit) {
-        viewModel.locationRepository.location.collectLatest { locationData ->
-            locationData ?: return@collectLatest
-            val name = withContext(Dispatchers.IO) {
-                reverseGeocode(context, locationData.latitude, locationData.longitude)
-            }
-            locationText = name
-        }
-    }
+    val locationText by viewModel.cityName.collectAsStateWithLifecycle()
 
     Surface(
         modifier = Modifier

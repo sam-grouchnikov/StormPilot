@@ -60,7 +60,7 @@ fun NavSkeleton() {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 15.dp, horizontal = 15.dp),
+                            .padding(vertical = 0.dp, horizontal = 0.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Surface(
