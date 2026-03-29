@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
-import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.compose.NavHost
@@ -20,7 +19,9 @@ import com.example.stormpilot.pages.NavSkeleton
 import com.example.stormpilot.pages.WelcomePage
 import com.example.stormpilot.pages.SignIn
 import com.example.stormpilot.pages.SignUp
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -46,14 +47,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             StormPilotTheme(darkTheme = true) {
-                StormPilotApp()
+                AppCenter()
             }
         }
     }
 }
 
 @Composable
-fun StormPilotApp() {
+fun AppCenter() {
     val navController = rememberNavController()
 
     NavHost(
