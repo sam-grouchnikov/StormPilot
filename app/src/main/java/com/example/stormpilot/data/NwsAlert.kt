@@ -2,11 +2,11 @@ package com.example.stormpilot.data
 
 data class NwsAlert(
     val id: String,
-    val event: String,        // e.g. "Tornado Warning"
+    val event: String,
     val headline: String,
     val description: String,
     val instruction: String?,
-    val severity: String,     // "Extreme", "Severe", "Moderate", "Minor"
+    val severity: String,
     val urgency: String,
     val onset: String?,
     val expires: String?,

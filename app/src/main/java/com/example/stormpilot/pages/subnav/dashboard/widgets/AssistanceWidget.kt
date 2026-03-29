@@ -64,7 +64,6 @@ import androidx.compose.ui.unit.sp
 fun LocationSelector(type: String, location: String) {
     var isSelected by remember { mutableStateOf(false) }
 
-    // 2. Dynamic colors based on selection state
     val containerColor = if (isSelected) {
         MaterialTheme.colorScheme.surfaceContainerHighest
     } else {
@@ -72,7 +71,7 @@ fun LocationSelector(type: String, location: String) {
     }
 
     Surface(
-        onClick = { isSelected = !isSelected }, // Toggle selection on click
+        onClick = { isSelected = !isSelected },
         shape = RoundedCornerShape(12.dp),
         color = containerColor,
         modifier = Modifier
@@ -86,7 +85,6 @@ fun LocationSelector(type: String, location: String) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Left Side: Icon and Text
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Outlined.LocalGasStation,

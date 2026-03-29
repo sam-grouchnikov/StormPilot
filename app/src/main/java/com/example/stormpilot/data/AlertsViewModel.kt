@@ -71,11 +71,9 @@ class AlertsViewModel @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val geocoder = Geocoder(context, Locale.getDefault())
-                // getFromLocation is a blocking call, hence Dispatchers.IO
                 val addresses = geocoder.getFromLocation(latitude, longitude, 1)
                 val address = addresses?.firstOrNull()
 
-                // Return city and state (e.g., "Norman, OK")
                 if (address != null) {
                     "${address.locality}, ${address.adminArea}"
                 } else null

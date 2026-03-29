@@ -52,7 +52,6 @@ fun NavSkeleton() {
 
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination?.route
-            val currentTab = tabs.firstOrNull { it.route == currentRoute } ?: TabDest.Radar
 
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,

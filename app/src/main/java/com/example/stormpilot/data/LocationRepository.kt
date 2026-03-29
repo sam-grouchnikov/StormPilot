@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
-import javax.inject.Singleton
 
 class LocationRepository @Inject constructor(
     @ApplicationContext private val context: Context
