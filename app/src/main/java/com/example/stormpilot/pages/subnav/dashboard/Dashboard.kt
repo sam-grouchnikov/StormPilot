@@ -22,7 +22,7 @@ import com.example.stormpilot.pages.subnav.dashboard.widgets.LocationWidget
 
     StormPilotTheme(darkTheme = isDarkMode) {
         Column{
-            LocationWidget("Greensburg, Kansas")
+            LocationWidget()
             Spacer(modifier = Modifier.height(15.dp))
             AlertsWidget()
             Spacer(modifier = Modifier.height(10.dp))
