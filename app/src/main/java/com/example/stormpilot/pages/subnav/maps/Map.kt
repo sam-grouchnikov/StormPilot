@@ -161,7 +161,7 @@ fun MapsPage() {
                         isAttributionEnabled = false,
                         attributionAlignment = Alignment.BottomEnd,
                         isCompassEnabled = true,
-                        compassAlignment = Alignment.TopEnd,
+                        compassAlignment = Alignment.BottomEnd,
                         isScaleBarEnabled = false,
                         scaleBarAlignment = Alignment.TopStart,
                     ),
@@ -212,6 +212,9 @@ fun MapsPage() {
                         end = if (active) 0.dp else 7.dp
                     ),
                 query = query,
+                colors = SearchBarDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.inverseOnSurface
+                ),
                 onQueryChange = { query = it },
                 onSearch = {
                     active = false

@@ -63,14 +63,20 @@ fun NavSkeleton() {
                         contentAlignment = Alignment.Center
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(24.dp),
+                            shape = RoundedCornerShape(
+                                topStart = 0.dp,
+                                topEnd = 0.dp,
+                                bottomEnd = 24.dp,
+                                bottomStart = 24.dp
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp),
+                                .height(75.dp),
                             color = MaterialTheme.colorScheme.surfaceContainerLowest
                         ) {
                             NavigationBar(
                                 containerColor = Color.Transparent,
+                                modifier = Modifier.padding(bottom = 0.dp)
                             ) {
                                 tabs.forEach { tab ->
                                     val selected = currentRoute == tab.route

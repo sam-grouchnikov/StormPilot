@@ -29,7 +29,7 @@ fun RadarPage(
         Column {
             LocationWidget(viewModel)
             Spacer(modifier = Modifier.height(15.dp))
-            AlertsWidget()
+            AlertsWidget(viewModel)
             Spacer(modifier = Modifier.height(10.dp))
             AtmosphereMetricsWidget()
             Spacer(modifier = Modifier.height(15.dp))
