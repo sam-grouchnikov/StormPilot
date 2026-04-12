@@ -17,6 +17,9 @@ import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.*
 
+/**
+ * Represents the UI state for the Maps screen, encompassing routing data,
+ */
 data class MapsUiState(
     val origin: Position? = null,
     val destination: Position? = null,
@@ -31,6 +34,21 @@ data class MapsUiState(
     val routeError: String? = null,
 )
 
+/**
+ * ViewModel responsible for managing the state and logic of the Maps screen.
+ *
+ * This ViewModel handles route calculation, user location tracking, off-route detection,
+ * and navigation progress updates. It interacts with the [RoutingRepository] to fetch
+ * geographic data and exposes a [MapsUiState] for the UI to observe.
+ *
+ * Key features include:
+ * - Requesting and parsing routes between an origin and destination.
+ * - Real-time tracking of user progress through navigation steps.
+ * - Automatic rerouting logic when the user deviates from the path by a specific threshold.
+ * - Conversion of route coordinates into GeoJSON for map rendering.
+ *
+ * @property routingRepository The repository used to fetch route information from a navigation service.
+ */
 @HiltViewModel
 class MapsViewModel @Inject constructor(
     private val routingRepository: RoutingRepository,
