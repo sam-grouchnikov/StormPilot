@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.material3)
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -70,6 +72,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     implementation("com.google.dagger:hilt-android:2.59.2")
     ksp("com.google.dagger:hilt-compiler:2.59.2")
