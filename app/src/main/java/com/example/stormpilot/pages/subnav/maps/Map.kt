@@ -75,6 +75,7 @@ import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
+import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
 import kotlin.math.log
@@ -183,9 +184,9 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
             MaplibreMap(
                 baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/dark/en.json?key=64a5f0a9c35b4ca1"),
                 cameraState = cameraState,
-                onMapLongClick = { point ->
+                onMapLongClick = { point, _ ->
                     viewModel.onDestinationSelected(point)
-                    true
+                    ClickResult.Consume
                 },
                 modifier = Modifier.padding(vertical = 0.dp, horizontal = 0.dp),
                 options = MapOptions(
@@ -241,7 +242,6 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
                     source = routeSource,
                     color = const(MaterialTheme.colorScheme.tertiary),
                     width = const(7.dp),
-                    opacity = const(0.9),
                 )
             }
 
@@ -390,9 +390,9 @@ private fun TripSummaryCard(
                     text = "${formatDistance(displayedDistance)} • ${formatDuration(displayedDuration)}",
                     style = MaterialTheme.typography.titleMedium,
                 )
-                state.steps.drop(state.currentStepIndex).take(4).forEachIndexed { index, step ->
-                    Text(text = "${index + 1}. ${step.instruction}", style = MaterialTheme.typography.bodyMedium)
-                }
+//                state.steps.drop(state.currentStepIndex).take(4).forEachIndexed { index, step ->
+//                    Text(text = "${index + 1}. ${step.instruction}", style = MaterialTheme.typography.bodyMedium)
+//                }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.Refresh, contentDescription = null)
                     Text("Clear route", modifier = Modifier.clickable { onClearRoute() }, color = MaterialTheme.colorScheme.primary)
