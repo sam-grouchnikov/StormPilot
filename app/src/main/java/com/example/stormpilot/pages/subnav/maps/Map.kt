@@ -69,6 +69,7 @@ import org.maplibre.compose.style.BaseStyle
 import org.maplibre.spatialk.geojson.Position
 import kotlin.time.Duration.Companion.seconds
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapsPage() {
