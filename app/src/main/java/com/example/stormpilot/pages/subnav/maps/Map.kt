@@ -383,12 +383,14 @@ private fun TripSummaryCard(
                 }
             }
 
-            if (state.distanceMeters != null && state.durationSeconds != null) {
+            val displayedDistance = state.remainingDistanceMeters ?: state.distanceMeters
+            val displayedDuration = state.remainingDurationSeconds ?: state.durationSeconds
+            if (displayedDistance != null && displayedDuration != null) {
                 Text(
-                    text = "${formatDistance(state.distanceMeters)} • ${formatDuration(state.durationSeconds)}",
+                    text = "${formatDistance(displayedDistance)} • ${formatDuration(displayedDuration)}",
                     style = MaterialTheme.typography.titleMedium,
                 )
-                state.steps.take(4).forEachIndexed { index, step ->
+                state.steps.drop(state.currentStepIndex).take(4).forEachIndexed { index, step ->
                     Text(text = "${index + 1}. ${step.instruction}", style = MaterialTheme.typography.bodyMedium)
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {

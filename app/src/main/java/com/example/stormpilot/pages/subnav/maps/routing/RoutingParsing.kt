@@ -29,11 +29,20 @@ object RoutingParsing {
         val steps = legs.flatMap { leg ->
             leg.jsonObject["steps"]?.jsonArray.orEmpty().map { step ->
                 val stepObj = step.jsonObject
+                val maneuverLocation = stepObj["maneuver"]?.jsonObject
+                    ?.get("location")?.jsonArray
+                    ?.let { raw ->
+                        Position(
+                            longitude = raw[0].jsonPrimitive.double,
+                            latitude = raw[1].jsonPrimitive.double,
+                        )
+                    }
                 RouteStep(
                     instruction = stepObj["maneuver"]?.jsonObject?.get("instruction")?.jsonPrimitive?.content
                         ?: stepObj["name"]?.jsonPrimitive?.content.orEmpty(),
                     distanceMeters = stepObj["distance"]?.jsonPrimitive?.double ?: 0.0,
                     durationSeconds = stepObj["duration"]?.jsonPrimitive?.double ?: 0.0,
+                    maneuverLocation = maneuverLocation,
                 )
             }
         }

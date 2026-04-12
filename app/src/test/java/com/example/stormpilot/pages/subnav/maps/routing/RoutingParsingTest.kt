@@ -24,7 +24,7 @@ class RoutingParsingTest {
                           "distance": 300.0,
                           "duration": 180.0,
                           "name": "Main St",
-                          "maneuver": {"instruction": "Head north"}
+                          "maneuver": {"instruction": "Head north", "location": [-122.1,37.4]}
                         }
                       ]
                     }
@@ -40,6 +40,7 @@ class RoutingParsingTest {
         assertEquals(610.0, result.durationSeconds, 0.001)
         assertEquals(2, result.polyline.size)
         assertEquals("Head north", result.steps.first().instruction)
+        assertEquals(-122.1, result.steps.first().maneuverLocation?.longitude ?: 0.0, 0.001)
     }
 
     @Test

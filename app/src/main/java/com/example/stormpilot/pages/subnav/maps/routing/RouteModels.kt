@@ -9,6 +9,7 @@ data class RouteStep(
     val instruction: String,
     val distanceMeters: Double,
     val durationSeconds: Double,
+    val maneuverLocation: Position? = null,
 )
 
 /**

@@ -23,7 +23,10 @@ data class MapsUiState(
     val routeGeoJson: GeoJsonData? = null,
     val distanceMeters: Double? = null,
     val durationSeconds: Double? = null,
+    val remainingDistanceMeters: Double? = null,
+    val remainingDurationSeconds: Double? = null,
     val steps: List<RouteStep> = emptyList(),
+    val currentStepIndex: Int = 0,
     val isLoadingRoute: Boolean = false,
     val routeError: String? = null,
 )
@@ -44,6 +47,7 @@ class MapsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(origin = position)
 
         if (_uiState.value.destination != null && currentRoutePolyline.isNotEmpty()) {
+            advanceStepProgress(position)
             val minDistance = minDistanceMetersToPolyline(position, currentRoutePolyline)
             if (minDistance > OFF_ROUTE_THRESHOLD_METERS) {
                 scheduleReroute()
@@ -69,7 +73,10 @@ class MapsViewModel @Inject constructor(
             routeGeoJson = null,
             distanceMeters = null,
             durationSeconds = null,
+            remainingDistanceMeters = null,
+            remainingDurationSeconds = null,
             steps = emptyList(),
+            currentStepIndex = 0,
             routeError = null,
             isLoadingRoute = false,
         )
@@ -100,7 +107,10 @@ class MapsViewModel @Inject constructor(
                         routeGeoJson = geoJson,
                         distanceMeters = route.distanceMeters,
                         durationSeconds = route.durationSeconds,
+                        remainingDistanceMeters = route.distanceMeters,
+                        remainingDurationSeconds = route.durationSeconds,
                         steps = route.steps,
+                        currentStepIndex = 0,
                         isLoadingRoute = false,
                         routeError = null,
                     )
@@ -116,7 +126,34 @@ class MapsViewModel @Inject constructor(
 
     companion object {
         private const val OFF_ROUTE_THRESHOLD_METERS = 40.0
+        private const val STEP_REACHED_THRESHOLD_METERS = 25.0
         private const val REROUTE_DEBOUNCE_MS = 8_000L
+    }
+
+    private fun advanceStepProgress(userPosition: Position) {
+        val currentState = _uiState.value
+        val steps = currentState.steps
+        if (steps.isEmpty()) return
+
+        var nextStepIndex = currentState.currentStepIndex.coerceAtMost(steps.lastIndex)
+        val maneuverPosition = steps[nextStepIndex].maneuverLocation
+        if (maneuverPosition != null) {
+            val distanceToManeuver = haversineMeters(userPosition, maneuverPosition)
+            if (distanceToManeuver <= STEP_REACHED_THRESHOLD_METERS && nextStepIndex < steps.lastIndex) {
+                nextStepIndex += 1
+            }
+        }
+
+        val completedDistance = steps.take(nextStepIndex).sumOf { it.distanceMeters }
+        val completedDuration = steps.take(nextStepIndex).sumOf { it.durationSeconds }
+        val totalDistance = currentState.distanceMeters ?: 0.0
+        val totalDuration = currentState.durationSeconds ?: 0.0
+
+        _uiState.value = currentState.copy(
+            currentStepIndex = nextStepIndex,
+            remainingDistanceMeters = (totalDistance - completedDistance).coerceAtLeast(0.0),
+            remainingDurationSeconds = (totalDuration - completedDuration).coerceAtLeast(0.0),
+        )
     }
 }
 
@@ -151,6 +188,18 @@ private fun distancePointToSegmentMeters(point: Position, start: Position, end: 
     val deltaY = py - closestY
 
     return sqrt(deltaX * deltaX + deltaY * deltaY) * EARTH_RADIUS_METERS
+}
+
+private fun haversineMeters(a: Position, b: Position): Double {
+    val lat1 = Math.toRadians(a.latitude)
+    val lat2 = Math.toRadians(b.latitude)
+    val dLat = lat2 - lat1
+    val dLon = Math.toRadians(b.longitude - a.longitude)
+
+    val sinLat = sin(dLat / 2.0)
+    val sinLon = sin(dLon / 2.0)
+    val h = sinLat * sinLat + cos(lat1) * cos(lat2) * sinLon * sinLon
+    return 2.0 * EARTH_RADIUS_METERS * asin(sqrt(h))
 }
 
 private const val EARTH_RADIUS_METERS = 6_371_000.0

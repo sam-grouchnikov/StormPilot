@@ -5,7 +5,6 @@ import kotlinx.coroutines.withContext
 import org.maplibre.spatialk.geojson.Position
 import java.net.HttpURLConnection
 import java.net.URL
-import java.net.URLEncoder
 import javax.inject.Inject
 
 interface RoutingApiClient {
