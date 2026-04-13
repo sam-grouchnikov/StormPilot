@@ -265,6 +265,37 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
                     strokeWidth = const(3.dp),
                 )
 
+                val destinationFeatureCollection = remember(uiState.destination) {
+                    val json = if (uiState.destination != null) {
+                        """
+                        {
+                          "type": "FeatureCollection",
+                          "features": [{
+                            "type": "Feature",
+                            "geometry": {
+                              "type": "Point",
+                              "coordinates": [${uiState.destination!!.longitude}, ${uiState.destination!!.latitude}]
+                            },
+                            "properties": {}
+                          }]
+                        }
+                        """.trimIndent()
+                    } else {
+                        """{"type": "FeatureCollection", "features": []}"""
+                    }
+                    GeoJsonData.JsonString(json)
+                }
+
+                val destinationSource = rememberGeoJsonSource(data = destinationFeatureCollection)
+                CircleLayer(
+                    id = "destination-pin",
+                    source = destinationSource,
+                    color = const(MaterialTheme.colorScheme.error),
+                    radius = const(7.dp),
+                    strokeColor = const(MaterialTheme.colorScheme.errorContainer),
+                    strokeWidth = const(2.dp),
+                )
+
                 val routeSource = rememberGeoJsonSource(
                     data = uiState.routeGeoJson ?: GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
                 )
