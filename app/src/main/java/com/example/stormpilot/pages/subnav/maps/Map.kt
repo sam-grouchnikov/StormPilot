@@ -112,7 +112,10 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
+fun MapsPage(
+    viewModel: MapsViewModel = hiltViewModel(),
+    onDestinationSelectedStateChanged: (Boolean) -> Unit = {},
+) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -205,6 +208,10 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
                 duration = 1.seconds,
             )
         }
+    }
+
+    LaunchedEffect(uiState.destination) {
+        onDestinationSelectedStateChanged(uiState.destination != null)
     }
 
     var query by remember { mutableStateOf("") }

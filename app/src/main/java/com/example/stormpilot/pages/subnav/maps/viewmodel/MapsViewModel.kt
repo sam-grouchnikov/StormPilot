@@ -80,13 +80,30 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onDestinationSelected(position: Position) {
-        _uiState.value = _uiState.value.copy(destination = position, routeError = null, address = "Locating...")
+        val shouldRefreshRoute = currentRoutePolyline.isNotEmpty()
+        _uiState.value = _uiState.value.copy(
+            destination = position,
+            routeGeoJson = null,
+            distanceMeters = null,
+            durationSeconds = null,
+            remainingDistanceMeters = null,
+            remainingDurationSeconds = null,
+            steps = emptyList(),
+            currentStepIndex = 0,
+            routeError = null,
+            isLoadingRoute = false,
+            address = "Locating..."
+        )
+        currentRoutePolyline = emptyList()
 
         viewModelScope.launch {
             val result = fetchAddress(position)
             _uiState.value = _uiState.value.copy(address = result)
         }
 
+        if (shouldRefreshRoute) {
+            requestRoute()
+        }
     }
 
     fun retryRoute() {
