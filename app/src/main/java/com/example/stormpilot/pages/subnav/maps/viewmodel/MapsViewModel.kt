@@ -70,7 +70,6 @@ class MapsViewModel @Inject constructor(
     private var rerouteDebounceJob: Job? = null
 
     fun onUserLocationUpdated(position: Position) {
-        val previousOrigin = _uiState.value.origin
         _uiState.value = _uiState.value.copy(origin = position)
 
         if (_uiState.value.destination != null && currentRoutePolyline.isNotEmpty()) {
@@ -79,17 +78,14 @@ class MapsViewModel @Inject constructor(
             if (minDistance > OFF_ROUTE_THRESHOLD_METERS) {
                 scheduleReroute()
             }
-        } else if (previousOrigin == null && _uiState.value.destination != null) {
-            requestRoute()
         }
     }
 
     fun onDestinationSelected(position: Position) {
+        val shouldRefreshRoute = currentRoutePolyline.isNotEmpty()
         _uiState.value = _uiState.value.copy(
             destination = position,
             routeGeoJson = null,
-            routeStart = null,
-            routeEnd = null,
             distanceMeters = null,
             durationSeconds = null,
             remainingDistanceMeters = null,
@@ -97,18 +93,26 @@ class MapsViewModel @Inject constructor(
             steps = emptyList(),
             currentStepIndex = 0,
             routeError = null,
-            address = "Locating...",
+            isLoadingRoute = false,
+            address = "Locating..."
         )
+        currentRoutePolyline = emptyList()
 
         viewModelScope.launch {
             val result = fetchAddress(position)
             _uiState.value = _uiState.value.copy(address = result)
         }
 
-        requestRoute()
+        if (shouldRefreshRoute) {
+            requestRoute()
+        }
     }
 
     fun retryRoute() {
+        requestRoute()
+    }
+
+    fun requestDirections() {
         requestRoute()
     }
 

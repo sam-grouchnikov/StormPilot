@@ -114,7 +114,10 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
+fun MapsPage(
+    viewModel: MapsViewModel = hiltViewModel(),
+    onDestinationSelectedStateChanged: (Boolean) -> Unit = {},
+) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -209,6 +212,10 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
         }
     }
 
+    LaunchedEffect(uiState.destination) {
+        onDestinationSelectedStateChanged(uiState.destination != null)
+    }
+
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
 
@@ -290,12 +297,12 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
 
                 val destinationSource = rememberGeoJsonSource(data = destinationFeatureCollection)
                 CircleLayer(
-                    id = "destination-pin",
+                    id = "destination-location",
                     source = destinationSource,
                     color = const(MaterialTheme.colorScheme.error),
-                    radius = const(7.dp),
-                    strokeColor = const(MaterialTheme.colorScheme.errorContainer),
-                    strokeWidth = const(2.dp),
+                    radius = const(6.dp),
+                    strokeColor = const(MaterialTheme.colorScheme.onError),
+                    strokeWidth = const(3.dp),
                 )
 
                 val routeSource = rememberGeoJsonSource(
@@ -357,6 +364,7 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
             TripSummaryCard(
                 state = uiState,
                 onRetry = viewModel::retryRoute,
+                onDirectionsClick = viewModel::requestDirections,
                 onClearRoute = viewModel::clearRoute,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(all=0.dp),
                 warningCount = 0
@@ -515,6 +523,7 @@ private fun SearchScaffold(
 private fun TripSummaryCard(
     state: MapsUiState,
     onRetry: () -> Unit,
+    onDirectionsClick: () -> Unit,
     onClearRoute: () -> Unit,
     modifier: Modifier = Modifier,
     warningCount: Int,
@@ -545,7 +554,7 @@ private fun TripSummaryCard(
             val displayedDistance = state.remainingDistanceMeters ?: state.distanceMeters
             val displayedDuration = state.remainingDurationSeconds ?: state.durationSeconds
             val displayedAddress = state.address
-            if (displayedDistance != null && displayedDuration != null) {
+            if (state.destination != null) {
 
                 Row(horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
@@ -580,7 +589,7 @@ private fun TripSummaryCard(
                     modifier = Modifier.horizontalScroll(rememberScrollState())
                 ) {
                     Button(
-                        onClick = { /*TODO*/},
+                        onClick = onDirectionsClick,
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Icon (
@@ -619,33 +628,30 @@ private fun TripSummaryCard(
 
 
                 }
-
-
-
-                
-                Text(
-                    text = "${formatDistance(displayedDistance)} • ${formatDuration(displayedDuration)}",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = if (warningCount == 0) Icons.Outlined.Check else Icons.Outlined.Warning,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
+                if (displayedDistance != null && displayedDuration != null) {
                     Text(
-                        text = if (warningCount == 0) "No warnings en route" else "$warningCount warning(s) en route",
+                        text = "${formatDistance(displayedDistance)} • ${formatDuration(displayedDuration)}",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
-                        color = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (warningCount == 0) Icons.Outlined.Check else Icons.Outlined.Warning,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (warningCount == 0) "No warnings en route" else "$warningCount warning(s) en route",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                        )
+                    }
+                }
             }
         }
     }
