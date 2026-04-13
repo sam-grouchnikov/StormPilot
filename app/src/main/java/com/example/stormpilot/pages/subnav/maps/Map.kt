@@ -309,17 +309,22 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
                 )
 
                 val connectorDotsData = remember(
+                    uiState.routeGeoJson,
                     uiState.origin,
                     uiState.destination,
                     uiState.routeStart,
                     uiState.routeEnd,
                 ) {
-                    buildConnectorDotsGeoJson(
-                        currentLocation = uiState.origin,
-                        routeStart = uiState.routeStart,
-                        routeEnd = uiState.routeEnd,
-                        destination = uiState.destination,
-                    )
+                    if (uiState.routeGeoJson == null) {
+                        GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
+                    } else {
+                        buildConnectorDotsGeoJson(
+                            currentLocation = uiState.origin,
+                            routeStart = uiState.routeStart,
+                            routeEnd = uiState.routeEnd,
+                            destination = uiState.destination,
+                        )
+                    }
                 }
                 val connectorDotsSource = rememberGeoJsonSource(data = connectorDotsData)
                 CircleLayer(
@@ -401,7 +406,7 @@ private fun buildConnectorDotsGeoJson(
 private fun generateDotPositions(
     start: Position?,
     end: Position?,
-    spacingMeters: Double = 18.0,
+    spacingMeters: Double = 8.0,
 ): List<Position> {
     if (start == null || end == null) return emptyList()
 

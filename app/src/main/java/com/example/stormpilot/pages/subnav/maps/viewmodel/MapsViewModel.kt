@@ -85,7 +85,20 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onDestinationSelected(position: Position) {
-        _uiState.value = _uiState.value.copy(destination = position, routeError = null, address = "Locating...")
+        _uiState.value = _uiState.value.copy(
+            destination = position,
+            routeGeoJson = null,
+            routeStart = null,
+            routeEnd = null,
+            distanceMeters = null,
+            durationSeconds = null,
+            remainingDistanceMeters = null,
+            remainingDurationSeconds = null,
+            steps = emptyList(),
+            currentStepIndex = 0,
+            routeError = null,
+            address = "Locating...",
+        )
 
         viewModelScope.launch {
             val result = fetchAddress(position)
