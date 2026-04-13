@@ -1,0 +1,53 @@
+package com.example.stormpilot.pages.subnav.maps.routing
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.maplibre.spatialk.geojson.Position
+import java.net.HttpURLConnection
+import java.net.URL
+import javax.inject.Inject
+
+interface RoutingApiClient {
+    suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult>
+}
+
+class ValhallaRoutingApiClient @Inject constructor() : RoutingApiClient {
+    override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
+        return Result.failure(UnsupportedOperationException("Valhalla endpoint not configured"))
+    }
+}
+
+class OsrmRoutingApiClient @Inject constructor() : RoutingApiClient {
+    override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                val coordinates = "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}"
+                val url = URL(
+                    "https://router.project-osrm.org/route/v1/driving/$coordinates" +
+                        "?overview=full&geometries=geojson&steps=true"
+                )
+                val connection = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 10_000
+                    readTimeout = 10_000
+                    setRequestProperty("Accept", "application/json")
+                }
+                connection.inputStream.bufferedReader().use { reader ->
+                    RoutingParsing.parseOsrmRoute(reader.readText())
+                }
+            }
+        }
+    }
+}
+
+class RoutingRepositoryImpl @Inject constructor(
+    private val valhallaClient: ValhallaRoutingApiClient,
+    private val osrmClient: OsrmRoutingApiClient,
+) : RoutingRepository {
+    override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
+        return valhallaClient.fetchRoute(origin, destination)
+            .recoverCatching {
+                osrmClient.fetchRoute(origin, destination).getOrThrow()
+            }
+    }
+}
