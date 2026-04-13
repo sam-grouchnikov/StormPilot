@@ -106,8 +106,10 @@ import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.max
+import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -305,6 +307,33 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
                     color = const(MaterialTheme.colorScheme.primary),
                     width = const(5.dp),
                 )
+
+                val connectorDotsData = remember(
+                    uiState.routeGeoJson,
+                    uiState.origin,
+                    uiState.destination,
+                    uiState.routeStart,
+                    uiState.routeEnd,
+                ) {
+                    if (uiState.routeGeoJson == null) {
+                        GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
+                    } else {
+                        buildConnectorDotsGeoJson(
+                            currentLocation = uiState.origin,
+                            routeStart = uiState.routeStart,
+                            routeEnd = uiState.routeEnd,
+                            destination = uiState.destination,
+                        )
+                    }
+                }
+                val connectorDotsSource = rememberGeoJsonSource(data = connectorDotsData)
+                CircleLayer(
+                    id = "route-connector-dots",
+                    source = connectorDotsSource,
+                    color = const(MaterialTheme.colorScheme.onSurfaceVariant),
+                    radius = const(2.3.dp),
+                    opacity = const(0.85f),
+                )
             }
 
             SearchScaffold(
@@ -334,6 +363,71 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
             )
         }
     }
+}
+
+private fun buildConnectorDotsGeoJson(
+    currentLocation: Position?,
+    routeStart: Position?,
+    routeEnd: Position?,
+    destination: Position?,
+): GeoJsonData {
+    val dots = buildList {
+        addAll(generateDotPositions(currentLocation, routeStart))
+        addAll(generateDotPositions(routeEnd, destination))
+    }
+
+    if (dots.isEmpty()) {
+        return GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
+    }
+
+    val features = dots.joinToString(",") { point ->
+        """
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [${point.longitude}, ${point.latitude}]
+          },
+          "properties": {}
+        }
+        """.trimIndent()
+    }
+
+    return GeoJsonData.JsonString(
+        """
+        {
+          "type": "FeatureCollection",
+          "features": [$features]
+        }
+        """.trimIndent(),
+    )
+}
+
+private fun generateDotPositions(
+    start: Position?,
+    end: Position?,
+    spacingMeters: Double = 8.0,
+): List<Position> {
+    if (start == null || end == null) return emptyList()
+
+    val distanceMeters = approximateDistanceMeters(start, end)
+    if (distanceMeters < spacingMeters) return emptyList()
+
+    val steps = ceil(distanceMeters / spacingMeters).toInt()
+    return (1 until steps).map { step ->
+        val t = step.toDouble() / steps.toDouble()
+        Position(
+            longitude = start.longitude + ((end.longitude - start.longitude) * t),
+            latitude = start.latitude + ((end.latitude - start.latitude) * t),
+        )
+    }
+}
+
+private fun approximateDistanceMeters(start: Position, end: Position): Double {
+    val latMeters = (end.latitude - start.latitude) * 111_320.0
+    val lonMeters =
+        (end.longitude - start.longitude) * 111_320.0 * kotlin.math.cos(Math.toRadians((start.latitude + end.latitude) / 2.0))
+    return sqrt((latMeters * latMeters) + (lonMeters * lonMeters))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -556,4 +650,3 @@ private fun TripSummaryCard(
         }
     }
 }
-

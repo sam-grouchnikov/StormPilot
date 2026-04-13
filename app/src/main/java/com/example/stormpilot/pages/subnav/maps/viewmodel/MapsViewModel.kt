@@ -29,6 +29,8 @@ data class MapsUiState(
     val origin: Position? = null,
     val destination: Position? = null,
     val routeGeoJson: GeoJsonData? = null,
+    val routeStart: Position? = null,
+    val routeEnd: Position? = null,
     val distanceMeters: Double? = null,
     val durationSeconds: Double? = null,
     val remainingDistanceMeters: Double? = null,
@@ -83,7 +85,20 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onDestinationSelected(position: Position) {
-        _uiState.value = _uiState.value.copy(destination = position, routeError = null, address = "Locating...")
+        _uiState.value = _uiState.value.copy(
+            destination = position,
+            routeGeoJson = null,
+            routeStart = null,
+            routeEnd = null,
+            distanceMeters = null,
+            durationSeconds = null,
+            remainingDistanceMeters = null,
+            remainingDurationSeconds = null,
+            steps = emptyList(),
+            currentStepIndex = 0,
+            routeError = null,
+            address = "Locating...",
+        )
 
         viewModelScope.launch {
             val result = fetchAddress(position)
@@ -102,6 +117,8 @@ class MapsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(
             destination = null,
             routeGeoJson = null,
+            routeStart = null,
+            routeEnd = null,
             distanceMeters = null,
             durationSeconds = null,
             remainingDistanceMeters = null,
@@ -137,6 +154,8 @@ class MapsViewModel @Inject constructor(
                     )
                     _uiState.value = _uiState.value.copy(
                         routeGeoJson = geoJson,
+                        routeStart = route.polyline.firstOrNull(),
+                        routeEnd = route.polyline.lastOrNull(),
                         distanceMeters = route.distanceMeters,
                         durationSeconds = route.durationSeconds,
                         remainingDistanceMeters = route.distanceMeters,
