@@ -3,7 +3,6 @@ package com.example.stormpilot.pages.subnav.maps
 import android.Manifest
 import android.content.pm.PackageManager
 import android.location.Geocoder
-import android.widget.Button
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -295,12 +294,28 @@ fun MapsPage(
 
                 val destinationSource = rememberGeoJsonSource(data = destinationFeatureCollection)
                 CircleLayer(
-                    id = "destination-location",
+                    id = "destination-marker-shadow",
                     source = destinationSource,
-                    color = const(MaterialTheme.colorScheme.error),
-                    radius = const(6.dp),
-                    strokeColor = const(MaterialTheme.colorScheme.onError),
-                    strokeWidth = const(3.dp),
+                    color = const(Color.Black.copy(alpha = 0.35f)),
+                    radius = const(10.dp),
+                    strokeColor = const(Color.Transparent),
+                    strokeWidth = const(0.dp),
+                )
+                CircleLayer(
+                    id = "destination-marker",
+                    source = destinationSource,
+                    color = const(Color(0xFFEA4335)),
+                    radius = const(8.dp),
+                    strokeColor = const(Color.White),
+                    strokeWidth = const(2.dp),
+                )
+                CircleLayer(
+                    id = "destination-marker-center",
+                    source = destinationSource,
+                    color = const(Color.White),
+                    radius = const(3.dp),
+                    strokeColor = const(Color.Transparent),
+                    strokeWidth = const(0.dp),
                 )
 
                 val routeSource = rememberGeoJsonSource(
