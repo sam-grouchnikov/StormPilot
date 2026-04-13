@@ -536,6 +536,33 @@ private fun TripSummaryCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = state.address ?: "Route",
+                    fontSize = 23.sp,
+                    fontWeight = FontWeight.Medium,
+                )
+
+                FilledIconButton(
+                    onClick = { onClearRoute() },
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.size(30.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
             if (state.isLoadingRoute) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(end = 4.dp))
@@ -553,37 +580,7 @@ private fun TripSummaryCard(
 
             val displayedDistance = state.remainingDistanceMeters ?: state.distanceMeters
             val displayedDuration = state.remainingDurationSeconds ?: state.durationSeconds
-            val displayedAddress = state.address
             if (state.destination != null) {
-
-                Row(horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth(),) {
-                    Text(
-                        text = displayedAddress ?: "No address",
-                        fontSize = 23.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-
-
-                    FilledIconButton(
-                        onClick = { onClearRoute() },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier.size(30.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
-
-
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.horizontalScroll(rememberScrollState())
