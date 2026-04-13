@@ -1,7 +1,10 @@
 package com.example.stormpilot.pages.subnav.maps.routing
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.double
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -30,7 +33,9 @@ object RoutingParsing {
         val steps = legs.flatMap { leg ->
             leg.jsonObject["steps"]?.jsonArray.orEmpty().map { step ->
                 val stepObj = step.jsonObject
-                val maneuverLocation = stepObj["maneuver"]?.jsonObject
+                val maneuverObj = stepObj["maneuver"]?.jsonObject
+
+                val maneuverLocation = maneuverObj
                     ?.get("location")?.jsonArray
                     ?.let { raw ->
                         Position(
@@ -38,12 +43,28 @@ object RoutingParsing {
                             latitude = raw[1].jsonPrimitive.double,
                         )
                     }
+
+                val maneuver = maneuverObj?.let { m ->
+                    val loc = m["location"]?.jsonArray
+                    Maneuver(
+                        type = m["type"]?.jsonPrimitive?.content ?: "unknown",
+                        modifier = m["modifier"]?.jsonPrimitive?.contentOrNull,
+                        exit = m["exit"]?.jsonPrimitive?.intOrNull,
+                        bearingBefore = m["bearing_before"]?.jsonPrimitive?.int ?: 0,
+                        bearingAfter = m["bearing_after"]?.jsonPrimitive?.int ?: 0,
+                        location = Position(
+                            longitude = loc?.get(0)?.jsonPrimitive?.double ?: 0.0,
+                            latitude = loc?.get(1)?.jsonPrimitive?.double ?: 0.0,
+                        ),
+                    )
+                }
+
                 RouteStep(
-                    instruction = stepObj["maneuver"]?.jsonObject?.get("instruction")?.jsonPrimitive?.content
-                        ?: stepObj["name"]?.jsonPrimitive?.content.orEmpty(),
+                    instruction = buildInstruction(maneuver, stepObj["name"]?.jsonPrimitive?.content),
                     distanceMeters = stepObj["distance"]?.jsonPrimitive?.double ?: 0.0,
                     durationSeconds = stepObj["duration"]?.jsonPrimitive?.double ?: 0.0,
                     maneuverLocation = maneuverLocation,
+                    maneuver = maneuver,
                 )
             }
         }
@@ -54,6 +75,27 @@ object RoutingParsing {
             durationSeconds = route["duration"]?.jsonPrimitive?.double ?: 0.0,
             steps = steps,
         )
+    }
+
+    private fun buildInstruction(maneuver: Maneuver?, streetName: String?): String {
+        if (maneuver == null) return streetName.orEmpty()
+        val name = streetName?.takeIf { it.isNotBlank() }?.let { " onto $it" }.orEmpty()
+        return when (maneuver.type) {
+            "depart"      -> "Head ${maneuver.modifier ?: ""}$name".trim()
+            "arrive"      -> "You have arrived at your destination"
+            "turn"        -> "Turn ${maneuver.modifier ?: ""}$name"
+            "new name"    -> "Continue$name"
+            "merge"       -> "Merge ${maneuver.modifier ?: ""}$name"
+            "on ramp"     -> "Take the ramp on the ${maneuver.modifier ?: ""}$name"
+            "off ramp"    -> "Take the exit on the ${maneuver.modifier ?: ""}$name"
+            "fork"        -> "Keep ${maneuver.modifier ?: ""} at the fork$name"
+            "end of road" -> "Turn ${maneuver.modifier ?: ""} at the end of the road$name"
+            "roundabout",
+            "rotary"      -> "Enter the roundabout and take exit ${maneuver.exit ?: ""}$name"
+            "continue"    -> "Continue ${maneuver.modifier ?: "straight"}$name"
+            "use lane"    -> "Use the ${maneuver.modifier ?: ""} lane$name"
+            else          -> "${maneuver.type} ${maneuver.modifier ?: ""}$name".trim()
+        }
     }
 
     fun toGeoJsonLineString(points: List<Position>): String {

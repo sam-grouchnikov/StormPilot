@@ -2,6 +2,8 @@ package com.example.stormpilot.pages.subnav.maps
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.location.Geocoder
+import android.widget.Button
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -10,29 +12,47 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Navigation
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -45,12 +65,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -64,6 +89,8 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
@@ -77,6 +104,7 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.log
 import kotlin.math.max
@@ -88,6 +116,8 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val scope = rememberCoroutineScope()
+    var selectedAddress by remember { mutableStateOf<String?>(null) }
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -167,8 +197,9 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
             )
             val latDelta = abs(origin.latitude - destination.latitude)
             val lonDelta = abs(origin.longitude - destination.longitude)
-            val span = max(latDelta, lonDelta).coerceAtLeast(0.0005)
-            val zoom = (11.5 - log(span, 2.0)).coerceIn(3.0, 16.5)
+            val paddingFactor = 5.5
+            val span = (max(latDelta, lonDelta) * paddingFactor).coerceAtLeast(0.0005)
+            val zoom = (9.5 - log(span, 2.0)).coerceIn(1.0, 15.5)
             cameraState.animateTo(
                 finalPosition = cameraState.position.copy(target = center, zoom = zoom),
                 duration = 1.seconds,
@@ -267,7 +298,8 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
                 state = uiState,
                 onRetry = viewModel::retryRoute,
                 onClearRoute = viewModel::clearRoute,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
+                modifier = Modifier.align(Alignment.BottomCenter).padding(all=0.dp),
+                warningCount = 0
             )
         }
     }
@@ -360,14 +392,16 @@ private fun TripSummaryCard(
     onRetry: () -> Unit,
     onClearRoute: () -> Unit,
     modifier: Modifier = Modifier,
+    warningCount: Int,
 ) {
     if (state.destination == null && state.routeError == null && !state.isLoadingRoute) return
 
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (state.isLoadingRoute) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(end = 4.dp))
@@ -385,19 +419,108 @@ private fun TripSummaryCard(
 
             val displayedDistance = state.remainingDistanceMeters ?: state.distanceMeters
             val displayedDuration = state.remainingDurationSeconds ?: state.durationSeconds
+            val displayedAddress = state.address
             if (displayedDistance != null && displayedDuration != null) {
+
+                Row(horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),) {
+                    Text(
+                        text = displayedAddress ?: "No address",
+                        fontSize = 23.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+
+
+                    FilledIconButton(
+                        onClick = { onClearRoute() },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.size(30.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+
+
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.horizontalScroll(rememberScrollState())
+                ) {
+                    Button(
+                        onClick = { /*TODO*/},
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Icon (
+                            imageVector = Icons.Default.Directions,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            "Directions",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Medium,)
+                    }
+
+                    Button(
+                        onClick = { /*TODO*/},
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon (
+                            imageVector = Icons.Outlined.Navigation,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            "Start",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Medium,)
+                    }
+
+
+                }
+
+
+
+                
                 Text(
                     text = "${formatDistance(displayedDistance)} • ${formatDuration(displayedDuration)}",
-                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-//                state.steps.drop(state.currentStepIndex).take(4).forEachIndexed { index, step ->
-//                    Text(text = "${index + 1}. ${step.instruction}", style = MaterialTheme.typography.bodyMedium)
-//                }
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Text("Clear route", modifier = Modifier.clickable { onClearRoute() }, color = MaterialTheme.colorScheme.primary)
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = if (warningCount == 0) Icons.Outlined.Check else Icons.Outlined.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (warningCount == 0) "No warnings en route" else "$warningCount warning(s) en route",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                    )
                 }
+
             }
         }
     }
 }
+

@@ -1,11 +1,14 @@
 package com.example.stormpilot.pages.subnav.maps.viewmodel
 
+import android.location.Geocoder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.pages.subnav.maps.routing.RouteStep
 import com.example.stormpilot.pages.subnav.maps.routing.RoutingParsing
 import com.example.stormpilot.pages.subnav.maps.routing.RoutingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -13,8 +16,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.spatialk.geojson.Position
+import java.util.Locale
 import kotlin.math.*
 
 /**
@@ -32,6 +37,7 @@ data class MapsUiState(
     val currentStepIndex: Int = 0,
     val isLoadingRoute: Boolean = false,
     val routeError: String? = null,
+    val address: String? = null,
 )
 
 /**
@@ -52,6 +58,7 @@ data class MapsUiState(
 @HiltViewModel
 class MapsViewModel @Inject constructor(
     private val routingRepository: RoutingRepository,
+    @ApplicationContext private val context: android.content.Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapsUiState())
@@ -76,7 +83,13 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onDestinationSelected(position: Position) {
-        _uiState.value = _uiState.value.copy(destination = position, routeError = null)
+        _uiState.value = _uiState.value.copy(destination = position, routeError = null, address = "Locating...")
+
+        viewModelScope.launch {
+            val result = fetchAddress(position)
+            _uiState.value = _uiState.value.copy(address = result)
+        }
+
         requestRoute()
     }
 
@@ -97,6 +110,7 @@ class MapsViewModel @Inject constructor(
             currentStepIndex = 0,
             routeError = null,
             isLoadingRoute = false,
+            address = null,
         )
     }
 
@@ -172,6 +186,28 @@ class MapsViewModel @Inject constructor(
             remainingDistanceMeters = (totalDistance - completedDistance).coerceAtLeast(0.0),
             remainingDurationSeconds = (totalDuration - completedDuration).coerceAtLeast(0.0),
         )
+    }
+
+    private suspend fun fetchAddress(position: Position): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                // Use the 'context' injected in the constructor
+                val geocoder = Geocoder(context, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(position.latitude, position.longitude, 1)
+
+                if (!addresses.isNullOrEmpty()) {
+                    val addr = addresses[0]
+                    val name = addr.featureName ?: ""
+                    val street = addr.thoroughfare ?: ""
+
+                    if (name == street || street.isEmpty()) name else "$name $street"
+                } else {
+                    "Unknown Location"
+                }
+            } catch (e: Exception) {
+                "Point: ${"%.4f".format(position.latitude)}, ${"%.4f".format(position.longitude)}"
+            }
+        }
     }
 }
 

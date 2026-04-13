@@ -10,6 +10,7 @@ data class RouteStep(
     val distanceMeters: Double,
     val durationSeconds: Double,
     val maneuverLocation: Position? = null,
+    val maneuver: Maneuver?,
 )
 
 /**
@@ -20,4 +21,13 @@ data class RouteResult(
     val distanceMeters: Double,
     val durationSeconds: Double,
     val steps: List<RouteStep>,
+)
+
+data class Maneuver(
+    val type: String,
+    val modifier: String?,
+    val exit: Int?,
+    val bearingBefore: Int,
+    val bearingAfter: Int,
+    val location: Position,
 )
