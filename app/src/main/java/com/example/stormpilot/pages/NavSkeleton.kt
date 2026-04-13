@@ -58,7 +58,6 @@ fun NavSkeleton() {
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                 bottomBar = {
                     val hideBottomBar = currentRoute == TabDest.Nav.route && isMapDestinationSelected.value
-                    if (!hideBottomBar) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -105,7 +104,7 @@ fun NavSkeleton() {
                                 }
                             }
                         }
-                    }
+
                 }
 
             ) { innerPadding ->

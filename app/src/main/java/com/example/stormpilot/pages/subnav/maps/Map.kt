@@ -528,128 +528,132 @@ private fun TripSummaryCard(
     modifier: Modifier = Modifier,
     warningCount: Int,
 ) {
-    if (state.destination == null && state.routeError == null && !state.isLoadingRoute) return
-
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-    ) {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    text = state.address ?: "Route",
-                    fontSize = 23.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-
-                FilledIconButton(
-                    onClick = { onClearRoute() },
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.size(30.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-
-            if (state.isLoadingRoute) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(end = 4.dp))
-                    Text("Loading route…")
-                }
-            }
-
-            state.routeError?.let { error ->
-                Text(text = error, color = MaterialTheme.colorScheme.error)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Retry", modifier = Modifier.clickable { onRetry() }, color = MaterialTheme.colorScheme.primary)
-                    Text("Clear", modifier = Modifier.clickable { onClearRoute() }, color = MaterialTheme.colorScheme.primary)
-                }
-            }
-
-            val displayedDistance = state.remainingDistanceMeters ?: state.distanceMeters
-            val displayedDuration = state.remainingDurationSeconds ?: state.durationSeconds
-            if (state.destination != null) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.horizontalScroll(rememberScrollState())
-                ) {
-                    Button(
-                        onClick = onDirectionsClick,
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+    if (state.address != null) {
+        Card(
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        ) {
+            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (!state.isLoadingRoute) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon (
-                            imageVector = Icons.Filled.Navigation,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            "Start",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Medium,)
-                    }
-
-                    Button(
-                        onClick = { /*TODO*/},
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        )
-                    ) {
-                        Icon (
-                            imageVector = Icons.Outlined.Shield,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            "Safe Start",
-                            fontSize = 17.sp,
+                            text = state.address,
+                            fontSize = 23.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                    }
-
-
-                }
-                if (displayedDistance != null && displayedDuration != null) {
-                    Text(
-                        text = "${formatDistance(displayedDistance)} • ${formatDuration(displayedDuration)}",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = if (warningCount == 0) Icons.Outlined.Check else Icons.Outlined.Warning,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+
+                        FilledIconButton(
+                            onClick = { onClearRoute() },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.size(30.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+
+
+                if (state.isLoadingRoute) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(end = 4.dp))
+                        Text("Loading route…")
+                    }
+                }
+
+                state.routeError?.let { error ->
+                    Text(text = error, color = MaterialTheme.colorScheme.error)
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Retry", modifier = Modifier.clickable { onRetry() }, color = MaterialTheme.colorScheme.primary)
+                        Text("Clear", modifier = Modifier.clickable { onClearRoute() }, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+
+                val displayedDistance = state.remainingDistanceMeters ?: state.distanceMeters
+                val displayedDuration = state.remainingDurationSeconds ?: state.durationSeconds
+                if (!state.isLoadingRoute) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.horizontalScroll(rememberScrollState())
+                    ) {
+                        Button(
+                            onClick = onDirectionsClick,
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                        ) {
+                            Icon (
+                                imageVector = Icons.Filled.Navigation,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Start",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Medium,)
+                        }
+
+                        Button(
+                            onClick = { /*TODO*/},
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            )
+                        ) {
+                            Icon (
+                                imageVector = Icons.Outlined.Shield,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "Safe Start",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+
+                    }
+                    if (displayedDistance != null && displayedDuration != null) {
                         Text(
-                            text = if (warningCount == 0) "No warnings en route" else "$warningCount warning(s) en route",
+                            text = "${formatDistance(displayedDistance)} • ${formatDuration(displayedDuration)}",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (warningCount == 0) Icons.Outlined.Check else Icons.Outlined.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (warningCount == 0) "No warnings en route" else "$warningCount warning(s) en route",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                            )
+                        }
                     }
                 }
             }
         }
     }
+
 }
