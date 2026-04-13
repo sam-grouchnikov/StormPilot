@@ -271,8 +271,8 @@ fun MapsPage(viewModel: MapsViewModel = hiltViewModel()) {
                 LineLayer(
                     id = "route-line",
                     source = routeSource,
-                    color = const(MaterialTheme.colorScheme.tertiary),
-                    width = const(7.dp),
+                    color = const(MaterialTheme.colorScheme.primary),
+                    width = const(5.dp),
                 )
             }
 
@@ -459,13 +459,13 @@ private fun TripSummaryCard(
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                     ) {
                         Icon (
-                            imageVector = Icons.Default.Directions,
+                            imageVector = Icons.Filled.Navigation,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            "Directions",
+                            "Start",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Medium,)
                     }
@@ -475,19 +475,21 @@ private fun TripSummaryCard(
                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            contentColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         Icon (
-                            imageVector = Icons.Outlined.Navigation,
+                            imageVector = Icons.Outlined.Shield,
                             contentDescription = null,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            "Start",
+                            "Safe Start",
                             fontSize = 17.sp,
-                            fontWeight = FontWeight.Medium,)
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                     }
 
 
