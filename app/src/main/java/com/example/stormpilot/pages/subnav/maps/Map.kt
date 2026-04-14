@@ -2,8 +2,6 @@ package com.example.stormpilot.pages.subnav.maps
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.location.Geocoder
-import android.widget.Button
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -33,14 +31,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
@@ -65,7 +59,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -89,8 +82,6 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
@@ -104,7 +95,6 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.log
@@ -121,8 +111,7 @@ fun MapsPage(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
-    val scope = rememberCoroutineScope()
-    var selectedAddress by remember { mutableStateOf<String?>(null) }
+    var navMode by remember { mutableStateOf(false) }
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -192,10 +181,10 @@ fun MapsPage(
         }
     }
 
-    LaunchedEffect(uiState.routeGeoJson) {
+    LaunchedEffect(uiState.routeGeoJson, navMode) {
         val origin = uiState.origin
         val destination = uiState.destination
-        if (origin != null && destination != null && uiState.routeGeoJson != null) {
+        if (!navMode && origin != null && destination != null && uiState.routeGeoJson != null) {
             val center = Position(
                 longitude = (origin.longitude + destination.longitude) / 2.0,
                 latitude = (origin.latitude + destination.latitude) / 2.0,
@@ -212,13 +201,28 @@ fun MapsPage(
         }
     }
 
+    LaunchedEffect(navMode, uiState.origin, uiState.currentStepIndex, uiState.steps) {
+        if (!navMode) return@LaunchedEffect
+        val origin = uiState.origin ?: return@LaunchedEffect
+        val currentStep = uiState.steps.getOrNull(uiState.currentStepIndex)
+        val bearing = currentStep?.maneuver?.bearingAfter?.toDouble() ?: cameraState.position.bearing
+        cameraState.animateTo(
+            finalPosition = cameraState.position.copy(
+                target = origin,
+                zoom = 17.5,
+                tilt = 50.0,
+                bearing = bearing,
+            ),
+            duration = 1.seconds,
+        )
+    }
+
     LaunchedEffect(uiState.destination) {
         onDestinationSelectedStateChanged(uiState.destination != null)
     }
 
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
-    var navMode by remember { mutableStateOf(false) }
     var showTripSummary by remember {mutableStateOf(false)}
 
 
@@ -368,17 +372,17 @@ fun MapsPage(
             }
 
             fun onDirClick() {
-                viewModel::requestDirections
+                viewModel.requestDirections()
                 navMode = true
             }
 
             fun onClose() {
-                viewModel::clearRoute
+                viewModel.clearRoute()
                 navMode = false
                 showTripSummary = false
             }
 
-            if (showTripSummary) {
+            if (showTripSummary && !navMode) {
                 TripSummaryCard(
                     state = uiState,
                     onRetry = viewModel::retryRoute,
@@ -386,7 +390,24 @@ fun MapsPage(
                     onClearRoute = { onClose() },
                     modifier = Modifier.align(Alignment.BottomCenter).padding(all=0.dp),
                     warningCount = 0,
-                    navMode = navMode
+                )
+            }
+
+            if (navMode) {
+                NavigationModeHeader(
+                    instruction = uiState.steps.getOrNull(uiState.currentStepIndex)?.instruction ?: "Continue on route",
+                    onExitNavigation = { navMode = false },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 12.dp, start = 12.dp, end = 12.dp),
+                )
+
+                NavigationModeFooter(
+                    remainingDistanceMeters = uiState.remainingDistanceMeters ?: uiState.distanceMeters,
+                    remainingDurationSeconds = uiState.remainingDurationSeconds ?: uiState.durationSeconds,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 16.dp, start = 12.dp, end = 12.dp),
                 )
             }
 
@@ -548,7 +569,6 @@ private fun TripSummaryCard(
     onClearRoute: () -> Unit,
     modifier: Modifier = Modifier,
     warningCount: Int,
-    navMode: Boolean,
 ) {
     if (state.address != null) {
         Card(
@@ -678,4 +698,68 @@ private fun TripSummaryCard(
         }
     }
 
+}
+
+@Composable
+private fun NavigationModeHeader(
+    instruction: String,
+    onExitNavigation: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = instruction,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            IconButton(onClick = onExitNavigation) {
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Exit navigation")
+            }
+        }
+    }
+}
+
+@Composable
+private fun NavigationModeFooter(
+    remainingDistanceMeters: Double?,
+    remainingDurationSeconds: Double?,
+    modifier: Modifier = Modifier,
+) {
+    if (remainingDistanceMeters == null || remainingDurationSeconds == null) return
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = formatDuration(remainingDurationSeconds),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = formatDistance(remainingDistanceMeters),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
