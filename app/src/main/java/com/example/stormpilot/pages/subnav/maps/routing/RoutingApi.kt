@@ -23,8 +23,8 @@ class OsrmRoutingApiClient @Inject constructor() : RoutingApiClient {
             runCatching {
                 val coordinates = "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}"
                 val url = URL(
-                    "https://router.project-osrm.org/route/v1/driving/$coordinates" +
-                        "?overview=full&geometries=geojson&steps=true"
+                    "https://routing.openstreetmap.de/routed-car/route/v1/driving/$coordinates" +
+                            "?overview=full&geometries=geojson&steps=true"
                 )
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"

@@ -1,6 +1,7 @@
 package com.example.stormpilot.pages.subnav.maps.viewmodel
 
 import android.location.Geocoder
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.pages.subnav.maps.routing.RouteStep
@@ -157,6 +158,8 @@ class MapsViewModel @Inject constructor(
         val destination = state.destination ?: return
 
         viewModelScope.launch {
+            Log.d("Routing", "Starting route request")
+            val start = System.currentTimeMillis()
             _uiState.value = _uiState.value.copy(isLoadingRoute = true, routeError = null)
             routingRepository.fetchRoute(origin, destination)
                 .onSuccess { route ->
@@ -184,6 +187,8 @@ class MapsViewModel @Inject constructor(
                         routeError = error.message ?: "Failed to fetch route",
                     )
                 }
+            Log.d("Routing", "Route finished in ${System.currentTimeMillis() - start}ms")
+
         }
     }
 

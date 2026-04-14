@@ -31,6 +31,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Search
@@ -59,6 +60,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,7 +84,11 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
@@ -112,6 +118,7 @@ fun MapsPage(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var navMode by remember { mutableStateOf(false) }
+    var userIsInteracting by remember { mutableStateOf(false) }
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -181,7 +188,7 @@ fun MapsPage(
         }
     }
 
-    LaunchedEffect(uiState.routeGeoJson, navMode) {
+    LaunchedEffect(uiState.routeGeoJson) {
         val origin = uiState.origin
         val destination = uiState.destination
         if (!navMode && origin != null && destination != null && uiState.routeGeoJson != null) {
@@ -204,6 +211,7 @@ fun MapsPage(
     LaunchedEffect(navMode, uiState.origin, uiState.currentStepIndex, uiState.steps) {
         if (!navMode) return@LaunchedEffect
         val origin = uiState.origin ?: return@LaunchedEffect
+        if (userIsInteracting) return@LaunchedEffect
         val currentStep = uiState.steps.getOrNull(uiState.currentStepIndex)
         val bearing = currentStep?.maneuver?.bearingAfter?.toDouble() ?: cameraState.position.bearing
         cameraState.animateTo(
@@ -212,6 +220,18 @@ fun MapsPage(
                 zoom = 17.5,
                 tilt = 50.0,
                 bearing = bearing,
+            ),
+            duration = 1.seconds,
+        )
+    }
+
+    suspend fun resetCam(cameraState: CameraState) {
+        delay(100)
+        cameraState.animateTo(
+            finalPosition = cameraState.position.copy(
+                zoom = 16.0,
+                tilt = 0.0,
+                bearing = 0.0,
             ),
             duration = 1.seconds,
         )
@@ -244,7 +264,7 @@ fun MapsPage(
                         logoAlignment = Alignment.BottomStart,
                         isAttributionEnabled = false,
                         attributionAlignment = Alignment.BottomEnd,
-                        isCompassEnabled = true,
+                        isCompassEnabled = false,
                         compassAlignment = Alignment.BottomEnd,
                         isScaleBarEnabled = false,
                         scaleBarAlignment = Alignment.TopStart,
@@ -392,11 +412,16 @@ fun MapsPage(
                     warningCount = 0,
                 )
             }
-
+            val scope = rememberCoroutineScope()
             if (navMode) {
                 NavigationModeHeader(
                     instruction = uiState.steps.getOrNull(uiState.currentStepIndex)?.instruction ?: "Continue on route",
-                    onExitNavigation = { navMode = false },
+                    onExitNavigation = {
+                        navMode = false
+                        scope.launch {
+                            resetCam(cameraState)
+                        }
+                    },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(top = 12.dp, start = 12.dp, end = 12.dp),
@@ -407,7 +432,13 @@ fun MapsPage(
                     remainingDurationSeconds = uiState.remainingDurationSeconds ?: uiState.durationSeconds,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 16.dp, start = 12.dp, end = 12.dp),
+                        .padding(bottom = 0.dp, start = 0.dp, end = 0.dp),
+                    onExitNavigation = {
+                        navMode = false
+                        scope.launch {
+                            resetCam(cameraState)
+                        }
+                    },
                 )
             }
 
@@ -723,9 +754,6 @@ private fun NavigationModeHeader(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
-            IconButton(onClick = onExitNavigation) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = "Exit navigation")
-            }
         }
     }
 }
@@ -735,31 +763,78 @@ private fun NavigationModeFooter(
     remainingDistanceMeters: Double?,
     remainingDurationSeconds: Double?,
     modifier: Modifier = Modifier,
+    onExitNavigation: () -> Unit,
 ) {
     if (remainingDistanceMeters == null || remainingDurationSeconds == null) return
-
+    val eta = remember(remainingDurationSeconds) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.SECOND, remainingDurationSeconds.toInt())
+        val hour = cal.get(java.util.Calendar.HOUR_OF_DAY)
+        val minute = cal.get(java.util.Calendar.MINUTE)
+        val amPm = if (hour >= 12) "PM" else "AM"
+        val displayHour = if (hour % 12 == 0) 12 else hour % 12
+        "$displayHour:${minute.toString().padStart(2, '0')} $amPm"
+    }
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 25.dp, vertical = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = formatDuration(remainingDurationSeconds),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = formatDistance(remainingDistanceMeters),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Column() {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.DriveEta,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(25.dp)
+                    )
+                    Spacer(modifier = Modifier.width(9.dp))
+                    Text(
+                        text = formatDuration(remainingDurationSeconds),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 23.sp,
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = formatDistance(remainingDistanceMeters),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 17.sp,
+
+                        )
+                    Text(" • ")
+                    Text(
+                        text = "Arriving $eta",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 17.sp,
+                        )
+                }
+
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onExitNavigation,
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Text(
+                    "Exit",
+                    fontSize = 23.sp,
+                    fontWeight = FontWeight.Medium,)
+            }
+
         }
     }
 }
