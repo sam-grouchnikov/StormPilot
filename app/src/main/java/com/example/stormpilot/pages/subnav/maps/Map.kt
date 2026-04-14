@@ -218,6 +218,9 @@ fun MapsPage(
 
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
+    var navMode by remember { mutableStateOf(false) }
+    var showTripSummary by remember {mutableStateOf(false)}
+
 
     StormPilotTheme(darkTheme = true) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -225,6 +228,7 @@ fun MapsPage(
                 baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/dark/en.json?key=64a5f0a9c35b4ca1"),
                 cameraState = cameraState,
                 onMapLongClick = { point, _ ->
+                    showTripSummary = true
                     viewModel.onDestinationSelected(point)
                     ClickResult.Consume
                 },
@@ -343,32 +347,49 @@ fun MapsPage(
                 )
             }
 
-            SearchScaffold(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(
-                        top = if (active) 0.dp else 2.dp,
-                        start = if (active) 0.dp else 7.dp,
-                        end = if (active) 0.dp else 7.dp,
-                    ),
-                query = query,
-                active = active,
-                onQueryChange = { query = it },
-                onActiveChange = { active = it },
-                onResultClick = { selected ->
-                    query = selected
-                    active = false
-                },
-            )
+            if (!navMode) {
+                SearchScaffold(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(
+                            top = if (active) 0.dp else 2.dp,
+                            start = if (active) 0.dp else 7.dp,
+                            end = if (active) 0.dp else 7.dp,
+                        ),
+                    query = query,
+                    active = active,
+                    onQueryChange = { query = it },
+                    onActiveChange = { active = it },
+                    onResultClick = { selected ->
+                        query = selected
+                        active = false
+                    },
+                )
+            }
 
-            TripSummaryCard(
-                state = uiState,
-                onRetry = viewModel::retryRoute,
-                onDirectionsClick = viewModel::requestDirections,
-                onClearRoute = viewModel::clearRoute,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(all=0.dp),
-                warningCount = 0
-            )
+            fun onDirClick() {
+                viewModel::requestDirections
+                navMode = true
+            }
+
+            fun onClose() {
+                viewModel::clearRoute
+                navMode = false
+                showTripSummary = false
+            }
+
+            if (showTripSummary) {
+                TripSummaryCard(
+                    state = uiState,
+                    onRetry = viewModel::retryRoute,
+                    onDirectionsClick = { onDirClick() },
+                    onClearRoute = { onClose() },
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(all=0.dp),
+                    warningCount = 0,
+                    navMode = navMode
+                )
+            }
+
         }
     }
 }
@@ -527,6 +548,7 @@ private fun TripSummaryCard(
     onClearRoute: () -> Unit,
     modifier: Modifier = Modifier,
     warningCount: Int,
+    navMode: Boolean,
 ) {
     if (state.address != null) {
         Card(
@@ -604,7 +626,7 @@ private fun TripSummaryCard(
                         }
 
                         Button(
-                            onClick = { /*TODO*/},
+                            onClick = { /*TODO*/ },
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,

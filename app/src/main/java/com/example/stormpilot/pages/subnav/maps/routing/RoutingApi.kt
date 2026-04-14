@@ -28,8 +28,8 @@ class OsrmRoutingApiClient @Inject constructor() : RoutingApiClient {
                 )
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
-                    connectTimeout = 10_000
-                    readTimeout = 10_000
+                    connectTimeout = 20_000
+                    readTimeout = 20_000
                     setRequestProperty("Accept", "application/json")
                 }
                 connection.inputStream.bufferedReader().use { reader ->
