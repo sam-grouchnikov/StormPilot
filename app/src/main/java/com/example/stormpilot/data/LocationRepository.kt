@@ -24,8 +24,8 @@ class LocationRepository @Inject constructor(
     private val _location = MutableStateFlow<LocationData?>(null)
     val location: StateFlow<LocationData?> = _location
 
-    private val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5_000L)
-        .setMinUpdateIntervalMillis(2_000L)
+    private val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 500L)
+        .setMinUpdateIntervalMillis(500L)
         .build()
 
     private val callback = object : LocationCallback() {
