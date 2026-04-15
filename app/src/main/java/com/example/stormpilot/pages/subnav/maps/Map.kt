@@ -102,7 +102,6 @@ import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -213,7 +212,11 @@ fun MapsPage(
         val origin = uiState.origin ?: return@LaunchedEffect
         if (userIsInteracting) return@LaunchedEffect
         val currentStep = uiState.steps.getOrNull(uiState.currentStepIndex)
-        val bearing = currentStep?.maneuver?.bearingAfter?.toDouble() ?: cameraState.position.bearing
+        val routeTarget =
+            currentStep?.maneuverLocation
+                ?: uiState.destination
+                ?: origin
+        val bearing = bearingDegrees(from = origin, to = routeTarget)
         cameraState.animateTo(
             finalPosition = cameraState.position.copy(
                 target = origin,
@@ -342,33 +345,6 @@ fun MapsPage(
                     color = const(MaterialTheme.colorScheme.primary),
                     width = const(5.dp),
                 )
-
-                val connectorDotsData = remember(
-                    uiState.routeGeoJson,
-                    uiState.origin,
-                    uiState.destination,
-                    uiState.routeStart,
-                    uiState.routeEnd,
-                ) {
-                    if (uiState.routeGeoJson == null) {
-                        GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
-                    } else {
-                        buildConnectorDotsGeoJson(
-                            currentLocation = uiState.origin,
-                            routeStart = uiState.routeStart,
-                            routeEnd = uiState.routeEnd,
-                            destination = uiState.destination,
-                        )
-                    }
-                }
-                val connectorDotsSource = rememberGeoJsonSource(data = connectorDotsData)
-                CircleLayer(
-                    id = "route-connector-dots",
-                    source = connectorDotsSource,
-                    color = const(MaterialTheme.colorScheme.onSurfaceVariant),
-                    radius = const(2.3.dp),
-                    opacity = const(0.85f),
-                )
             }
 
             if (!navMode) {
@@ -415,7 +391,7 @@ fun MapsPage(
             val scope = rememberCoroutineScope()
             if (navMode) {
                 NavigationModeHeader(
-                    instruction = uiState.steps.getOrNull(uiState.currentStepIndex)?.instruction ?: "Continue on route",
+                    instruction = navigationInstruction(uiState),
                     onExitNavigation = {
                         navMode = false
                         scope.launch {
@@ -446,62 +422,24 @@ fun MapsPage(
     }
 }
 
-private fun buildConnectorDotsGeoJson(
-    currentLocation: Position?,
-    routeStart: Position?,
-    routeEnd: Position?,
-    destination: Position?,
-): GeoJsonData {
-    val dots = buildList {
-        addAll(generateDotPositions(currentLocation, routeStart))
-        addAll(generateDotPositions(routeEnd, destination))
+private fun navigationInstruction(uiState: MapsUiState): String {
+    val steps = uiState.steps
+    if (steps.isEmpty()) return "Continue on route"
+
+    val currentStep = steps.getOrNull(uiState.currentStepIndex) ?: return "Continue on route"
+    val destination = uiState.destination
+    val origin = uiState.origin
+    val onLastStep = uiState.currentStepIndex >= steps.lastIndex
+    val closeToDestination =
+        destination != null &&
+            origin != null &&
+            approximateDistanceMeters(origin, destination) <= ARRIVAL_DISTANCE_THRESHOLD_METERS
+
+    if (onLastStep && !closeToDestination) {
+        return "Head straight"
     }
 
-    if (dots.isEmpty()) {
-        return GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
-    }
-
-    val features = dots.joinToString(",") { point ->
-        """
-        {
-          "type": "Feature",
-          "geometry": {
-            "type": "Point",
-            "coordinates": [${point.longitude}, ${point.latitude}]
-          },
-          "properties": {}
-        }
-        """.trimIndent()
-    }
-
-    return GeoJsonData.JsonString(
-        """
-        {
-          "type": "FeatureCollection",
-          "features": [$features]
-        }
-        """.trimIndent(),
-    )
-}
-
-private fun generateDotPositions(
-    start: Position?,
-    end: Position?,
-    spacingMeters: Double = 8.0,
-): List<Position> {
-    if (start == null || end == null) return emptyList()
-
-    val distanceMeters = approximateDistanceMeters(start, end)
-    if (distanceMeters < spacingMeters) return emptyList()
-
-    val steps = ceil(distanceMeters / spacingMeters).toInt()
-    return (1 until steps).map { step ->
-        val t = step.toDouble() / steps.toDouble()
-        Position(
-            longitude = start.longitude + ((end.longitude - start.longitude) * t),
-            latitude = start.latitude + ((end.latitude - start.latitude) * t),
-        )
-    }
+    return currentStep.instruction
 }
 
 private fun approximateDistanceMeters(start: Position, end: Position): Double {
@@ -510,3 +448,16 @@ private fun approximateDistanceMeters(start: Position, end: Position): Double {
         (end.longitude - start.longitude) * 111_320.0 * kotlin.math.cos(Math.toRadians((start.latitude + end.latitude) / 2.0))
     return sqrt((latMeters * latMeters) + (lonMeters * lonMeters))
 }
+
+private fun bearingDegrees(from: Position, to: Position): Double {
+    val lat1 = Math.toRadians(from.latitude)
+    val lat2 = Math.toRadians(to.latitude)
+    val dLon = Math.toRadians(to.longitude - from.longitude)
+    val y = kotlin.math.sin(dLon) * kotlin.math.cos(lat2)
+    val x = kotlin.math.cos(lat1) * kotlin.math.sin(lat2) -
+        kotlin.math.sin(lat1) * kotlin.math.cos(lat2) * kotlin.math.cos(dLon)
+    val bearing = Math.toDegrees(kotlin.math.atan2(y, x))
+    return (bearing + 360.0) % 360.0
+}
+
+private const val ARRIVAL_DISTANCE_THRESHOLD_METERS = 30.0
