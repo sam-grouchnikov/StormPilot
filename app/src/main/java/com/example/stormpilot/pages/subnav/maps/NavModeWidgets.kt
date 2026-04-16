@@ -28,6 +28,9 @@ import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Straight
+import androidx.compose.material.icons.filled.TurnLeft
+import androidx.compose.material.icons.filled.TurnRight
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Warning
@@ -53,6 +56,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -290,19 +294,34 @@ fun NavigationModeHeader(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {
+        val directionIcon = when {
+            instruction.startsWith("Turn left", ignoreCase = true) -> Icons.Filled.TurnLeft
+            instruction.startsWith("Turn right", ignoreCase = true) -> Icons.Filled.TurnRight
+            instruction.startsWith("Head", ignoreCase = true) -> Icons.Filled.Straight
+            else -> Icons.Filled.Navigation
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp),
+                .padding(start = 16.dp, top = 10.dp, bottom = 10.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Icon(
+                imageVector = directionIcon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(end = 6.dp, bottom = 4.dp),
+            )
             Text(
                 text = instruction,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
+                fontSize = 21.sp,
             )
         }
     }

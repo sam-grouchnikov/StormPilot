@@ -31,11 +31,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Button
@@ -228,6 +230,8 @@ fun MapsPage(
         )
     }
 
+
+
     suspend fun resetCam(cameraState: CameraState) {
         delay(100)
         cameraState.animateTo(
@@ -236,6 +240,20 @@ fun MapsPage(
                 tilt = 0.0,
                 bearing = 0.0,
             ),
+            duration = 1.seconds,
+        )
+    }
+
+    suspend fun flattenCam(cameraState: CameraState) {
+        cameraState.animateTo(
+            finalPosition = cameraState.position.copy(tilt = 0.0),
+            duration = 1.seconds,
+        )
+    }
+
+    suspend fun tiltCam(cameraState: CameraState) {
+        cameraState.animateTo(
+            finalPosition = cameraState.position.copy(tilt = 50.0),
             duration = 1.seconds,
         )
     }
@@ -400,8 +418,55 @@ fun MapsPage(
                     },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 12.dp, start = 12.dp, end = 12.dp),
+                        .padding(top = 8.dp, start = 8.dp, end = 8.dp),
                 )
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 16.dp, bottom = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilledIconButton(
+                        onClick = {
+                            scope.launch {
+                                cameraState.animateTo(
+                                    finalPosition = cameraState.position.copy(tilt = 0.0),
+                                    duration = 1.seconds,
+                                )
+                            }
+                        },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Crop,
+                            contentDescription = "Flatten view",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+
+                    FilledIconButton(
+                        onClick = {
+                            scope.launch {
+                                cameraState.animateTo(
+                                    finalPosition = cameraState.position.copy(tilt = 50.0),
+                                    duration = 1.seconds,
+                                )
+                            }
+                        },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Navigation,
+                            contentDescription = "Tilt view",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
 
                 NavigationModeFooter(
                     remainingDistanceMeters = uiState.remainingDistanceMeters ?: uiState.distanceMeters,
