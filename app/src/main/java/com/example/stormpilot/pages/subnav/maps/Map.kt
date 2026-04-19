@@ -95,11 +95,13 @@ import org.maplibre.compose.camera.rememberCameraState
 import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.LineLayer
+import org.maplibre.compose.layers.RasterLayer
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
+import org.maplibre.compose.sources.rememberRasterSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
@@ -265,6 +267,7 @@ fun MapsPage(
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
     var showTripSummary by remember {mutableStateOf(false)}
+    var showSevereAlertsOverlay by remember { mutableStateOf(false) }
 
 
     StormPilotTheme(darkTheme = true) {
@@ -363,6 +366,18 @@ fun MapsPage(
                     color = const(MaterialTheme.colorScheme.primary),
                     width = const(5.dp),
                 )
+
+                if (showSevereAlertsOverlay) {
+                    val severeAlertsSource = rememberRasterSource(
+                        tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/uswarn_geo/{z}/{x}/{y}.png"),
+                        tileSize = 256,
+                    )
+                    RasterLayer(
+                        id = "severe-alerts-overlay",
+                        source = severeAlertsSource,
+                        opacity = const(0.75f),
+                    )
+                }
             }
 
             if (!navMode) {
@@ -427,24 +442,47 @@ fun MapsPage(
                         .padding(end = 16.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    FilledIconButton(
-                        onClick = {
-                            scope.launch {
-                                cameraState.animateTo(
-                                    finalPosition = cameraState.position.copy(tilt = 0.0),
-                                    duration = 1.seconds,
-                                )
-                            }
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        ),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Crop,
-                            contentDescription = "Flatten view",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilledIconButton(
+                            onClick = {
+                                scope.launch {
+                                    cameraState.animateTo(
+                                        finalPosition = cameraState.position.copy(tilt = 0.0),
+                                        duration = 1.seconds,
+                                    )
+                                }
+                            },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            ),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Crop,
+                                contentDescription = "Flatten view",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+
+                        FilledIconButton(
+                            onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = if (showSevereAlertsOverlay) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainer
+                                },
+                            ),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Warning,
+                                contentDescription = "Toggle severe weather alerts overlay",
+                                tint = if (showSevereAlertsOverlay) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            )
+                        }
                     }
 
                     FilledIconButton(
