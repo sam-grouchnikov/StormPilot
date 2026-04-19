@@ -422,6 +422,29 @@ fun MapsPage(
                 )
             }
             val scope = rememberCoroutineScope()
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 16.dp, bottom = if (navMode) 240.dp else 120.dp)
+            ) {
+                FilledIconButton(
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Warning,
+                        contentDescription = "Toggle radar",
+                        tint = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+
             if (navMode) {
                 NavigationModeHeader(
                     instruction = navigationInstruction(uiState),
@@ -442,7 +465,6 @@ fun MapsPage(
                         .padding(end = 16.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         FilledIconButton(
                             onClick = {
                                 scope.launch {
@@ -463,27 +485,8 @@ fun MapsPage(
                             )
                         }
 
-                        FilledIconButton(
-                            onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = if (showSevereAlertsOverlay) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainer
-                                },
-                            ),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Warning,
-                                contentDescription = "Toggle severe weather alerts overlay",
-                                tint = if (showSevereAlertsOverlay) {
-                                    MaterialTheme.colorScheme.onPrimary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
-                            )
-                        }
-                    }
+
+
 
                     FilledIconButton(
                         onClick = {
