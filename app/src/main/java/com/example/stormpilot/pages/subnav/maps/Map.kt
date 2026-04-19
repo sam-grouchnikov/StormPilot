@@ -268,6 +268,9 @@ fun MapsPage(
     var active by remember { mutableStateOf(false) }
     var showTripSummary by remember {mutableStateOf(false)}
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
+    val severeAlertsSourceId = "severe-alerts-source"
+    val severeAlertsLayerId = "severe-alerts-overlay-layer"
+    val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.75f else 0f
 
 
     StormPilotTheme(darkTheme = true) {
@@ -367,17 +370,16 @@ fun MapsPage(
                     width = const(5.dp),
                 )
 
-                if (showSevereAlertsOverlay) {
-                    val severeAlertsSource = rememberRasterSource(
-                        tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/uswarn_geo/{z}/{x}/{y}.png"),
-                        tileSize = 256,
-                    )
-                    RasterLayer(
-                        id = "severe-alerts-overlay",
-                        source = severeAlertsSource,
-                        opacity = const(0.75f),
-                    )
-                }
+                val severeAlertsSource = rememberRasterSource(
+                    id = severeAlertsSourceId,
+                    tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/uswarn_geo/{z}/{x}/{y}.png"),
+                    tileSize = 256,
+                )
+                RasterLayer(
+                    id = severeAlertsLayerId,
+                    source = severeAlertsSource,
+                    opacity = const(severeAlertsOverlayOpacity),
+                )
             }
 
             if (!navMode) {
