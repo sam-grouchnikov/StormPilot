@@ -60,6 +60,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -106,8 +107,11 @@ import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.log
 import kotlin.math.max
+import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.seconds
 
@@ -122,6 +126,7 @@ fun MapsPage(
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var navMode by remember { mutableStateOf(false) }
     var userIsInteracting by remember { mutableStateOf(false) }
+    var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -150,6 +155,8 @@ fun MapsPage(
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
+
+
 
     DisposableEffect(hasLocationPermission) {
         if (!hasLocationPermission) {
@@ -272,6 +279,14 @@ fun MapsPage(
     val severeAlertsLayerId = "severe-alerts-overlay-layer"
     val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.75f else 0f
 
+    LaunchedEffect(showSevereAlertsOverlay) {
+        if (showSevereAlertsOverlay) {
+            while (true) {
+                delay(300_000L)
+                radarRefreshKey = System.currentTimeMillis()
+            }
+        }
+    }
 
     StormPilotTheme(darkTheme = true) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -371,8 +386,7 @@ fun MapsPage(
                 )
 
                 val severeAlertsSource = rememberRasterSource(
-                    id = severeAlertsSourceId,
-                    tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/uswarn_geo/{z}/{x}/{y}.png"),
+                    tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?v=$radarRefreshKey"),
                     tileSize = 256,
                 )
                 RasterLayer(
@@ -553,7 +567,7 @@ private fun navigationInstruction(uiState: MapsUiState): String {
 private fun approximateDistanceMeters(start: Position, end: Position): Double {
     val latMeters = (end.latitude - start.latitude) * 111_320.0
     val lonMeters =
-        (end.longitude - start.longitude) * 111_320.0 * kotlin.math.cos(Math.toRadians((start.latitude + end.latitude) / 2.0))
+        (end.longitude - start.longitude) * 111_320.0 * cos(Math.toRadians((start.latitude + end.latitude) / 2.0))
     return sqrt((latMeters * latMeters) + (lonMeters * lonMeters))
 }
 
@@ -561,10 +575,10 @@ private fun bearingDegrees(from: Position, to: Position): Double {
     val lat1 = Math.toRadians(from.latitude)
     val lat2 = Math.toRadians(to.latitude)
     val dLon = Math.toRadians(to.longitude - from.longitude)
-    val y = kotlin.math.sin(dLon) * kotlin.math.cos(lat2)
-    val x = kotlin.math.cos(lat1) * kotlin.math.sin(lat2) -
-        kotlin.math.sin(lat1) * kotlin.math.cos(lat2) * kotlin.math.cos(dLon)
-    val bearing = Math.toDegrees(kotlin.math.atan2(y, x))
+    val y = sin(dLon) * cos(lat2)
+    val x = cos(lat1) * sin(lat2) -
+        sin(lat1) * cos(lat2) * cos(dLon)
+    val bearing = Math.toDegrees(atan2(y, x))
     return (bearing + 360.0) % 360.0
 }
 
