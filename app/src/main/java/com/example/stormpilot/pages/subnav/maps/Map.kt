@@ -89,7 +89,6 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
@@ -128,6 +127,7 @@ fun MapsPage(
     var navMode by remember { mutableStateOf(false) }
     var navigationCameraTrackingEnabled by remember { mutableStateOf(false) }
     var isProgrammaticCameraUpdate by remember { mutableStateOf(false) }
+    var is2dNavView by remember { mutableStateOf(false) }
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var alertsRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
@@ -158,8 +158,6 @@ fun MapsPage(
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
-
-
 
     DisposableEffect(hasLocationPermission) {
         if (!hasLocationPermission) {
@@ -221,36 +219,36 @@ fun MapsPage(
         }
     }
 
-    suspend fun recenterNavigationCamera() {
-        if (!navMode) return
-        val origin = uiState.origin ?: return
-        val currentStep = uiState.steps.getOrNull(uiState.currentStepIndex)
-        val routeTarget =
-            currentStep?.maneuverLocation
-                ?: uiState.destination
-                ?: origin
-        val bearing = bearingDegrees(from = origin, to = routeTarget)
-        isProgrammaticCameraUpdate = true
-        cameraState.animateTo(
-            finalPosition = cameraState.position.copy(
-                target = origin,
-                zoom = 17.5,
-                tilt = 50.0,
-                bearing = bearing,
-            ),
-            duration = 1.seconds,
-        )
-        delay(150)
-        isProgrammaticCameraUpdate = false
-    }
-
-    LaunchedEffect(navMode, navigationCameraTrackingEnabled, uiState.origin, uiState.currentStepIndex, uiState.destination) {
+    // Continuous location tracking effect
+    LaunchedEffect(navMode, navigationCameraTrackingEnabled, uiState.origin, uiState.currentStepIndex, uiState.destination, is2dNavView) {
         if (navMode && navigationCameraTrackingEnabled && uiState.origin != null) {
-            recenterNavigationCamera()
+            val origin = uiState.origin!!
+            val currentStep = uiState.steps.getOrNull(uiState.currentStepIndex)
+            val routeTarget = currentStep?.maneuverLocation ?: uiState.destination ?: origin
+            val bearing = bearingDegrees(from = origin, to = routeTarget)
+
+            try {
+                isProgrammaticCameraUpdate = true
+                cameraState.animateTo(
+                    finalPosition = cameraState.position.copy(
+                        target = origin,
+                        zoom = 17.5,
+                        tilt = if (is2dNavView) 0.0 else 50.0,
+                        bearing = bearing,
+                    ),
+                    duration = 1.seconds,
+                )
+            } finally {
+                // If animation is cancelled by a user gesture (map drag), this finally block
+                // immediately runs, opening it up to set tracking to false on the next snapshot.
+                delay(50)
+                isProgrammaticCameraUpdate = false
+            }
         }
     }
 
-    LaunchedEffect(cameraState, navMode, navigationCameraTrackingEnabled) {
+    // Automatically disable tracking when user manually pans/scrolls the map
+    LaunchedEffect(cameraState, navMode) {
         snapshotFlow { cameraState.position }
             .collect {
                 if (navMode && navigationCameraTrackingEnabled && !isProgrammaticCameraUpdate) {
@@ -258,8 +256,6 @@ fun MapsPage(
                 }
             }
     }
-
-
 
     suspend fun resetCam(cameraState: CameraState) {
         delay(100)
@@ -279,7 +275,7 @@ fun MapsPage(
 
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
-    var showTripSummary by remember {mutableStateOf(false)}
+    var showTripSummary by remember { mutableStateOf(false) }
     var showRadarOverlay by remember { mutableStateOf(false) }
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
     val radarOverlayOpacity = if (showRadarOverlay) 0.75f else 0f
@@ -444,6 +440,7 @@ fun MapsPage(
             fun onDirClick() {
                 viewModel.requestDirections()
                 navMode = true
+                is2dNavView = false
                 navigationCameraTrackingEnabled = true
             }
 
@@ -460,12 +457,11 @@ fun MapsPage(
                     onRetry = viewModel::retryRoute,
                     onDirectionsClick = { onDirClick() },
                     onClearRoute = { onClose() },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(all=0.dp),
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(all = 0.dp),
                     warningCount = 0,
                 )
             }
             val scope = rememberCoroutineScope()
-
 
             if (navMode) {
                 NavigationModeHeader(
@@ -497,7 +493,6 @@ fun MapsPage(
                     },
                 )
             }
-
 
             Column(
                 modifier = Modifier
@@ -536,36 +531,45 @@ fun MapsPage(
                 }
 
                 if (navMode) {
+                    // Tilt Toggle Button
                     FilledIconButton(
                         onClick = {
-                            scope.launch {
-                                val useTiltedView = cameraState.position.tilt < 25.0
-                                cameraState.animateTo(
-                                    finalPosition = cameraState.position.copy(
-                                        tilt = if (useTiltedView) 50.0 else 0.0,
-                                    ),
-                                    duration = 1.seconds,
-                                )
+                            is2dNavView = !is2dNavView
+                            // If tracking is off, we manually animate the tilt here.
+                            // If tracking is on, the LaunchedEffect will handle the tilt change on next update
+                            if (!navigationCameraTrackingEnabled) {
+                                scope.launch {
+                                    try {
+                                        isProgrammaticCameraUpdate = true
+                                        cameraState.animateTo(
+                                            finalPosition = cameraState.position.copy(
+                                                tilt = if (is2dNavView) 0.0 else 50.0,
+                                            ),
+                                            duration = 1.seconds,
+                                        )
+                                    } finally {
+                                        delay(50)
+                                        isProgrammaticCameraUpdate = false
+                                    }
+                                }
                             }
                         },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         ),
                     ) {
-                        val useTiltedView = cameraState.position.tilt < 25.0
                         Icon(
-                            imageVector = if (useTiltedView) Icons.Outlined.Navigation else Icons.Filled.Crop,
-                            contentDescription = if (useTiltedView) "Enable tilted view" else "Disable tilted view",
+                            imageVector = if (!is2dNavView) Icons.Outlined.Navigation else Icons.Filled.Crop,
+                            contentDescription = if (!is2dNavView) "Enable 2D view" else "Enable 3D view",
                             tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
 
+                    // Recenter Button
                     FilledIconButton(
                         onClick = {
-                            scope.launch {
-                                navigationCameraTrackingEnabled = true
-                                recenterNavigationCamera()
-                            }
+                            navigationCameraTrackingEnabled = true
+                            is2dNavView = false // Standardizing return to Tilted 3D view
                         },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -574,12 +578,11 @@ fun MapsPage(
                         Icon(
                             imageVector = Icons.Filled.MyLocation,
                             contentDescription = "Recenter navigation",
-                            tint = MaterialTheme.colorScheme.onSurface,
+                            tint = if (navigationCameraTrackingEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
             }
-
         }
     }
 }
@@ -594,8 +597,8 @@ private fun navigationInstruction(uiState: MapsUiState): String {
     val onLastStep = uiState.currentStepIndex >= steps.lastIndex
     val closeToDestination =
         destination != null &&
-            origin != null &&
-            approximateDistanceMeters(origin, destination) <= ARRIVAL_DISTANCE_THRESHOLD_METERS
+                origin != null &&
+                approximateDistanceMeters(origin, destination) <= ARRIVAL_DISTANCE_THRESHOLD_METERS
 
     if (onLastStep && !closeToDestination) {
         return "Head straight"
@@ -617,7 +620,7 @@ private fun bearingDegrees(from: Position, to: Position): Double {
     val dLon = Math.toRadians(to.longitude - from.longitude)
     val y = sin(dLon) * cos(lat2)
     val x = cos(lat1) * sin(lat2) -
-        sin(lat1) * cos(lat2) * cos(dLon)
+            sin(lat1) * cos(lat2) * cos(dLon)
     val bearing = Math.toDegrees(atan2(y, x))
     return (bearing + 360.0) % 360.0
 }
