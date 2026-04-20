@@ -16,8 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Composable
-fun AtmosphereMetricsWidget() {
+
+@Composable fun AtmosphereMetricsWidget() {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.padding(start = 20.dp)
@@ -30,23 +30,25 @@ fun AtmosphereMetricsWidget() {
     }
 }
 
-@Composable
-fun AtmosphereTinyBox(label: String, value: String) {
+@Composable fun AtmosphereTinyBox(label: String, value: String) {
     Surface(
-        modifier = Modifier.padding(top = 5.dp),
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 5.dp, bottomEnd = 20.dp, bottomStart = 20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
+        modifier = Modifier
+            .padding(start = 0.dp, end = 0.dp, top = 5.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        Column(modifier = Modifier.padding(10.dp)) {
+        Column(
+            modifier = Modifier.padding(all = 10.dp)
+        ) {
             Text(
                 text = label,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = (-0.15).sp
+                fontWeight = FontWeight.Medium
             )
-            Text(text = value, fontSize = 15.sp)
+            Text(
+                text = value,
+                fontSize = 15.sp
+            )
         }
     }
 }

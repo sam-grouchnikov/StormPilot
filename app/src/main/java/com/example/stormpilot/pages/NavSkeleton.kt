@@ -73,7 +73,7 @@ fun NavSkeleton() {
                     contentAlignment = Alignment.BottomCenter
                 ) {
                     Surface(
-                        shape = RoundedCornerShape(topStart = 36.dp, topEnd = 14.dp),
+                        shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(84.dp),
@@ -122,7 +122,8 @@ fun NavSkeleton() {
                 NavHost(
                     navController = navController,
                     startDestination = TabDest.Nav.route,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                 ) {
                     composable(TabDest.Nav.route) {
                         MapsPage(onDestinationSelectedStateChanged = { isSelected ->

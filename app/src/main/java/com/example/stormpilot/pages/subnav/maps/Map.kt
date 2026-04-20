@@ -410,7 +410,7 @@ fun MapsPage(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(
-                            top = if (active) 0.dp else 2.dp,
+                            top = if (active) 0.dp else 22.dp,
                             start = if (active) 0.dp else 7.dp,
                             end = if (active) 0.dp else 7.dp,
                         ),
@@ -449,10 +449,40 @@ fun MapsPage(
             val scope = rememberCoroutineScope()
 
 
+            if (navMode) {
+                NavigationModeHeader(
+                    instruction = navigationInstruction(uiState),
+                    onExitNavigation = {
+                        navMode = false
+                        scope.launch {
+                            resetCam(cameraState)
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 8.dp, start = 8.dp, end = 8.dp),
+                )
+
+                NavigationModeFooter(
+                    remainingDistanceMeters = uiState.remainingDistanceMeters ?: uiState.distanceMeters,
+                    remainingDurationSeconds = uiState.remainingDurationSeconds ?: uiState.durationSeconds,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 0.dp, start = 0.dp, end = 0.dp),
+                    onExitNavigation = {
+                        navMode = false
+                        scope.launch {
+                            resetCam(cameraState)
+                        }
+                    },
+                )
+            }
+
+
             Column(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = if (navMode) 240.dp else 120.dp),
+                    .align(Alignment.TopEnd)
+                    .padding(end = 16.dp, top = if (navMode) 102.dp else 93.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilledIconButton(
@@ -527,35 +557,6 @@ fun MapsPage(
                         )
                     }
                 }
-            }
-
-            if (navMode) {
-                NavigationModeHeader(
-                    instruction = navigationInstruction(uiState),
-                    onExitNavigation = {
-                        navMode = false
-                        scope.launch {
-                            resetCam(cameraState)
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 8.dp, start = 8.dp, end = 8.dp),
-                )
-
-                NavigationModeFooter(
-                    remainingDistanceMeters = uiState.remainingDistanceMeters ?: uiState.distanceMeters,
-                    remainingDurationSeconds = uiState.remainingDurationSeconds ?: uiState.durationSeconds,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 0.dp, start = 0.dp, end = 0.dp),
-                    onExitNavigation = {
-                        navMode = false
-                        scope.launch {
-                            resetCam(cameraState)
-                        }
-                    },
-                )
             }
 
         }

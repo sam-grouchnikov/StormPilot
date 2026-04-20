@@ -2,12 +2,8 @@ package com.example.stormpilot.pages.subnav.dashboard
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,15 +27,7 @@ fun RadarPage(
     var isDarkMode by remember { mutableStateOf(true) }
 
     StormPilotTheme(darkTheme = isDarkMode) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .safeDrawingPadding()
-                .windowInsetsPadding(
-                    androidx.compose.foundation.layout.WindowInsets.safeDrawing
-                        .only(WindowInsetsSides.Top)
-                )
-        ) {
+        Column(modifier = Modifier.padding(top = 15.dp)) {
             LocationWidget(viewModel)
             Spacer(modifier = Modifier.height(15.dp))
             AlertsWidget(viewModel)

@@ -1,8 +1,5 @@
 package com.example.stormpilot.pages.subnav.dashboard.widgets
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DirectionsCar
@@ -30,76 +26,61 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Composable
-fun AssistanceWidget() {
+
+@Composable fun AssistanceWidget() {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        shape = RoundedCornerShape(topStart = 36.dp, topEnd = 10.dp, bottomStart = 36.dp, bottomEnd = 36.dp),
+            .padding(start = 20.dp, end = 20.dp),
+        shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
     ) {
         Column(
             verticalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(start = 20.dp, top = 20.dp, bottom = 20.dp, end = 20.dp)
         ) {
             Row(modifier = Modifier.padding(start = 10.dp)) {
                 Text(
                     text = "Nearby Assistance",
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 23.sp,
-                    letterSpacing = (-0.3).sp
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 23.sp
                 )
             }
             Spacer(modifier = Modifier.height(7.dp))
-            LocationSelector(location = "QuikTrip @ Greensburg")
-            LocationSelector(location = "Wellstar Arlington")
+            LocationSelector("gas", "QuikTrip @ Greensburg")
+            Spacer(modifier = Modifier.height(0.dp))
+            LocationSelector("gas", "Wellstar Arlington")
         }
     }
 }
 
 @Composable
-fun LocationSelector(location: String) {
+fun LocationSelector(type: String, location: String) {
     var isSelected by remember { mutableStateOf(false) }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.0f else 0.97f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "assistance-selection-scale"
-    )
 
     val containerColor = if (isSelected) {
         MaterialTheme.colorScheme.surfaceContainerHighest
     } else {
-        MaterialTheme.colorScheme.surfaceContainerLowest
+        MaterialTheme.colorScheme.surfaceContainerHigh
     }
 
     Surface(
         onClick = { isSelected = !isSelected },
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 8.dp, bottomEnd = 24.dp, bottomStart = 24.dp),
+        shape = RoundedCornerShape(12.dp),
         color = containerColor,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .scale(scale)
+            .padding(vertical = 0.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(top = 5.dp, start = 8.dp, bottom = 5.dp, end = 15.dp)
+                .padding(top = 3.dp, start = 5.dp, bottom = 3.dp, end=15.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -112,16 +93,23 @@ fun LocationSelector(location: String) {
                     modifier = Modifier.size(21.dp)
                 )
                 Spacer(modifier = Modifier.width(7.dp))
-                Text(text = location, color = MaterialTheme.colorScheme.onSurface)
+                Column {
+                    Text(
+                        text = location,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             if (isSelected) {
                 FilledIconButton(
-                    onClick = { },
-                    modifier = Modifier.size(34.dp),
-                    shape = CircleShape,
+                    onClick = { /* Handle car action here */ },
+                    modifier = Modifier
+                        .size(30.dp)
+                        .padding(all = 1.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
                     )
                 ) {
                     Icon(
