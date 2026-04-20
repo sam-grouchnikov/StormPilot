@@ -65,6 +65,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,6 +89,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
@@ -124,6 +126,8 @@ fun MapsPage(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var navMode by remember { mutableStateOf(false) }
+    var navigationCameraTrackingEnabled by remember { mutableStateOf(false) }
+    var isProgrammaticCameraUpdate by remember { mutableStateOf(false) }
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var alertsRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
@@ -226,6 +230,7 @@ fun MapsPage(
                 ?: uiState.destination
                 ?: origin
         val bearing = bearingDegrees(from = origin, to = routeTarget)
+        isProgrammaticCameraUpdate = true
         cameraState.animateTo(
             finalPosition = cameraState.position.copy(
                 target = origin,
@@ -235,12 +240,23 @@ fun MapsPage(
             ),
             duration = 1.seconds,
         )
+        delay(150)
+        isProgrammaticCameraUpdate = false
     }
 
-    LaunchedEffect(navMode) {
-        if (navMode) {
+    LaunchedEffect(navMode, navigationCameraTrackingEnabled, uiState.origin, uiState.currentStepIndex, uiState.destination) {
+        if (navMode && navigationCameraTrackingEnabled && uiState.origin != null) {
             recenterNavigationCamera()
         }
+    }
+
+    LaunchedEffect(cameraState, navMode, navigationCameraTrackingEnabled) {
+        snapshotFlow { cameraState.position }
+            .collect {
+                if (navMode && navigationCameraTrackingEnabled && !isProgrammaticCameraUpdate) {
+                    navigationCameraTrackingEnabled = false
+                }
+            }
     }
 
 
@@ -428,11 +444,13 @@ fun MapsPage(
             fun onDirClick() {
                 viewModel.requestDirections()
                 navMode = true
+                navigationCameraTrackingEnabled = true
             }
 
             fun onClose() {
                 viewModel.clearRoute()
                 navMode = false
+                navigationCameraTrackingEnabled = false
                 showTripSummary = false
             }
 
@@ -454,6 +472,7 @@ fun MapsPage(
                     instruction = navigationInstruction(uiState),
                     onExitNavigation = {
                         navMode = false
+                        navigationCameraTrackingEnabled = false
                         scope.launch {
                             resetCam(cameraState)
                         }
@@ -471,6 +490,7 @@ fun MapsPage(
                         .padding(bottom = 0.dp, start = 0.dp, end = 0.dp),
                     onExitNavigation = {
                         navMode = false
+                        navigationCameraTrackingEnabled = false
                         scope.launch {
                             resetCam(cameraState)
                         }
@@ -543,6 +563,7 @@ fun MapsPage(
                     FilledIconButton(
                         onClick = {
                             scope.launch {
+                                navigationCameraTrackingEnabled = true
                                 recenterNavigationCamera()
                             }
                         },
