@@ -1,6 +1,5 @@
 package com.example.stormpilot.pages.subnav.dashboard.widgets
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,26 +30,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.ui.theme.WarningColorStates
 import com.example.stormpilot.viewmodel.AlertsViewModel
 
-@Composable fun AlertsWidget(viewModel: AlertsViewModel) {
+@Composable
+fun AlertsWidget(viewModel: AlertsViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val stateColors = WarningColorStates()
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 20.dp, end = 20.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            .padding(horizontal = 20.dp),
+        shape = RoundedCornerShape(topStart = 32.dp, topEnd = 8.dp, bottomEnd = 32.dp, bottomStart = 32.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(modifier = Modifier.height(15.dp))
 
             val floodActive = uiState.flashFloodWarning != null
-            val floodText = "Flash Flood Warning"
-
             WarningWidget(
                 warningIcon = Icons.Outlined.Flood,
-                warning = if (floodActive) floodText else "No Flood Alerts",
+                warning = if (floodActive) "Flash Flood Warning" else "No Flood Alerts",
                 containerColor = if (floodActive) stateColors.flashFloodContainer else stateColors.disabledContainer,
                 iconColor = if (floodActive) stateColors.flashFloodContents else stateColors.disabledContents
             )
@@ -58,11 +58,9 @@ import com.example.stormpilot.viewmodel.AlertsViewModel
             Spacer(modifier = Modifier.height(10.dp))
 
             val stormActive = uiState.severeThunderstormWarning != null
-            val stormText = "T-Storm Warning"
-
             WarningWidget(
                 warningIcon = Icons.Outlined.Bolt,
-                warning = if (stormActive) stormText else "No Storm Alerts",
+                warning = if (stormActive) "T-Storm Warning" else "No Storm Alerts",
                 containerColor = if (stormActive) stateColors.thunderstormContainer else stateColors.disabledContainer,
                 iconColor = if (stormActive) stateColors.thunderstormContents else stateColors.disabledContents
             )
@@ -70,44 +68,44 @@ import com.example.stormpilot.viewmodel.AlertsViewModel
             Spacer(modifier = Modifier.height(10.dp))
 
             val tornadoActive = uiState.tornadoWarning != null
-            val tornadoText = "Tornado Warning"
-
             WarningWidget(
                 warningIcon = Icons.Outlined.Tornado,
-                warning = if (tornadoActive) tornadoText else "No Tornado Alerts",
+                warning = if (tornadoActive) "Tornado Warning" else "No Tornado Alerts",
                 containerColor = if (tornadoActive) Color.Red else stateColors.disabledContainer,
                 iconColor = if (tornadoActive) Color.White else stateColors.disabledContents
             )
 
             Spacer(modifier = Modifier.height(15.dp))
-
         }
     }
 }
 
-@Composable fun WarningWidget(warningIcon: ImageVector, warning: String, containerColor: Color, iconColor: Color) {
-    var containerColorCopy: Color = containerColor
-    var iconColorCopy: Color = iconColor
-
+@Composable
+fun WarningWidget(
+    warningIcon: ImageVector,
+    warning: String,
+    containerColor: Color,
+    iconColor: Color
+) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth(0.93f)
-            .padding(start = 0.dp, end = 0.dp),
-        shape = RoundedCornerShape(14.dp),
-        color = containerColorCopy,
+        modifier = Modifier.fillMaxWidth(0.93f),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 6.dp, bottomEnd = 24.dp, bottomStart = 24.dp),
+        color = containerColor,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
     ) {
         Row(modifier = Modifier.padding(start = 15.dp, top = 6.dp, bottom = 6.dp)) {
             Icon(
                 imageVector = warningIcon,
                 contentDescription = null,
-                tint = iconColorCopy,
+                tint = iconColor,
                 modifier = Modifier.size(23.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = warning,
-                color = iconColorCopy,
-                fontWeight = FontWeight.W500,
+                color = iconColor,
+                fontWeight = FontWeight.W600,
                 fontSize = 17.sp
             )
         }
