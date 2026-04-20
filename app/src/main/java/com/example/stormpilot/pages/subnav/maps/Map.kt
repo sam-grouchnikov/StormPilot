@@ -34,7 +34,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Navigation
@@ -87,7 +87,6 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.maplibre.compose.camera.CameraPosition
@@ -125,8 +124,8 @@ fun MapsPage(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var navMode by remember { mutableStateOf(false) }
-    var userIsInteracting by remember { mutableStateOf(false) }
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var alertsRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -218,10 +217,9 @@ fun MapsPage(
         }
     }
 
-    LaunchedEffect(navMode, uiState.origin, uiState.currentStepIndex, uiState.steps) {
-        if (!navMode) return@LaunchedEffect
-        val origin = uiState.origin ?: return@LaunchedEffect
-        if (userIsInteracting) return@LaunchedEffect
+    suspend fun recenterNavigationCamera() {
+        if (!navMode) return
+        val origin = uiState.origin ?: return
         val currentStep = uiState.steps.getOrNull(uiState.currentStepIndex)
         val routeTarget =
             currentStep?.maneuverLocation
@@ -239,6 +237,12 @@ fun MapsPage(
         )
     }
 
+    LaunchedEffect(navMode) {
+        if (navMode) {
+            recenterNavigationCamera()
+        }
+    }
+
 
 
     suspend fun resetCam(cameraState: CameraState) {
@@ -253,20 +257,6 @@ fun MapsPage(
         )
     }
 
-    suspend fun flattenCam(cameraState: CameraState) {
-        cameraState.animateTo(
-            finalPosition = cameraState.position.copy(tilt = 0.0),
-            duration = 1.seconds,
-        )
-    }
-
-    suspend fun tiltCam(cameraState: CameraState) {
-        cameraState.animateTo(
-            finalPosition = cameraState.position.copy(tilt = 50.0),
-            duration = 1.seconds,
-        )
-    }
-
     LaunchedEffect(uiState.destination) {
         onDestinationSelectedStateChanged(uiState.destination != null)
     }
@@ -274,16 +264,25 @@ fun MapsPage(
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
     var showTripSummary by remember {mutableStateOf(false)}
+    var showRadarOverlay by remember { mutableStateOf(false) }
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
-    val severeAlertsSourceId = "severe-alerts-source"
-    val severeAlertsLayerId = "severe-alerts-overlay-layer"
-    val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.75f else 0f
+    val radarOverlayOpacity = if (showRadarOverlay) 0.75f else 0f
+    val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.85f else 0f
+
+    LaunchedEffect(showRadarOverlay) {
+        if (showRadarOverlay) {
+            while (true) {
+                delay(300_000L)
+                radarRefreshKey = System.currentTimeMillis()
+            }
+        }
+    }
 
     LaunchedEffect(showSevereAlertsOverlay) {
         if (showSevereAlertsOverlay) {
             while (true) {
                 delay(300_000L)
-                radarRefreshKey = System.currentTimeMillis()
+                alertsRefreshKey = System.currentTimeMillis()
             }
         }
     }
@@ -385,12 +384,22 @@ fun MapsPage(
                     width = const(5.dp),
                 )
 
-                val severeAlertsSource = rememberRasterSource(
+                val radarSource = rememberRasterSource(
                     tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?v=$radarRefreshKey"),
                     tileSize = 256,
                 )
                 RasterLayer(
-                    id = severeAlertsLayerId,
+                    id = "radar-overlay-layer",
+                    source = radarSource,
+                    opacity = const(radarOverlayOpacity),
+                )
+
+                val severeAlertsSource = rememberRasterSource(
+                    tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/watchwarn/{z}/{x}/{y}.png?v=$alertsRefreshKey"),
+                    tileSize = 256,
+                )
+                RasterLayer(
+                    id = "severe-alerts-overlay-layer",
                     source = severeAlertsSource,
                     opacity = const(severeAlertsOverlayOpacity),
                 )
@@ -439,13 +448,29 @@ fun MapsPage(
             }
             val scope = rememberCoroutineScope()
 
-            Box(
+
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = 16.dp, bottom = if (navMode) 240.dp else 120.dp)
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 16.dp, bottom = if (navMode) 240.dp else 120.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilledIconButton(
-                    modifier = Modifier.align(Alignment.BottomEnd),
+                    onClick = { showRadarOverlay = !showRadarOverlay },
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = if (showRadarOverlay) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Shield,
+                        contentDescription = "Toggle radar overlay",
+                        tint = if (showRadarOverlay) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+
+                FilledIconButton(
                     onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.primary
@@ -454,10 +479,53 @@ fun MapsPage(
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Warning,
-                        contentDescription = "Toggle radar",
+                        contentDescription = "Toggle severe weather alerts overlay",
                         tint = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.onPrimary
                         else MaterialTheme.colorScheme.onSurface,
                     )
+                }
+
+                if (navMode) {
+                    FilledIconButton(
+                        onClick = {
+                            scope.launch {
+                                val useTiltedView = cameraState.position.tilt < 25.0
+                                cameraState.animateTo(
+                                    finalPosition = cameraState.position.copy(
+                                        tilt = if (useTiltedView) 50.0 else 0.0,
+                                    ),
+                                    duration = 1.seconds,
+                                )
+                            }
+                        },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        ),
+                    ) {
+                        val useTiltedView = cameraState.position.tilt < 25.0
+                        Icon(
+                            imageVector = if (useTiltedView) Icons.Outlined.Navigation else Icons.Filled.Crop,
+                            contentDescription = if (useTiltedView) "Enable tilted view" else "Disable tilted view",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+
+                    FilledIconButton(
+                        onClick = {
+                            scope.launch {
+                                recenterNavigationCamera()
+                            }
+                        },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MyLocation,
+                            contentDescription = "Recenter navigation",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
 
@@ -474,56 +542,6 @@ fun MapsPage(
                         .align(Alignment.TopCenter)
                         .padding(top = 8.dp, start = 8.dp, end = 8.dp),
                 )
-
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 120.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                        FilledIconButton(
-                            onClick = {
-                                scope.launch {
-                                    cameraState.animateTo(
-                                        finalPosition = cameraState.position.copy(tilt = 0.0),
-                                        duration = 1.seconds,
-                                    )
-                                }
-                            },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            ),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Crop,
-                                contentDescription = "Flatten view",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-
-
-
-
-                    FilledIconButton(
-                        onClick = {
-                            scope.launch {
-                                cameraState.animateTo(
-                                    finalPosition = cameraState.position.copy(tilt = 50.0),
-                                    duration = 1.seconds,
-                                )
-                            }
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        ),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Navigation,
-                            contentDescription = "Tilt view",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
-                }
 
                 NavigationModeFooter(
                     remainingDistanceMeters = uiState.remainingDistanceMeters ?: uiState.distanceMeters,
