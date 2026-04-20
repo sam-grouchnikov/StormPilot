@@ -288,6 +288,7 @@ fun StormPilotTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        typography = StormPilotTypography,
         content = content
     )
 }
