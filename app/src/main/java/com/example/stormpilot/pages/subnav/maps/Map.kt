@@ -454,11 +454,7 @@ fun MapsPage(
                 SearchScaffold(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(
-                            top = if (active) 0.dp else 22.dp,
-                            start = if (active) 0.dp else 7.dp,
-                            end = if (active) 0.dp else 7.dp,
-                        ),
+                        .padding(top = 12.dp, start = 8.dp, end = 8.dp),
                     query = query,
                     active = active,
                     onQueryChange = { query = it },

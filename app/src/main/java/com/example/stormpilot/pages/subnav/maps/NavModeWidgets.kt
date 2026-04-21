@@ -1,10 +1,12 @@
 package com.example.stormpilot.pages.subnav.maps
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -95,51 +97,50 @@ fun SearchScaffold(
         },
         shape = SearchBarDefaults.inputFieldShape,
     ) {
-        Column(modifier = Modifier.padding(vertical = 10.dp)) {
-            AnimatedVisibility(
-                visible = active,
-                enter = fadeIn(animationSpec = tween(0)) + expandVertically(),
-                exit = fadeOut(),
+        AnimatedVisibility(
+            visible = active,
+            enter = fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                expandVertically(animationSpec = tween(260, easing = FastOutSlowInEasing)),
+            exit = fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
+                shrinkVertically(animationSpec = tween(180, easing = FastOutSlowInEasing)),
+        ) {
+            val recents = List(3) { index -> "Recent Location $index" }
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                val recents = List(3) { index -> "Recent Location $index" }
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(0.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    items(recents) { result ->
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = result,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                            },
-                            supportingContent = {
-                                Text(
-                                    text = "123 Street Name, City",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            },
-                            leadingContent = {
-                                Icon(
-                                    imageVector = Icons.Default.History,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onResultClick(result) },
-                        )
-                    }
+                items(recents) { result ->
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = result,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        },
+                        supportingContent = {
+                            Text(
+                                text = "123 Street Name, City",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onResultClick(result) },
+                    )
                 }
             }
         }
