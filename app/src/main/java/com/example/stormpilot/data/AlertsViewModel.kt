@@ -106,7 +106,6 @@ class AlertsViewModel @Inject constructor(
             locationRepository.location
                 .map { loc ->
                     loc?.let {
-                        // Truncate to 2 decimal places to avoid fetching on every tiny movement
                         Pair(
                             Math.round(it.latitude * 20) / 20.0,
                             Math.round(it.longitude * 20) / 20.0,
@@ -115,19 +114,21 @@ class AlertsViewModel @Inject constructor(
                 }
                 .distinctUntilChanged()
                 .collect { truncatedLocation ->
-                    truncatedLocation?.let { (lat, lon) ->
-                        fetchAlerts(lat, lon)
+                    truncatedLocation?.let { _ ->
+                        // Use the actual raw location, not the truncated one
+                        locationRepository.location.value?.let { loc ->
+                            fetchAlerts(loc.latitude, loc.longitude)
+                        }
                     }
                 }
         }
     }
 
 
-    // Also refresh every 5 minutes regardless of movement
     private fun startPeriodicRefresh() {
         viewModelScope.launch {
             while (true) {
-                delay(5 * 60 * 1000L)
+                delay(1 * 1 * 1000L)
                 locationRepository.location.value?.let { loc ->
                     fetchAlerts(loc.latitude, loc.longitude)
                 }

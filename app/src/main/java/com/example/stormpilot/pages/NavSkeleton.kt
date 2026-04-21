@@ -44,9 +44,9 @@ import com.example.stormpilot.pages.subnav.dashboard.RadarPage
 import com.example.stormpilot.pages.subnav.maps.MapsPage
 
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
-    data object Radar : TabDest("graphs", "Graphs", Icons.Outlined.Radar)
+    data object Radar : TabDest("graphs", "Dashboard", Icons.Outlined.Radar)
     data object Nav : TabDest("home", "Home", Icons.Outlined.LocationOn)
-    data object Settings : TabDest("terminal", "Terminal", Icons.Outlined.Settings)
+    data object Settings : TabDest("terminal", "Settings", Icons.Outlined.Settings)
 }
 
 @Composable
@@ -66,45 +66,31 @@ fun NavSkeleton() {
             containerColor = Color.Transparent,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .windowInsetsPadding(WindowInsets.navigationBars),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(topStart = 25.dp, topEnd = 25.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(84.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLowest
-                    ) {
-                        NavigationBar(
-                            containerColor = Color.Transparent,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        ) {
-                            tabs.forEach { tab ->
-                                val selected = currentRoute == tab.route
-                                NavigationBarItem(
-                                    selected = selected,
-                                    onClick = {
-                                        navController.navigate(tab.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
-                                            }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    },
-                                    icon = { Icon(tab.icon, contentDescription = tab.title) },
-                                    colors = NavigationBarItemDefaults.colors(
-                                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                        selectedIconColor = MaterialTheme.colorScheme.primary,
-                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                )
-                            }
-                        }
+                NavigationBar {
+                    tabs.forEach { tab ->
+                        val selected = currentRoute == tab.route
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(tab.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = { Icon(tab.icon, contentDescription = tab.title) },
+                            label = { Text(tab.title) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+
+                                unselectedIconColor = Color.Gray,
+                                unselectedTextColor = Color.Gray
+                            )
+                        )
                     }
                 }
             }

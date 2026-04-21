@@ -41,6 +41,7 @@ data class MapsUiState(
     val isLoadingRoute: Boolean = false,
     val routeError: String? = null,
     val address: String? = null,
+    val alertsGeoJson: GeoJsonData? = null,
 )
 
 /**
@@ -89,6 +90,35 @@ class MapsViewModel @Inject constructor(
             val minDistance = minDistanceMetersToPolyline(position, currentRoutePolyline)
             if (minDistance > OFF_ROUTE_THRESHOLD_METERS) {
                 scheduleReroute()
+            }
+        }
+    }
+
+    private val alertTypes = listOf("Tornado Warning", "Severe Thunderstorm Warning", "Flash Flood Warning")
+
+    init {
+        viewModelScope.launch {
+            while (true) {
+                fetchAlerts()
+                delay(300_000L)
+            }
+        }
+    }
+
+    private suspend fun fetchAlerts() {
+        withContext(Dispatchers.IO) {
+            try {
+                val where = alertTypes.joinToString(",") { "'$it'" }.let { "prod_type IN ($it)" }
+                val encoded = java.net.URLEncoder.encode(where, "UTF-8")
+                val url = java.net.URL(
+                    "https://mapservices.weather.noaa.gov/eventdriven/rest/services/WWA/watch_warn_adv/MapServer/1/query" +
+                            "?where=$encoded&outFields=prod_type&geometryType=esriGeometryPolygon" +
+                            "&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson"
+                )
+                val geojson = url.readText()
+                _uiState.value = _uiState.value.copy(alertsGeoJson = GeoJsonData.JsonString(geojson))
+            } catch (e: Exception) {
+                Log.e("Alerts", "Failed to fetch alerts: ${e.message}")
             }
         }
     }

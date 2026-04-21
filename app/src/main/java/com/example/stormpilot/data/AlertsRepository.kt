@@ -12,15 +12,15 @@ class AlertsRepository @Inject constructor(){
         return withContext(Dispatchers.IO) {
             try {
                 val url = "https://api.weather.gov/alerts/active?point=$latitude,$longitude"
-
                 val connection = URL(url).openConnection() as java.net.HttpURLConnection
-
                 connection.setRequestProperty("User-Agent", "(StormPilot, sam.grouchnikov@gmail.com)")
                 connection.setRequestProperty("Accept", "application/geo+json")
                 connection.connectTimeout = 10000
                 connection.readTimeout = 10000
 
-                val response = URL(url).readText()
+                val response = connection.inputStream.bufferedReader().readText() // use the same connection
+                connection.disconnect()
+
                 val json = JSONObject(response)
                 val features = json.getJSONArray("features")
 

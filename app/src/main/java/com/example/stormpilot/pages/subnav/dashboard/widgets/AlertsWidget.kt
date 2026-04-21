@@ -1,5 +1,6 @@
 package com.example.stormpilot.pages.subnav.dashboard.widgets
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -78,6 +79,8 @@ import com.example.stormpilot.viewmodel.AlertsViewModel
                 containerColor = if (tornadoActive) Color.Red else stateColors.disabledContainer,
                 iconColor = if (tornadoActive) Color.White else stateColors.disabledContents
             )
+
+            Log.v("Alerts", "Flood: $floodActive Storm: $stormActive Tornado: $tornadoActive")
 
             Spacer(modifier = Modifier.height(15.dp))
 

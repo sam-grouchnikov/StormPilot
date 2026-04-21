@@ -90,11 +90,20 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.maplibre.android.style.expressions.Expression.match
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.expressions.dsl.Case
+import org.maplibre.compose.expressions.dsl.Feature
+import org.maplibre.compose.expressions.dsl.Feature.get
+import org.maplibre.compose.expressions.dsl.asString
+import org.maplibre.compose.expressions.dsl.case
+import org.maplibre.compose.expressions.dsl.condition
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.layers.CircleLayer
+import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.layers.LineLayer
 import org.maplibre.compose.layers.RasterLayer
 import org.maplibre.compose.map.MapOptions
@@ -105,6 +114,9 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.sources.rememberRasterSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
+import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -406,15 +418,36 @@ fun MapsPage(
                     opacity = const(radarOverlayOpacity),
                 )
 
-                val severeAlertsSource = rememberRasterSource(
-                    tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/watchwarn/{z}/{x}/{y}.png?v=$alertsRefreshKey"),
-                    tileSize = 256,
+                val alertsSource = rememberGeoJsonSource(
+                    data = uiState.alertsGeoJson ?: GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
                 )
-                RasterLayer(
-                    id = "severe-alerts-overlay-layer",
-                    source = severeAlertsSource,
-                    opacity = const(severeAlertsOverlayOpacity),
-                )
+
+                if (showSevereAlertsOverlay) {
+                    FillLayer(
+                        id = "alerts-fill",
+                        source = alertsSource,
+                        color = switch(
+                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x00FF0000))),
+                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x00FFD700))),
+                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0x0000BB00))),
+                            fallback = const(Color.Transparent),
+                        ),
+                    )
+                    LineLayer(
+                        id = "alerts-outline",
+                        source = alertsSource,
+                        color = switch(
+                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x55FF0000))),
+                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x55FFD700))),
+                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(
+                                0x5500FF00
+                            )
+                            )),
+                            fallback = const(Color.Transparent),
+                        ),
+                        width = const(3.dp),
+                    )
+                }
             }
 
             if (!navMode) {
