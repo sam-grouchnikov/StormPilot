@@ -1,5 +1,10 @@
 package com.example.stormpilot.pages
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
@@ -23,7 +28,6 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -108,6 +112,30 @@ fun NavSkeleton() {
                 NavHost(
                     navController = navController,
                     startDestination = TabDest.Nav.route,
+                    enterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { it / 8 },
+                            animationSpec = tween(380)
+                        ) + fadeIn(animationSpec = tween(260))
+                    },
+                    exitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { -it / 10 },
+                            animationSpec = tween(260)
+                        ) + fadeOut(animationSpec = tween(180))
+                    },
+                    popEnterTransition = {
+                        slideInHorizontally(
+                            initialOffsetX = { -it / 8 },
+                            animationSpec = tween(340)
+                        ) + fadeIn(animationSpec = tween(220))
+                    },
+                    popExitTransition = {
+                        slideOutHorizontally(
+                            targetOffsetX = { it / 8 },
+                            animationSpec = tween(240)
+                        ) + fadeOut(animationSpec = tween(160))
+                    },
                     modifier = Modifier
                         .fillMaxSize()
                 ) {

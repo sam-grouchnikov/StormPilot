@@ -1,5 +1,8 @@
 package com.example.stormpilot.pages
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,12 +29,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
@@ -41,10 +46,17 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.compose.StormPilotTheme
+import kotlinx.coroutines.delay
 
 @Composable
 fun SignIn(onLogin: () -> Unit) {
     val isDarkMode = remember {mutableStateOf(true)}
+    val contentVisible = remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(70)
+        contentVisible.value = true
+    }
+
     StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -61,21 +73,24 @@ fun SignIn(onLogin: () -> Unit) {
                     text = "Welcome back!",
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 34.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.signInEntrance(contentVisible.value, 0)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "Log in to start chasing!",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 17.sp,
-                    fontWeight = FontWeight.W500
+                    fontWeight = FontWeight.W500,
+                    modifier = Modifier.signInEntrance(contentVisible.value, 1)
                 )
                 Spacer(modifier = Modifier.height(50.dp))
                 Text(
                     text = "Email",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.W600,
-                    fontSize = 17.sp
+                    fontSize = 17.sp,
+                    modifier = Modifier.signInEntrance(contentVisible.value, 2)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 var email by remember { mutableStateOf("") }
@@ -85,14 +100,16 @@ fun SignIn(onLogin: () -> Unit) {
                     onValueChange = { email = it },
                     icon = Icons.Outlined.Email,
                     placeholder = "example@domain.com",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.signInEntrance(contentVisible.value, 3)
                 )
                 Spacer(modifier = Modifier.height(25.dp))
                 Text(
                     text = "Password",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.W600,
-                    fontSize = 17.sp
+                    fontSize = 17.sp,
+                    modifier = Modifier.signInEntrance(contentVisible.value, 4)
                 )
                 Spacer(modifier = Modifier.height(15.dp))
                 LinedIconInputField(
@@ -100,12 +117,16 @@ fun SignIn(onLogin: () -> Unit) {
                     onValueChange = { password = it },
                     icon = Icons.Outlined.Lock,
                     placeholder = "123",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.signInEntrance(contentVisible.value, 5)
                 )
                 Spacer(modifier = Modifier.height(45.dp))
                 Button(
                     onClick = onLogin,
-                    modifier = Modifier.fillMaxWidth(1.0f).height(50.dp), // Button takes 80% width
+                    modifier = Modifier
+                        .fillMaxWidth(1.0f)
+                        .height(50.dp)
+                        .signInEntrance(contentVisible.value, 6), // Button takes 80% width
                     shape = RoundedCornerShape(35.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -120,6 +141,25 @@ fun SignIn(onLogin: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun Modifier.signInEntrance(visible: Boolean, index: Int): Modifier {
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(420, delayMillis = index * 55, easing = FastOutSlowInEasing),
+        label = "signin_alpha_$index"
+    )
+    val y by animateFloatAsState(
+        targetValue = if (visible) 0f else 20f,
+        animationSpec = tween(460, delayMillis = index * 55, easing = FastOutSlowInEasing),
+        label = "signin_y_$index"
+    )
+
+    return graphicsLayer {
+        this.alpha = alpha
+        translationY = y
     }
 }
 
