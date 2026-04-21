@@ -1,6 +1,12 @@
 package com.example.stormpilot.pages
 
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,9 +23,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Thunderstorm
-import androidx.compose.material.icons.rounded.Storm
-import androidx.compose.material.icons.rounded.Terminal
-import androidx.compose.material.icons.rounded.Thunderstorm
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,19 +30,40 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import com.example.compose.StormPilotTheme
 
 
 @Composable
 fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
     val isDarkMode = remember {mutableStateOf(true)}
+    val contentVisible = remember { mutableStateOf(false) }
+    val bobbingTransition = rememberInfiniteTransition(label = "welcome_logo_bobbing")
+    val logoOffset by bobbingTransition.animateFloat(
+        initialValue = -6f,
+        targetValue = 6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "logo_offset_animation"
+    )
+
+    LaunchedEffect(Unit) {
+        delay(80)
+        contentVisible.value = true
+    }
+
     StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -60,14 +84,17 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                         imageVector = Icons.Outlined.Thunderstorm,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(70.dp)
+                        modifier = Modifier
+                            .size(70.dp)
+                            .graphicsLayer { translationY = logoOffset }
                     )
                     Spacer(modifier = Modifier.width(20.dp))
                     Text(
                         text = "StormPilot",
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 45.sp
+                        fontSize = 45.sp,
+                        modifier = Modifier.staggeredEntrance(contentVisible.value, 0)
                     )
                 }
 
@@ -85,13 +112,17 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                         .fillMaxWidth()
                         .padding(horizontal = 63.dp)
                         .align(Alignment.Start)
+                        .staggeredEntrance(contentVisible.value, 1)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 Button(
                     onClick = onSignUpClick,
-                    modifier = Modifier.fillMaxWidth(0.81f).height(50.dp), // Button takes 80% width
+                    modifier = Modifier
+                        .fillMaxWidth(0.81f)
+                        .height(50.dp)
+                        .staggeredEntrance(contentVisible.value, 2), // Button takes 80% width
                     shape = RoundedCornerShape(35.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -110,7 +141,10 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
 
                 Button(
                     onClick = onSignInClick,
-                    modifier = Modifier.fillMaxWidth(0.81f).height(50.dp), // Button takes 80% width
+                    modifier = Modifier
+                        .fillMaxWidth(0.81f)
+                        .height(50.dp)
+                        .staggeredEntrance(contentVisible.value, 3), // Button takes 80% width
                     shape = RoundedCornerShape(35.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
@@ -125,5 +159,32 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun Modifier.staggeredEntrance(visible: Boolean, index: Int): Modifier {
+    val alpha by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 500,
+            delayMillis = 120 * index,
+            easing = FastOutSlowInEasing
+        ),
+        label = "welcome_alpha_$index"
+    )
+    val translation by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (visible) 0f else 34f,
+        animationSpec = tween(
+            durationMillis = 520,
+            delayMillis = 120 * index,
+            easing = FastOutSlowInEasing
+        ),
+        label = "welcome_translation_$index"
+    )
+
+    return this.graphicsLayer {
+        this.alpha = alpha
+        translationY = translation
     }
 }

@@ -7,8 +7,11 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -56,10 +59,30 @@ fun AppCenter() {
     NavHost(
         navController = navController,
         startDestination = "welcome",
-        enterTransition = { EnterTransition.None },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None }
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it / 5 },
+                animationSpec = tween(durationMillis = 550)
+            ) + fadeIn(animationSpec = tween(durationMillis = 500))
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -it / 6 },
+                animationSpec = tween(durationMillis = 500)
+            ) + fadeOut(animationSpec = tween(durationMillis = 300))
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -it / 5 },
+                animationSpec = tween(durationMillis = 500)
+            ) + fadeIn(animationSpec = tween(durationMillis = 450))
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it / 5 },
+                animationSpec = tween(durationMillis = 450)
+            ) + fadeOut(animationSpec = tween(durationMillis = 280))
+        }
     ) {
         composable("welcome") {
             WelcomePage(
