@@ -53,7 +53,11 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +69,7 @@ import androidx.compose.ui.unit.sp
 import com.example.stormpilot.pages.subnav.maps.routing.formatDistance
 import com.example.stormpilot.pages.subnav.maps.routing.formatDuration
 import com.example.stormpilot.pages.subnav.maps.viewmodel.MapsUiState
+import kotlinx.coroutines.delay
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -162,6 +167,17 @@ fun TripSummaryCard(
     modifier: Modifier = Modifier,
     warningCount: Int,
 ) {
+    var showIndicator by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.isLoadingRoute) {
+        if (state.isLoadingRoute) {
+            delay(500)
+            showIndicator = true
+        } else {
+            showIndicator = false
+        }
+    }
+
     if (state.address != null) {
         Card(
             modifier = modifier.fillMaxWidth(),
@@ -202,7 +218,7 @@ fun TripSummaryCard(
                 if (state.isLoadingRoute) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(end = 4.dp))
-                        Text("Loading route…")
+                        Text("")
                     }
                 }
 
@@ -343,6 +359,7 @@ fun NavigationModeFooter(
     modifier: Modifier = Modifier,
     onExitNavigation: () -> Unit,
 ) {
+
     if (remainingDistanceMeters == null || remainingDurationSeconds == null) return
     val eta = remember(remainingDurationSeconds) {
         val cal = java.util.Calendar.getInstance()

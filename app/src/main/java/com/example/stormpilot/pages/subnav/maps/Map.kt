@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -12,6 +13,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -294,6 +296,11 @@ fun MapsPage(
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
     val radarOverlayOpacity = if (showRadarOverlay) 0.75f else 0f
     val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.85f else 0f
+    val footerState = when {
+        navMode -> MapsFooterState.Navigation
+        showTripSummary -> MapsFooterState.Summary
+        else -> MapsFooterState.Hidden
+    }
 
     LaunchedEffect(showRadarOverlay) {
         if (showRadarOverlay) {
@@ -482,17 +489,45 @@ fun MapsPage(
                 showTripSummary = false
             }
 
-            if (showTripSummary && !navMode) {
-                TripSummaryCard(
-                    state = uiState,
-                    onRetry = viewModel::retryRoute,
-                    onDirectionsClick = { onDirClick() },
-                    onClearRoute = { onClose() },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(all = 0.dp),
-                    warningCount = 0,
-                )
-            }
             val scope = rememberCoroutineScope()
+
+            AnimatedContent(
+                targetState = footerState,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
+                            fadeOut(animationSpec = tween(durationMillis = 140))
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(all = 0.dp),
+                label = "maps_footer_transition",
+            ) { activeFooter ->
+                when (activeFooter) {
+                    MapsFooterState.Summary -> TripSummaryCard(
+                        state = uiState,
+                        onRetry = viewModel::retryRoute,
+                        onDirectionsClick = { onDirClick() },
+                        onClearRoute = { onClose() },
+                        modifier = Modifier.fillMaxWidth(),
+                        warningCount = 0,
+                    )
+
+                    MapsFooterState.Navigation -> NavigationModeFooter(
+                        remainingDistanceMeters = uiState.remainingDistanceMeters ?: uiState.distanceMeters,
+                        remainingDurationSeconds = uiState.remainingDurationSeconds ?: uiState.durationSeconds,
+                        modifier = Modifier.fillMaxWidth(),
+                        onExitNavigation = {
+                            navMode = false
+                            navigationCameraTrackingEnabled = false
+                            scope.launch {
+                                resetCam(cameraState)
+                            }
+                        },
+                    )
+
+                    MapsFooterState.Hidden -> Spacer(modifier = Modifier.height(0.dp))
+                }
+            }
 
             if (navMode) {
                 NavigationModeHeader(
@@ -507,21 +542,6 @@ fun MapsPage(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .padding(top = 8.dp, start = 8.dp, end = 8.dp),
-                )
-
-                NavigationModeFooter(
-                    remainingDistanceMeters = uiState.remainingDistanceMeters ?: uiState.distanceMeters,
-                    remainingDurationSeconds = uiState.remainingDurationSeconds ?: uiState.durationSeconds,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 0.dp, start = 0.dp, end = 0.dp),
-                    onExitNavigation = {
-                        navMode = false
-                        navigationCameraTrackingEnabled = false
-                        scope.launch {
-                            resetCam(cameraState)
-                        }
-                    },
                 )
             }
 
@@ -627,6 +647,12 @@ fun MapsPage(
             }
         }
     }
+}
+
+private enum class MapsFooterState {
+    Hidden,
+    Summary,
+    Navigation,
 }
 
 private fun navigationInstruction(uiState: MapsUiState): String {
