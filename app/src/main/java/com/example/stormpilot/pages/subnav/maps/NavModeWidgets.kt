@@ -79,7 +79,12 @@ fun SearchScaffold(
 ) {
         SearchBar(
 //            modifier = if (active) modifier else modifier.padding(start = 5.dp, end = 5.dp, top = 25.dp),
-            modifier = modifier,
+            modifier = if (!active) {
+                modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 2.dp).height(60.dp)
+            } else {
+                modifier
+            },
+            shape = RoundedCornerShape(30.dp),
             query = query,
             colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.inverseOnSurface),
             onQueryChange = onQueryChange,
@@ -96,7 +101,6 @@ fun SearchScaffold(
                     }
                 }
             },
-            shape = SearchBarDefaults.inputFieldShape,
         ) {
             AnimatedVisibility(
                 visible = active,
@@ -297,7 +301,7 @@ fun NavigationModeHeader(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 5.dp),
+            .padding(top = 5.dp, start = 2.dp, end = 2.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {

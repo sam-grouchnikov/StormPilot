@@ -9,6 +9,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -525,8 +528,8 @@ fun MapsPage(
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = if (navMode) 82.dp else 73.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(end = 9.dp, top = if (navMode) 82.dp else 82.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 FilledIconButton(
                     onClick = { showRadarOverlay = !showRadarOverlay },
@@ -558,56 +561,67 @@ fun MapsPage(
                     )
                 }
 
-                if (navMode) {
-                    // Tilt Toggle Button
-                    FilledIconButton(
-                        onClick = {
-                            is2dNavView = !is2dNavView
-                            // If tracking is off, we manually animate the tilt here.
-                            // If tracking is on, the LaunchedEffect will handle the tilt change on next update
-                            if (!navigationCameraTrackingEnabled) {
-                                scope.launch {
-                                    try {
-                                        isProgrammaticCameraUpdate = true
-                                        cameraState.animateTo(
-                                            finalPosition = cameraState.position.copy(
-                                                tilt = if (is2dNavView) 0.0 else 50.0,
-                                            ),
-                                            duration = 1.seconds,
-                                        )
-                                    } finally {
-                                        delay(50)
-                                        isProgrammaticCameraUpdate = false
+                AnimatedVisibility(
+                    visible = navMode,
+                    enter = fadeIn(tween(300)) + slideInHorizontally(
+                        initialOffsetX = { it }, // slides in from the right
+                        animationSpec = tween(300)
+                    ),
+                    exit = fadeOut(tween(200)) + slideOutHorizontally(
+                        targetOffsetX = { it }, // slides out to the right
+                        animationSpec = tween(200)
+                    ),
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        FilledIconButton(
+                            onClick = {
+                                is2dNavView = !is2dNavView
+                                // If tracking is off, we manually animate the tilt here.
+                                // If tracking is on, the LaunchedEffect will handle the tilt change on next update
+                                if (!navigationCameraTrackingEnabled) {
+                                    scope.launch {
+                                        try {
+                                            isProgrammaticCameraUpdate = true
+                                            cameraState.animateTo(
+                                                finalPosition = cameraState.position.copy(
+                                                    tilt = if (is2dNavView) 0.0 else 50.0,
+                                                ),
+                                                duration = 1.seconds,
+                                            )
+                                        } finally {
+                                            delay(50)
+                                            isProgrammaticCameraUpdate = false
+                                        }
                                     }
                                 }
-                            }
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        ),
-                    ) {
-                        Icon(
-                            imageVector = if (!is2dNavView) Icons.Outlined.Navigation else Icons.Filled.Crop,
-                            contentDescription = if (!is2dNavView) "Enable 2D view" else "Enable 3D view",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
-                    }
+                            },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.inverseOnSurface,
+                            ),
+                        ) {
+                            Icon(
+                                imageVector = if (!is2dNavView) Icons.Outlined.Navigation else Icons.Filled.Crop,
+                                contentDescription = if (!is2dNavView) "Enable 2D view" else "Enable 3D view",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
 
-                    // Recenter Button
-                    FilledIconButton(
-                        onClick = {
-                            navigationCameraTrackingEnabled = true
-                            is2dNavView = false // Standardizing return to Tilted 3D view
-                        },
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.inverseOnSurface,
-                        ),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.MyLocation,
-                            contentDescription = "Recenter navigation",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                        )
+                        // Recenter Button
+                        FilledIconButton(
+                            onClick = {
+                                navigationCameraTrackingEnabled = true
+                                is2dNavView = false // Standardizing return to Tilted 3D view
+                            },
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.inverseOnSurface,
+                            ),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.MyLocation,
+                                contentDescription = "Recenter navigation",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 }
             }
