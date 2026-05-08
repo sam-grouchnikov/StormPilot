@@ -77,75 +77,77 @@ fun SearchScaffold(
     onActiveChange: (Boolean) -> Unit,
     onResultClick: (String) -> Unit,
 ) {
-    SearchBar(
-        modifier = modifier,
-        query = query,
-        colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.inverseOnSurface),
-        onQueryChange = onQueryChange,
-        onSearch = { onActiveChange(false) },
-        windowInsets = WindowInsets(0, 0, 0, 0),
-        active = active,
-        onActiveChange = onActiveChange,
-        placeholder = { Text("Search here") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        trailingIcon = {
-            if (active) {
-                IconButton(onClick = { if (query.isNotEmpty()) onQueryChange("") else onActiveChange(false) }) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
+        SearchBar(
+//            modifier = if (active) modifier else modifier.padding(start = 5.dp, end = 5.dp, top = 25.dp),
+            modifier = modifier,
+            query = query,
+            colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.inverseOnSurface),
+            onQueryChange = onQueryChange,
+            onSearch = { onActiveChange(false) },
+            windowInsets = WindowInsets(0, 3, 0, 0),
+            active = active,
+            onActiveChange = onActiveChange,
+            placeholder = { Text("Search here") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = {
+                if (active) {
+                    IconButton(onClick = { if (query.isNotEmpty()) onQueryChange("") else onActiveChange(false) }) {
+                        Icon(Icons.Default.Close, contentDescription = "Close")
+                    }
                 }
-            }
-        },
-        shape = SearchBarDefaults.inputFieldShape,
-    ) {
-        AnimatedVisibility(
-            visible = active,
-            enter = fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                expandVertically(animationSpec = tween(260, easing = FastOutSlowInEasing)),
-            exit = fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
-                shrinkVertically(animationSpec = tween(180, easing = FastOutSlowInEasing)),
+            },
+            shape = SearchBarDefaults.inputFieldShape,
         ) {
-            val recents = List(3) { index -> "Recent Location $index" }
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+            AnimatedVisibility(
+                visible = active,
+                enter = fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                        expandVertically(animationSpec = tween(260, easing = FastOutSlowInEasing)),
+                exit = fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
+                        shrinkVertically(animationSpec = tween(180, easing = FastOutSlowInEasing)),
             ) {
-                items(recents) { result ->
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                text = result,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        },
-                        supportingContent = {
-                            Text(
-                                text = "123 Street Name, City",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onResultClick(result) },
-                    )
+                val recents = List(3) { index -> "Recent Location $index" }
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    items(recents) { result ->
+                        ListItem(
+                            headlineContent = {
+                                Text(
+                                    text = result,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            },
+                            supportingContent = {
+                                Text(
+                                    text = "123 Street Name, City",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            leadingContent = {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            },
+                            colors = ListItemDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onResultClick(result) },
+                        )
+                    }
                 }
             }
         }
     }
-}
+
 
 @Composable
 fun TripSummaryCard(
@@ -295,7 +297,7 @@ fun NavigationModeHeader(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 25.dp),
+            .padding(top = 5.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {

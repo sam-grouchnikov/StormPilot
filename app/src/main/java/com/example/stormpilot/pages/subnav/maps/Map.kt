@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -251,8 +252,6 @@ fun MapsPage(
                     duration = 1.seconds,
                 )
             } finally {
-                // If animation is cancelled by a user gesture (map drag), this finally block
-                // immediately runs, opening it up to set tracking to false on the next snapshot.
                 delay(50)
                 isProgrammaticCameraUpdate = false
             }
@@ -454,7 +453,7 @@ fun MapsPage(
                 SearchScaffold(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 12.dp, start = 8.dp, end = 8.dp),
+                        .padding(top = 0.dp, start = 0.dp, end = 0.dp),
                     query = query,
                     active = active,
                     onQueryChange = { query = it },
@@ -526,14 +525,14 @@ fun MapsPage(
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = 16.dp, top = if (navMode) 102.dp else 93.dp),
+                    .padding(end = 16.dp, top = if (navMode) 82.dp else 73.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilledIconButton(
                     onClick = { showRadarOverlay = !showRadarOverlay },
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = if (showRadarOverlay) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surfaceContainer,
+                        else MaterialTheme.colorScheme.inverseOnSurface,
                     ),
                 ) {
                     Icon(
@@ -548,11 +547,11 @@ fun MapsPage(
                     onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.surfaceContainer,
+                        else MaterialTheme.colorScheme.inverseOnSurface,
                     ),
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Warning,
+                        imageVector = Icons.Outlined.WarningAmber,
                         contentDescription = "Toggle severe weather alerts overlay",
                         tint = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.onPrimary
                         else MaterialTheme.colorScheme.onSurface,
@@ -584,7 +583,7 @@ fun MapsPage(
                             }
                         },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            containerColor = MaterialTheme.colorScheme.inverseOnSurface,
                         ),
                     ) {
                         Icon(
@@ -601,13 +600,13 @@ fun MapsPage(
                             is2dNavView = false // Standardizing return to Tilted 3D view
                         },
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            containerColor = MaterialTheme.colorScheme.inverseOnSurface,
                         ),
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MyLocation,
                             contentDescription = "Recenter navigation",
-                            tint = if (navigationCameraTrackingEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            tint = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }

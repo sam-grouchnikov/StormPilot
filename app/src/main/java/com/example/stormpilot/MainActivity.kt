@@ -39,10 +39,10 @@ class MainActivity : ComponentActivity() {
 
 // Hide the navigation bar
         windowInsetsController.hide(WindowInsetsCompat.Type.navigationBars())
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
-        )
+//        enableEdgeToEdge(
+//            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+//            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT)
+//        )
 
         setContent {
             StormPilotTheme(darkTheme = true) {

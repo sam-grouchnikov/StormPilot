@@ -259,6 +259,7 @@ val unspecified_scheme = ColorFamily(
 fun StormPilotTheme(
     darkTheme: Boolean = true,
     dynamicColor: Boolean = true,
+    isLoading: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -270,16 +271,19 @@ fun StormPilotTheme(
         else -> lightScheme
     }
 
-    // Logic to update System Bar Icon Colors
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             val controller = WindowCompat.getInsetsController(window, view)
 
-            // LIGHT MODE: Dark Icons (true)
-            // DARK MODE: White Icons (false)
             val useDarkIcons = !darkTheme
+
+            window.statusBarColor = if (isLoading) {
+                android.graphics.Color.GRAY
+            } else {
+                android.graphics.Color.DKGRAY
+            }
 
             controller.isAppearanceLightStatusBars = useDarkIcons
             controller.isAppearanceLightNavigationBars = useDarkIcons
