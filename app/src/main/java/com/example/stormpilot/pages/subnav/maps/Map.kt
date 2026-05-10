@@ -321,7 +321,7 @@ fun MapsPage(
 
     StormPilotTheme(
         darkTheme = true,
-        opaqueNavigationBar = navMode,
+        opaqueNavigationBar = true,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             MaplibreMap(

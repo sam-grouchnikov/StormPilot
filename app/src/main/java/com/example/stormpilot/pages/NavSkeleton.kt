@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -79,7 +80,7 @@ fun NavSkeleton() {
                     enter = fadeIn(animationSpec = tween(180)),
                     exit = fadeOut(animationSpec = tween(100)),
                 ) {
-                    NavigationBar {
+                    NavigationBar(modifier = Modifier.height(120.dp)) {
                         tabs.forEach { tab ->
                             val selected = currentRoute == tab.route
                             NavigationBarItem(

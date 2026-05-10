@@ -261,7 +261,7 @@ fun StormPilotTheme(
     darkTheme: Boolean = true,
     dynamicColor: Boolean = true,
     isLoading: Boolean = false,
-    opaqueNavigationBar: Boolean = false,
+    opaqueNavigationBar: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
