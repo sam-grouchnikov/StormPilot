@@ -82,80 +82,81 @@ fun SearchScaffold(
     onActiveChange: (Boolean) -> Unit,
     onResultClick: (String) -> Unit,
 ) {
-        SearchBar(
-//            modifier = if (active) modifier else modifier.padding(start = 5.dp, end = 5.dp, top = 25.dp),
-            modifier = if (!active) {
-                modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 2.dp).height(60.dp)
-            } else {
-                modifier
-            },
-            shape = RoundedCornerShape(30.dp),
-            query = query,
-            colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.inverseOnSurface),
-            onQueryChange = onQueryChange,
-            onSearch = { onActiveChange(false) },
-            windowInsets = WindowInsets(0, 3, 0, 0),
-            active = active,
-            onActiveChange = onActiveChange,
-            placeholder = { Text("Search here") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            trailingIcon = {
-                if (active) {
-                    IconButton(onClick = { if (query.isNotEmpty()) onQueryChange("") else onActiveChange(false) }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close")
-                    }
+    SearchBar(
+        modifier = if (!active) {
+            modifier
+                .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 2.dp)
+                .height(60.dp)
+        } else {
+            modifier
+        },
+        shape = RoundedCornerShape(30.dp),
+        query = query,
+        colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.inverseOnSurface),
+        onQueryChange = onQueryChange,
+        onSearch = { onActiveChange(false) },
+        windowInsets = WindowInsets(0, 0, 0, 0),
+        active = active,
+        onActiveChange = onActiveChange,
+        placeholder = { Text("Search here") },
+        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+        trailingIcon = {
+            if (active) {
+                IconButton(onClick = { if (query.isNotEmpty()) onQueryChange("") else onActiveChange(false) }) {
+                    Icon(Icons.Default.Close, contentDescription = "Close")
                 }
-            },
+            }
+        },
+    ) {
+        AnimatedVisibility(
+            visible = active,
+            enter = fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
+                expandVertically(animationSpec = tween(260, easing = FastOutSlowInEasing)),
+            exit = fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
+                shrinkVertically(animationSpec = tween(180, easing = FastOutSlowInEasing)),
         ) {
-            AnimatedVisibility(
-                visible = active,
-                enter = fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                        expandVertically(animationSpec = tween(260, easing = FastOutSlowInEasing)),
-                exit = fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
-                        shrinkVertically(animationSpec = tween(180, easing = FastOutSlowInEasing)),
+            val recents = List(3) { index -> "Recent Location $index" }
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                val recents = List(3) { index -> "Recent Location $index" }
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    items(recents) { result ->
-                        ListItem(
-                            headlineContent = {
-                                Text(
-                                    text = result,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                            },
-                            supportingContent = {
-                                Text(
-                                    text = "123 Street Name, City",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            },
-                            leadingContent = {
-                                Icon(
-                                    imageVector = Icons.Default.History,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                )
-                            },
-                            colors = ListItemDefaults.colors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable { onResultClick(result) },
-                        )
-                    }
+                items(recents) { result ->
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = result,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        },
+                        supportingContent = {
+                            Text(
+                                text = "123 Street Name, City",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable { onResultClick(result) },
+                    )
                 }
             }
         }
     }
+}
 
 
 @Composable

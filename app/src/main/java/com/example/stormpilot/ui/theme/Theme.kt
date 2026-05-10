@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -260,6 +261,7 @@ fun StormPilotTheme(
     darkTheme: Boolean = true,
     dynamicColor: Boolean = true,
     isLoading: Boolean = false,
+    opaqueNavigationBar: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -278,13 +280,17 @@ fun StormPilotTheme(
             val controller = WindowCompat.getInsetsController(window, view)
 
             val useDarkIcons = !darkTheme
-
-            window.statusBarColor = if (isLoading) {
-                android.graphics.Color.GRAY
+            val navigationBarColor = if (opaqueNavigationBar) {
+                colorScheme.surfaceContainerHigh.toArgb()
             } else {
-                android.graphics.Color.DKGRAY
+                android.graphics.Color.TRANSPARENT
             }
 
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            window.navigationBarColor = navigationBarColor
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
             controller.isAppearanceLightStatusBars = useDarkIcons
             controller.isAppearanceLightNavigationBars = useDarkIcons
         }

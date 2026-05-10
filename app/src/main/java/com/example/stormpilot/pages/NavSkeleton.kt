@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -59,6 +60,11 @@ fun NavSkeleton() {
     StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
         val navController = rememberNavController()
         val tabs = listOf(TabDest.Radar, TabDest.Nav, TabDest.Settings)
+        val mapContentInsets =
+            WindowInsets.safeDrawing
+                .only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal)
+                .union(WindowInsets.displayCutout)
+        val standardContentInsets = WindowInsets.safeDrawing.union(WindowInsets.displayCutout)
 
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = backStackEntry?.destination?.route
@@ -102,15 +108,20 @@ fun NavSkeleton() {
                     }
                 }
             }
-        ) {
-            Box(
-                modifier = Modifier
+        ) { innerPadding ->
+            val contentModifier = if (currentRoute == TabDest.Nav.route) {
+                Modifier
                     .fillMaxSize()
-                    .windowInsetsPadding(
-                        WindowInsets.safeDrawing
-                            .only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal)
-                            .union(WindowInsets.displayCutout)
-                    )
+                    .windowInsetsPadding(mapContentInsets)
+            } else {
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .windowInsetsPadding(standardContentInsets)
+            }
+
+            Box(
+                modifier = contentModifier
             ) {
                 NavHost(
                     navController = navController,

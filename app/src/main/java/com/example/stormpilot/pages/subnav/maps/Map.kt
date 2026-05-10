@@ -22,12 +22,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -120,8 +121,6 @@ import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.sources.rememberRasterSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
-import org.maplibre.compose.expressions.dsl.switch
-import org.maplibre.compose.expressions.dsl.const
 import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
@@ -320,17 +319,20 @@ fun MapsPage(
         }
     }
 
-    StormPilotTheme(darkTheme = true) {
+    StormPilotTheme(
+        darkTheme = true,
+        opaqueNavigationBar = navMode,
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             MaplibreMap(
-                baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/dark/en.json?key=64a5f0a9c35b4ca1"),
+                baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/black/en.json?key=64a5f0a9c35b4ca1"),
                 cameraState = cameraState,
                 onMapLongClick = { point, _ ->
                     showTripSummary = true
                     viewModel.onDestinationSelected(point)
                     ClickResult.Consume
                 },
-                modifier = Modifier.padding(vertical = 0.dp, horizontal = 0.dp),
+                modifier = Modifier.fillMaxSize(),
                 options = MapOptions(
                     ornamentOptions = OrnamentOptions(
                         padding = PaddingValues(0.dp),
@@ -463,7 +465,7 @@ fun MapsPage(
                 SearchScaffold(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 0.dp, start = 0.dp, end = 0.dp),
+                        .statusBarsPadding(),
                     query = query,
                     active = active,
                     onQueryChange = { query = it },
@@ -499,7 +501,7 @@ fun MapsPage(
                 },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(all = 0.dp),
+                    .navigationBarsPadding(),
                 label = "maps_footer_transition",
             ) { activeFooter ->
                 when (activeFooter) {
@@ -541,6 +543,7 @@ fun MapsPage(
                     },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
+                        .statusBarsPadding()
                         .padding(top = 8.dp, start = 8.dp, end = 8.dp),
                 )
             }
@@ -548,7 +551,8 @@ fun MapsPage(
             Column(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(end = 9.dp, top = if (navMode) 82.dp else 82.dp),
+                    .statusBarsPadding()
+                    .padding(end = 9.dp, top = 82.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 FilledIconButton(
