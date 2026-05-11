@@ -10,16 +10,23 @@ import com.example.stormpilot.pages.subnav.maps.routing.RoutingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import javax.inject.Inject
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.spatialk.geojson.Position
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLEncoder
 import java.util.Locale
 import kotlin.math.*
 
@@ -42,6 +49,8 @@ data class MapsUiState(
     val routeError: String? = null,
     val address: String? = null,
     val alertsGeoJson: GeoJsonData? = null,
+    val routeWarningCount: Int? = null,
+    val routeWarningError: String? = null,
 )
 
 /**
@@ -70,6 +79,8 @@ class MapsViewModel @Inject constructor(
 
     private var currentRoutePolyline: List<Position> = emptyList()
     private var rerouteDebounceJob: Job? = null
+    private var routeWarningsJob: Job? = null
+    private var latestAlertsGeoJson: String? = null
 
     fun onUserLocationUpdated(position: Position) {
         val updatedState = _uiState.value.copy(origin = position)
@@ -106,20 +117,40 @@ class MapsViewModel @Inject constructor(
     }
 
     private suspend fun fetchAlerts() {
-        withContext(Dispatchers.IO) {
-            try {
-                val where = alertTypes.joinToString(",") { "'$it'" }.let { "prod_type IN ($it)" }
-                val encoded = java.net.URLEncoder.encode(where, "UTF-8")
-                val url = java.net.URL(
-                    "https://mapservices.weather.noaa.gov/eventdriven/rest/services/WWA/watch_warn_adv/MapServer/1/query" +
-                            "?where=$encoded&outFields=prod_type&geometryType=esriGeometryPolygon" +
-                            "&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson"
-                )
-                val geojson = url.readText()
-                _uiState.value = _uiState.value.copy(alertsGeoJson = GeoJsonData.JsonString(geojson))
-            } catch (e: Exception) {
-                Log.e("Alerts", "Failed to fetch alerts: ${e.message}")
-            }
+        try {
+            val geojson = fetchAlertsGeoJson()
+            latestAlertsGeoJson = geojson
+            _uiState.update { it.copy(alertsGeoJson = GeoJsonData.JsonString(geojson)) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e("Alerts", "Failed to fetch alerts: ${e.message}")
+        }
+    }
+
+    private suspend fun fetchAlertsGeoJson(): String = withContext(Dispatchers.IO) {
+        val where = alertTypes.joinToString(",") { "'$it'" }.let { "prod_type IN ($it)" }
+        val encoded = URLEncoder.encode(where, "UTF-8")
+        val url = URL(
+            "https://mapservices.weather.noaa.gov/eventdriven/rest/services/WWA/watch_warn_adv/MapServer/1/query" +
+                    "?where=$encoded&outFields=prod_type&geometryType=esriGeometryPolygon" +
+                    "&spatialRel=esriSpatialRelIntersects&outSR=4326&f=geojson"
+        )
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 10_000
+            readTimeout = 10_000
+            setRequestProperty("Accept", "application/geo+json")
+        }
+
+        try {
+            val responseCode = connection.responseCode
+            val stream = if (responseCode in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            check(responseCode in 200..299) { "Alerts request failed with HTTP $responseCode: $body" }
+            body
+        } finally {
+            connection.disconnect()
         }
     }
 
@@ -135,13 +166,16 @@ class MapsViewModel @Inject constructor(
             currentStepIndex = 0,
             routeError = null,
             isLoadingRoute = false,
-            address = "Locating..."
+            address = "Locating...",
+            routeWarningCount = null,
+            routeWarningError = null,
         )
         currentRoutePolyline = emptyList()
+        routeWarningsJob?.cancel()
 
         viewModelScope.launch {
             val result = fetchAddress(position)
-            _uiState.value = _uiState.value.copy(address = result)
+            _uiState.update { it.copy(address = result) }
         }
 
         requestRoute()
@@ -157,6 +191,7 @@ class MapsViewModel @Inject constructor(
 
     fun clearRoute() {
         currentRoutePolyline = emptyList()
+        routeWarningsJob?.cancel()
         _uiState.value = _uiState.value.copy(
             destination = null,
             routeGeoJson = null,
@@ -171,6 +206,8 @@ class MapsViewModel @Inject constructor(
             routeError = null,
             isLoadingRoute = false,
             address = null,
+            routeWarningCount = null,
+            routeWarningError = null,
         )
     }
 
@@ -190,7 +227,13 @@ class MapsViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d("Routing", "Starting route request")
             val start = System.currentTimeMillis()
-            _uiState.value = _uiState.value.copy(isLoadingRoute = true, routeError = null)
+            routeWarningsJob?.cancel()
+            _uiState.value = _uiState.value.copy(
+                isLoadingRoute = true,
+                routeError = null,
+                routeWarningCount = null,
+                routeWarningError = null,
+            )
             routingRepository.fetchRoute(origin, destination)
                 .onSuccess { route ->
                     currentRoutePolyline = route.polyline
@@ -209,16 +252,68 @@ class MapsViewModel @Inject constructor(
                         currentStepIndex = 0,
                         isLoadingRoute = false,
                         routeError = null,
+                        routeWarningCount = null,
+                        routeWarningError = null,
                     )
+                    checkRouteWarnings(route.polyline)
                 }
                 .onFailure { error ->
+                    routeWarningsJob?.cancel()
                     _uiState.value = _uiState.value.copy(
                         isLoadingRoute = false,
                         routeError = error.message ?: "Failed to fetch route",
+                        routeWarningCount = null,
+                        routeWarningError = null,
                     )
                 }
             Log.d("Routing", "Route finished in ${System.currentTimeMillis() - start}ms")
 
+        }
+    }
+
+    private fun checkRouteWarnings(routePolyline: List<Position>) {
+        routeWarningsJob?.cancel()
+        routeWarningsJob = viewModelScope.launch {
+            if (routePolyline.size < 2) {
+                _uiState.update { it.copy(routeWarningCount = 0, routeWarningError = null) }
+                return@launch
+            }
+
+            _uiState.update { it.copy(routeWarningCount = null, routeWarningError = null) }
+
+            val alertsGeoJson = try {
+                fetchAlertsGeoJson().also { geojson ->
+                    latestAlertsGeoJson = geojson
+                    _uiState.update { it.copy(alertsGeoJson = GeoJsonData.JsonString(geojson)) }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e("RouteWarnings", "Failed to fetch route warnings: ${e.message}")
+                latestAlertsGeoJson
+            }
+
+            if (alertsGeoJson == null) {
+                _uiState.update {
+                    it.copy(
+                        routeWarningCount = null,
+                        routeWarningError = "Warnings unavailable",
+                    )
+                }
+                return@launch
+            }
+
+            val warningCount = withContext(Dispatchers.Default) {
+                RouteWarningCounter.countWarningsIntersectingRoute(alertsGeoJson, routePolyline)
+            }
+            currentCoroutineContext().ensureActive()
+
+            _uiState.update {
+                it.copy(
+                    routeWarningCount = warningCount,
+                    routeWarningError = null,
+                )
+            }
         }
     }
 

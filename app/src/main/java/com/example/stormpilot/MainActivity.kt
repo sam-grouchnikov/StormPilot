@@ -27,18 +27,19 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-
         super.onCreate(savedInstanceState)
+
+        val semiTransparentScrim = android.graphics.Color.argb(0x90, 0x1b, 0x1b, 0x1b)
+
         enableEdgeToEdge(
+            // This still handles icon colors (light/dark text) appropriately
             statusBarStyle = SystemBarStyle.auto(
                 lightScrim = Color.TRANSPARENT,
-                darkScrim = Color.TRANSPARENT,
-            ),
-            navigationBarStyle = SystemBarStyle.auto(
-                lightScrim = Color.TRANSPARENT,
-                darkScrim = Color.GRAY,
-            ),
+                darkScrim = Color.TRANSPARENT
+            )
         )
+
+        window.statusBarColor = semiTransparentScrim
 
         setContent {
             StormPilotTheme(darkTheme = true) {

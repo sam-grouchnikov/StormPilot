@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Radar
@@ -34,6 +35,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -80,7 +82,12 @@ fun NavSkeleton() {
                     enter = fadeIn(animationSpec = tween(180)),
                     exit = fadeOut(animationSpec = tween(100)),
                 ) {
-                    NavigationBar(modifier = Modifier.height(120.dp)) {
+                    NavigationBar(
+                        modifier = Modifier
+                            .height(125.dp)
+                            .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ) {
                         tabs.forEach { tab ->
                             val selected = currentRoute == tab.route
                             NavigationBarItem(

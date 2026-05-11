@@ -64,16 +64,20 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
         contentVisible.value = true
     }
 
-    StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
+    StormPilotTheme(
+        darkTheme = isDarkMode.value,
+        dynamicColor = false,
+        useSurfaceContainerNavigationBar = true
+    ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surfaceContainerLow
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(bottom = 65.dp, top = 200.dp),
+                    .padding(bottom = 100.dp, top = 160.dp),
                 // 1. Centers everything vertically
                 verticalArrangement = Arrangement.Center,
                 // 2. Centers everything horizontally

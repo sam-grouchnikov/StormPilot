@@ -262,6 +262,7 @@ fun StormPilotTheme(
     dynamicColor: Boolean = true,
     isLoading: Boolean = false,
     opaqueNavigationBar: Boolean = true,
+    useSurfaceContainerNavigationBar: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -280,8 +281,13 @@ fun StormPilotTheme(
             val controller = WindowCompat.getInsetsController(window, view)
 
             val useDarkIcons = !darkTheme
+            val navigationBarSurfaceColor = if (useSurfaceContainerNavigationBar) {
+                colorScheme.surfaceContainer
+            } else {
+                colorScheme.surfaceContainerHigh
+            }
             val navigationBarColor = if (opaqueNavigationBar) {
-                colorScheme.surfaceContainerHigh.toArgb()
+                navigationBarSurfaceColor.toArgb()
             } else {
                 android.graphics.Color.TRANSPARENT
             }

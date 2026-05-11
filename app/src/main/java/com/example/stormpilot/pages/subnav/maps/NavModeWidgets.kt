@@ -1,30 +1,41 @@
 package com.example.stormpilot.pages.subnav.maps
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.History
@@ -49,8 +60,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,14 +72,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.pages.subnav.maps.routing.formatDistance
 import com.example.stormpilot.pages.subnav.maps.routing.formatDuration
 import com.example.stormpilot.pages.subnav.maps.viewmodel.MapsUiState
 import kotlinx.coroutines.delay
+import com.example.stormpilot.ui.theme.ExtendedColors
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -81,82 +101,216 @@ fun SearchScaffold(
     onQueryChange: (String) -> Unit,
     onActiveChange: (Boolean) -> Unit,
     onResultClick: (String) -> Unit,
+    containerColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
 ) {
-    SearchBar(
-        modifier = if (!active) {
-            modifier
-                .padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 2.dp)
-                .height(60.dp)
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+    val density = LocalDensity.current
+    val statusBarTopPadding = with(density) { WindowInsets.statusBars.getTop(this).toDp() }
+    val surfaceTopPadding by animateDpAsState(
+        targetValue = if (active) 0.dp else statusBarTopPadding + 6.dp,
+        animationSpec = tween(SearchTransitionDurationMillis, easing = FastOutSlowInEasing),
+        label = "maps_search_top_padding",
+    )
+    val surfaceHorizontalPadding by animateDpAsState(
+        targetValue = if (active) 0.dp else 8.dp,
+        animationSpec = tween(SearchTransitionDurationMillis, easing = FastOutSlowInEasing),
+        label = "maps_search_horizontal_padding",
+    )
+    val cornerRadius by animateDpAsState(
+        targetValue = if (active) 0.dp else 30.dp,
+        animationSpec = tween(SearchTransitionDurationMillis, easing = FastOutSlowInEasing),
+        label = "maps_search_corner_radius",
+    )
+    val shadowElevation by animateDpAsState(
+        targetValue = if (active) 0.dp else 8.dp,
+        animationSpec = tween(SearchTransitionDurationMillis, easing = FastOutSlowInEasing),
+        label = "maps_search_elevation",
+    )
+
+    LaunchedEffect(active) {
+        if (active) {
+            focusRequester.requestFocus()
         } else {
-            modifier
-        },
-        shape = RoundedCornerShape(30.dp),
-        query = query,
-        colors = SearchBarDefaults.colors(containerColor = MaterialTheme.colorScheme.inverseOnSurface),
-        onQueryChange = onQueryChange,
-        onSearch = { onActiveChange(false) },
-        windowInsets = WindowInsets(0, 0, 0, 0),
-        active = active,
-        onActiveChange = onActiveChange,
-        placeholder = { Text("Search here") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        trailingIcon = {
-            if (active) {
-                IconButton(onClick = { if (query.isNotEmpty()) onQueryChange("") else onActiveChange(false) }) {
-                    Icon(Icons.Default.Close, contentDescription = "Close")
-                }
-            }
-        },
-    ) {
-        AnimatedVisibility(
-            visible = active,
-            enter = fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) +
-                expandVertically(animationSpec = tween(260, easing = FastOutSlowInEasing)),
-            exit = fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
-                shrinkVertically(animationSpec = tween(180, easing = FastOutSlowInEasing)),
+            focusManager.clearFocus()
+        }
+    }
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val surfaceHeight by animateDpAsState(
+            targetValue = if (active) maxHeight else 60.dp,
+            animationSpec = tween(SearchTransitionDurationMillis, easing = FastOutSlowInEasing),
+            label = "maps_search_height",
+        )
+
+        Surface(
+            modifier = Modifier
+                .padding(
+                    start = surfaceHorizontalPadding,
+                    end = surfaceHorizontalPadding,
+                    top = surfaceTopPadding,
+                )
+                .fillMaxWidth()
+                .height(surfaceHeight),
+            shape = RoundedCornerShape(cornerRadius),
+            color = containerColor,
+            shadowElevation = shadowElevation,
         ) {
-            val recents = List(3) { index -> "Recent Location $index" }
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                items(recents) { result ->
-                    ListItem(
-                        headlineContent = {
-                            Text(
-                                text = result,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                AnimatedVisibility(
+                    visible = active,
+                    enter = expandVertically(animationSpec = tween(240, easing = FastOutSlowInEasing)),
+                    exit = shrinkVertically(animationSpec = tween(160, easing = FastOutSlowInEasing)),
+                ) {
+                    Spacer(modifier = Modifier.height(statusBarTopPadding))
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .clickable(enabled = !active) { onActiveChange(true) }
+                        .padding(start = 4.dp, end = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(
+                        onClick = {
+                            if (active) {
+                                onActiveChange(false)
+                            } else {
+                                onActiveChange(true)
+                            }
                         },
-                        supportingContent = {
-                            Text(
-                                text = "123 Street Name, City",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        },
-                        leadingContent = {
-                            Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        },
-                        colors = ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    ) {
+                        Icon(
+                            imageVector = if (active) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Search,
+                            contentDescription = if (active) "Close search" else "Open search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    BasicTextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        singleLine = true,
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                        ),
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                onActiveChange(false)
+                                focusManager.clearFocus()
+                            },
                         ),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onResultClick(result) },
+                            .weight(1f)
+                            .focusRequester(focusRequester)
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused && !active) {
+                                    onActiveChange(true)
+                                }
+                            },
+                        decorationBox = { innerTextField ->
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (query.isEmpty()) {
+                                    Text(
+                                        text = "Search here",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        },
                     )
+
+                    AnimatedVisibility(
+                        visible = active,
+                        enter = fadeIn(animationSpec = tween(140, delayMillis = 90)),
+                        exit = fadeOut(animationSpec = tween(90)),
+                    ) {
+                        IconButton(
+                            onClick = {
+                                if (query.isNotEmpty()) {
+                                    onQueryChange("")
+                                } else {
+                                    onActiveChange(false)
+                                }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Clear search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = active,
+                    modifier = Modifier.weight(1f),
+                    enter = fadeIn(animationSpec = tween(180, delayMillis = 140, easing = FastOutSlowInEasing)) +
+                        slideInVertically(
+                            initialOffsetY = { it / 8 },
+                            animationSpec = tween(260, delayMillis = 90, easing = FastOutSlowInEasing),
+                        ),
+                    exit = fadeOut(animationSpec = tween(90, easing = FastOutSlowInEasing)) +
+                        shrinkVertically(animationSpec = tween(150, easing = FastOutSlowInEasing)),
+                ) {
+                    val recents = List(3) { index -> "Recent Location ${index + 1}" }
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .navigationBarsPadding(),
+                        contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp, bottom = 18.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        items(recents) { result ->
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        text = result,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                },
+                                supportingContent = {
+                                    Text(
+                                        text = "123 Street Name, City",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                },
+                                leadingContent = {
+                                    Icon(
+                                        imageVector = Icons.Default.History,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        focusManager.clearFocus()
+                                        onResultClick(result)
+                                    },
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
+
+private const val SearchTransitionDurationMillis = 420
 
 
 @Composable
@@ -166,7 +320,6 @@ fun TripSummaryCard(
     onDirectionsClick: () -> Unit,
     onClearRoute: () -> Unit,
     modifier: Modifier = Modifier,
-    warningCount: Int,
 ) {
     var showIndicator by remember { mutableStateOf(false) }
 
@@ -188,23 +341,26 @@ fun TripSummaryCard(
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!state.isLoadingRoute) {
                     Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(
                             text = state.address,
+                            modifier = Modifier.weight(1f),
                             fontSize = 23.sp,
                             fontWeight = FontWeight.Medium,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
                         )
 
                         FilledIconButton(
                             onClick = { onClearRoute() },
                             colors = IconButtonDefaults.filledIconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                contentColor = Color.White
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             ),
-                            modifier = Modifier.size(30.dp),
+                            modifier = Modifier.size(36.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
@@ -287,18 +443,41 @@ fun TripSummaryCard(
                         )
 
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (warningCount == 0) Icons.Outlined.Check else Icons.Outlined.Warning,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
-                            )
+                            val warningCount = state.routeWarningCount
+                            val warningError = state.routeWarningError
+                            val warningColor = when {
+                                warningError != null -> MaterialTheme.colorScheme.onSurfaceVariant
+                                warningCount == null -> MaterialTheme.colorScheme.onSurfaceVariant
+                                warningCount == 0 -> Color(0xFF6CBE6C)
+                                else -> Color(0xFFBE746C)
+                            }
+
+                            if (warningCount == null && warningError == null) {
+                                CircularProgressIndicator(
+                                    strokeWidth = 2.dp,
+                                    modifier = Modifier.size(20.dp),
+                                    color = warningColor,
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = if (warningCount == 0) Icons.Outlined.Check else Icons.Outlined.Warning,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = warningColor,
+                                )
+                            }
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (warningCount == 0) "No warnings en route" else "$warningCount warning(s) en route",
+                                text = when {
+                                    warningError != null -> warningError
+                                    warningCount == null -> "Checking warnings en route"
+                                    warningCount == 0 -> "No warnings en route"
+                                    warningCount == 1 -> "1 warning en route"
+                                    else -> "$warningCount warnings en route"
+                                },
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = if (warningCount == 0) Color(0xFF6CBE6C) else Color(0xFFBE746C),
+                                color = warningColor,
                             )
                         }
                     }
@@ -318,7 +497,7 @@ fun NavigationModeHeader(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 5.dp, start = 2.dp, end = 2.dp),
+            .padding(top = 0.dp, start = 2.dp, end = 2.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
     ) {
@@ -416,13 +595,14 @@ fun NavigationModeFooter(
                 }
 
             }
+            val colors = ExtendedColors()
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = onExitNavigation,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    containerColor = colors.exitContainer,
+                    contentColor = colors.exitText
                 )
             ) {
                 Text(

@@ -1,6 +1,7 @@
 package com.example.stormpilot.pages.subnav.maps
 
 import android.Manifest
+import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,6 +15,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -22,18 +24,22 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -66,6 +72,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -76,8 +83,11 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -122,6 +132,7 @@ import org.maplibre.compose.sources.rememberRasterSource
 import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.compose.expressions.dsl.eq
+import org.maplibre.compose.expressions.value.RasterResampling
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -130,6 +141,7 @@ import kotlin.math.log
 import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -323,6 +335,8 @@ fun MapsPage(
         darkTheme = true,
         opaqueNavigationBar = true,
     ) {
+        val searchContainerColor = MaterialTheme.colorScheme.inverseOnSurface
+
         Box(modifier = Modifier.fillMaxSize()) {
             MaplibreMap(
                 baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/black/en.json?key=64a5f0a9c35b4ca1"),
@@ -427,6 +441,8 @@ fun MapsPage(
                     id = "radar-overlay-layer",
                     source = radarSource,
                     opacity = const(radarOverlayOpacity),
+                    resampling = const(RasterResampling.Linear),
+                    fadeDuration = const(RADAR_TILE_FADE_DURATION),
                 )
 
                 val alertsSource = rememberGeoJsonSource(
@@ -448,34 +464,30 @@ fun MapsPage(
                         id = "alerts-outline",
                         source = alertsSource,
                         color = switch(
-                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x55FF0000))),
-                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x55FFD700))),
+                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(
+                                0x80FF0000
+                            )
+                            )),
+                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(
+                                0xFFFF8400
+                            )
+                            )),
                             condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(
-                                0x5500FF00
+                                0x8000FF00
                             )
                             )),
                             fallback = const(Color.Transparent),
                         ),
-                        width = const(3.dp),
+                        width = const(2.dp),
                     )
                 }
             }
 
-            if (!navMode) {
-                SearchScaffold(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .statusBarsPadding(),
-                    query = query,
-                    active = active,
-                    onQueryChange = { query = it },
-                    onActiveChange = { active = it },
-                    onResultClick = { selected ->
-                        query = selected
-                        active = false
-                    },
-                )
-            }
+            SearchStatusBarBackground(
+                active = active && !navMode,
+                color = searchContainerColor,
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
 
             fun onDirClick() {
                 viewModel.requestDirections()
@@ -484,6 +496,10 @@ fun MapsPage(
                 navigationCameraTrackingEnabled = true
             }
 
+
+
+            val scope = rememberCoroutineScope()
+
             fun onClose() {
                 viewModel.clearRoute()
                 navMode = false
@@ -491,7 +507,7 @@ fun MapsPage(
                 showTripSummary = false
             }
 
-            val scope = rememberCoroutineScope()
+
 
             AnimatedContent(
                 targetState = footerState,
@@ -511,7 +527,6 @@ fun MapsPage(
                         onDirectionsClick = { onDirClick() },
                         onClearRoute = { onClose() },
                         modifier = Modifier.fillMaxWidth(),
-                        warningCount = 0,
                     )
 
                     MapsFooterState.Navigation -> NavigationModeFooter(
@@ -548,106 +563,129 @@ fun MapsPage(
                 )
             }
 
-            Column(
+            AnimatedVisibility(
+                visible = !active,
+                enter = fadeIn(tween(220)),
+                exit = fadeOut(tween(120)),
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .statusBarsPadding()
-                    .padding(end = 9.dp, top = 82.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                    .padding(end = 9.dp, top = 74.dp),
             ) {
-                FilledIconButton(
-                    onClick = { showRadarOverlay = !showRadarOverlay },
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (showRadarOverlay) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.inverseOnSurface,
-                    ),
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Shield,
-                        contentDescription = "Toggle radar overlay",
-                        tint = if (showRadarOverlay) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface,
-                    )
-                }
+                    FilledIconButton(
+                        onClick = { showRadarOverlay = !showRadarOverlay },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = if (showRadarOverlay) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.inverseOnSurface,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Shield,
+                            contentDescription = "Toggle radar overlay",
+                            tint = if (showRadarOverlay) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
 
-                FilledIconButton(
-                    onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.inverseOnSurface,
-                    ),
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.WarningAmber,
-                        contentDescription = "Toggle severe weather alerts overlay",
-                        tint = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface,
-                    )
-                }
+                    FilledIconButton(
+                        onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.inverseOnSurface,
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.WarningAmber,
+                            contentDescription = "Toggle severe weather alerts overlay",
+                            tint = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
 
-                AnimatedVisibility(
-                    visible = navMode,
-                    enter = fadeIn(tween(300)) + slideInHorizontally(
-                        initialOffsetX = { it }, // slides in from the right
-                        animationSpec = tween(300)
-                    ),
-                    exit = fadeOut(tween(200)) + slideOutHorizontally(
-                        targetOffsetX = { it }, // slides out to the right
-                        animationSpec = tween(200)
-                    ),
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        FilledIconButton(
-                            onClick = {
-                                is2dNavView = !is2dNavView
-                                // If tracking is off, we manually animate the tilt here.
-                                // If tracking is on, the LaunchedEffect will handle the tilt change on next update
-                                if (!navigationCameraTrackingEnabled) {
-                                    scope.launch {
-                                        try {
-                                            isProgrammaticCameraUpdate = true
-                                            cameraState.animateTo(
-                                                finalPosition = cameraState.position.copy(
-                                                    tilt = if (is2dNavView) 0.0 else 50.0,
-                                                ),
-                                                duration = 1.seconds,
-                                            )
-                                        } finally {
-                                            delay(50)
-                                            isProgrammaticCameraUpdate = false
+                    AnimatedVisibility(
+                        visible = navMode,
+                        enter = fadeIn(tween(300)) + slideInHorizontally(
+                            initialOffsetX = { it }, // slides in from the right
+                            animationSpec = tween(300)
+                        ),
+                        exit = fadeOut(tween(200)) + slideOutHorizontally(
+                            targetOffsetX = { it }, // slides out to the right
+                            animationSpec = tween(200)
+                        ),
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FilledIconButton(
+                                onClick = {
+                                    is2dNavView = !is2dNavView
+                                    // If tracking is off, we manually animate the tilt here.
+                                    // If tracking is on, the LaunchedEffect will handle the tilt change on next update
+                                    if (!navigationCameraTrackingEnabled) {
+                                        scope.launch {
+                                            try {
+                                                isProgrammaticCameraUpdate = true
+                                                cameraState.animateTo(
+                                                    finalPosition = cameraState.position.copy(
+                                                        tilt = if (is2dNavView) 0.0 else 50.0,
+                                                    ),
+                                                    duration = 1.seconds,
+                                                )
+                                            } finally {
+                                                delay(50)
+                                                isProgrammaticCameraUpdate = false
+                                            }
                                         }
                                     }
-                                }
-                            },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.inverseOnSurface,
-                            ),
-                        ) {
-                            Icon(
-                                imageVector = if (!is2dNavView) Icons.Outlined.Navigation else Icons.Filled.Crop,
-                                contentDescription = if (!is2dNavView) "Enable 2D view" else "Enable 3D view",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
+                                },
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.inverseOnSurface,
+                                ),
+                            ) {
+                                Icon(
+                                    imageVector = if (!is2dNavView) Icons.Outlined.Navigation else Icons.Filled.Crop,
+                                    contentDescription = if (!is2dNavView) "Enable 2D view" else "Enable 3D view",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
 
-                        // Recenter Button
-                        FilledIconButton(
-                            onClick = {
-                                navigationCameraTrackingEnabled = true
-                                is2dNavView = false // Standardizing return to Tilted 3D view
-                            },
-                            colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.inverseOnSurface,
-                            ),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.MyLocation,
-                                contentDescription = "Recenter navigation",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
+                            // Recenter Button
+                            FilledIconButton(
+                                onClick = {
+                                    navigationCameraTrackingEnabled = true
+                                    is2dNavView = false // Standardizing return to Tilted 3D view
+                                },
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.inverseOnSurface,
+                                ),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.MyLocation,
+                                    contentDescription = "Recenter navigation",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 }
+            }
+
+            if (!navMode) {
+                SearchScaffold(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxSize(),
+                    query = query,
+                    active = active,
+                    onQueryChange = { query = it },
+                    onActiveChange = { active = it },
+                    onResultClick = { selected ->
+                        query = selected
+                        active = false
+                    },
+                    containerColor = searchContainerColor,
+                )
             }
         }
     }
@@ -697,4 +735,30 @@ private fun bearingDegrees(from: Position, to: Position): Double {
     return (bearing + 360.0) % 360.0
 }
 
+@Composable
+@Suppress("DEPRECATION")
+private fun SearchStatusBarBackground(
+    active: Boolean,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window ?: return@SideEffect
+            window.statusBarColor = if (active) color.toArgb() else android.graphics.Color.TRANSPARENT
+        }
+    }
+
+    if (active) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .windowInsetsTopHeight(WindowInsets.statusBars)
+                .background(color),
+        )
+    }
+}
+
 private const val ARRIVAL_DISTANCE_THRESHOLD_METERS = 30.0
+private val RADAR_TILE_FADE_DURATION = 1.milliseconds

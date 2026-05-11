@@ -56,10 +56,14 @@ fun SignUp(onLogin: () -> Unit) {
         delay(70)
         contentVisible.value = true
     }
-    StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
+    StormPilotTheme(
+        darkTheme = isDarkMode.value,
+        dynamicColor = false,
+        useSurfaceContainerNavigationBar = true
+    ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.surfaceContainerLow
+            color = MaterialTheme.colorScheme.surfaceContainer
         ) {
             Column(
                 modifier = Modifier
