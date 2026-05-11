@@ -174,10 +174,7 @@ fun NavSkeleton() {
     }
 }
 
-@Composable
-fun SettingsPage() {
-    PageCenter("Settings content")
-}
+
 
 @Composable
 fun PageCenter(text: String) {
