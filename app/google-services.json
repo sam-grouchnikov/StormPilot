@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "961184716807",
+    "project_id": "stormpilot-eeef3",
+    "storage_bucket": "stormpilot-eeef3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:961184716807:android:30e10b7330b42ab810b2a2",
+        "android_client_info": {
+          "package_name": "com.example.stormpilot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd8q1GBNw1gpPlhiMR5Q8dTVlU3mghwTU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
