@@ -4,14 +4,18 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.pages.subnav.dashboard.aichat.ChatMessage
 import com.google.firebase.Firebase
 import com.google.firebase.ai.Chat
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.GenerativeBackend
+import com.google.firebase.ai.type.content
+import com.google.firebase.ai.type.generationConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -20,36 +24,115 @@ class GenAIViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : ViewModel() {
 
-    // 1. Thread-safe snapshot list mapping directly to the ChatPopup layout
     val chatMessages = mutableStateListOf<ChatMessage>()
 
-    // 2. Setup the stable core Firebase AI production model
-    private val model = Firebase.ai(backend = GenerativeBackend.googleAI())
-        .generativeModel(modelName = "gemini-2.5-flash")
-
-    // 3. Thread-safe initialization for the multi-turn session
-    private val chatSession: Chat by lazy {
-        model.startChat()
+    // 1. Optimize configuration to minimize model thinking overhead
+    private val modelConfig = generationConfig {
+        temperature = 0.65f
+        maxOutputTokens = 500
+        topK = 20
     }
 
+    private lateinit var chatSession: Chat
+
+    init {
+        chatSession = Firebase.ai(backend = GenerativeBackend.googleAI())
+            .generativeModel(
+                modelName = "gemini-3.1-flash-lite",
+                generationConfig = modelConfig,
+                tools = listOf(GenAIWeatherTools(context).tool()),
+                systemInstruction = content {
+                    text(
+                        "You are a concise storm chasing assistant. Keep all responses under 3 sentences unless the user explicitly asks for detail. " +
+                            "Use the available weather tools when the user asks about current weather, forecasts, alerts, or outlooks for a location. " +
+                            "Ask for a location if the user asks for location-specific weather and does not provide one."
+                    )
+                }
+            )
+            .startChat()
+    }
+
+
     /**
-     * Accepts a user string prompt, updates the active multi-turn session tracking,
-     * and maps the response back into a nullable String suitable for your ChatPopup Composable.
+     * Streams an AI response turn-by-turn.
+     * Updates the text inside the chatMessages list in real-time as chunks arrive.
+     *
+     * @param prompt The string request from the user.
+     * @param loadingMessageId The unique id of the placeholder message already present in the UI.
      */
-    suspend fun promptTest(prompt: String): String? {
-        return withContext(Dispatchers.IO) {
+    suspend fun promptTestStream(prompt: String, loadingMessageId: Long) {
+        withContext(Dispatchers.IO) {
             try {
-                // Submit message to the lazy-loaded Firebase session instance
-                val response = chatSession.sendMessage(prompt)
+                val sb = StringBuilder()
 
-                // Return the text back to the UI block
-                response.text ?: "The model generated an empty response."
+                // 2. Call the streaming API endpoint instead of the standard blocking send
+                chatSession.sendMessageStream(prompt).collect { chunk ->
+                    val chunkText = chunk.text ?: ""
+                    if (chunkText.isBlank()) return@collect
+
+                    sb.append(chunkText)
+                    updateAssistantMessage(
+                        loadingMessageId = loadingMessageId,
+                        text = sb.toString(),
+                        isLoading = false
+                    )
+                }
+
+                if (sb.isBlank()) {
+                    updateAssistantMessage(
+                        loadingMessageId = loadingMessageId,
+                        text = "I couldn't generate a response for that. Try adding a specific location or asking again.",
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
-                Log.e("GenAIViewModel", "Error inside chat session loop processing prompt", e)
+                // Walk the cause chain to find the most useful message
+                val rootCause = generateSequence(e as Throwable) { it.cause }
+                    .lastOrNull { it.message != null }
 
-                // Expose the raw message directly to the UI bubble to simplify tracking configurations
-                "Error processing request: ${e.localizedMessage ?: "Please verify your Firebase AI settings."}"
+                val errorMsg = rootCause?.message
+                    ?: e.localizedMessage
+                    ?: "Connection lost."
+
+                Log.e("GenAIViewModel", "Error type: ${e::class.simpleName}")
+                Log.e("GenAIViewModel", "Root cause type: ${rootCause?.javaClass?.simpleName}")
+                Log.e("GenAIViewModel", "Root cause message: $errorMsg", e)
+
+                updateAssistantMessage(
+                    loadingMessageId = loadingMessageId,
+                    text = "Error: $errorMsg",
+                    isLoading = false
+                )
             }
+        }
+    }
+
+    private suspend fun updateAssistantMessage(
+        loadingMessageId: Long,
+        text: String,
+        isLoading: Boolean
+    ) = withContext(Dispatchers.Main.immediate) {
+        val index = chatMessages.indexOfFirst { it.id == loadingMessageId }
+        if (index >= 0) {
+            chatMessages[index] = chatMessages[index].copy(
+                text = text,
+                isLoading = isLoading
+            )
+        }
+    }
+
+    fun sendMessage(prompt: String) {
+        val loadingMessage = ChatMessage(
+            text = null,
+            isUser = false,
+            isLoading = true
+        )
+
+        chatMessages.add(ChatMessage(text = prompt, isUser = true))
+        chatMessages.add(loadingMessage)
+
+        viewModelScope.launch {
+            promptTestStream(prompt, loadingMessage.id)
         }
     }
 }
