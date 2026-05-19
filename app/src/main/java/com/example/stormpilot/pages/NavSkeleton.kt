@@ -86,7 +86,7 @@ fun NavSkeleton() {
                         modifier = Modifier
                             .height(125.dp)
                             .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         ) {
                         tabs.forEach { tab ->
                             val selected = currentRoute == tab.route
