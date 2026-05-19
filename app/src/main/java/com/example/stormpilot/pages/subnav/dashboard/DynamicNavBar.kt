@@ -27,14 +27,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,8 +46,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stormpilot.genai.GenAIViewModel
-import com.example.stormpilot.pages.subnav.dashboard.pages.AIChat
 import com.example.stormpilot.pages.subnav.dashboard.pages.Alerts
 import com.example.stormpilot.pages.subnav.dashboard.pages.Location
 import kotlinx.coroutines.launch
@@ -58,23 +54,28 @@ data class BubbleNavigationItem(val title: String, val icon: ImageVector)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ModernBubbleNavBarScreen(genAIViewModel: GenAIViewModel) {
+fun ModernBubbleNavBarScreen(
+    showChat: Boolean,
+    onChatClick: () -> Unit
+) {
     val items = listOf(
         BubbleNavigationItem("Location", Icons.Outlined.LocationOn),
         BubbleNavigationItem("Alerts", Icons.Outlined.WarningAmber),
         BubbleNavigationItem("AI Chat", Icons.Outlined.AutoAwesome)
     )
+    val chatIndex = items.lastIndex
 
-    val pagerState = rememberPagerState(pageCount = { items.size })
+    val pagerState = rememberPagerState(pageCount = { chatIndex })
     val coroutineScope = rememberCoroutineScope()
 
     // Use targetPage during swipe gestures for a leading highlight effect;
     // fall back to currentPage when no animation is in progress.
-    val selectedIndex = if (pagerState.isScrollInProgress) {
+    val selectedPageIndex = if (pagerState.isScrollInProgress) {
         pagerState.targetPage
     } else {
         pagerState.currentPage
     }
+    val selectedIndex = if (showChat) chatIndex else selectedPageIndex
 
     Column(modifier = Modifier.fillMaxSize()) {
 
@@ -86,7 +87,7 @@ fun ModernBubbleNavBarScreen(genAIViewModel: GenAIViewModel) {
         ) {
             // TabRow instead of ScrollableTabRow → tabs are equally spaced / centered
             TabRow(
-                selectedTabIndex = pagerState.currentPage,
+                selectedTabIndex = selectedIndex,
                 containerColor = Color.Transparent,
                 // Hide the default ink indicator; we use bubble backgrounds instead
                 indicator = {},
@@ -94,13 +95,14 @@ fun ModernBubbleNavBarScreen(genAIViewModel: GenAIViewModel) {
             ) {
                 items.forEachIndexed { index, item ->
                     val isSelected = selectedIndex == index
+                    val isOpenPageGreyedOut = showChat && index == selectedPageIndex && index != chatIndex
 
                     // Spring-based color animation for a more physical, responsive feel
                     val bubbleBackgroundColor by animateColorAsState(
-                        targetValue = if (isSelected) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        targetValue = when {
+                            isSelected -> MaterialTheme.colorScheme.primaryContainer
+                            isOpenPageGreyedOut -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                         },
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -110,10 +112,10 @@ fun ModernBubbleNavBarScreen(genAIViewModel: GenAIViewModel) {
                     )
 
                     val contentColor by animateColorAsState(
-                        targetValue = if (isSelected) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        targetValue = when {
+                            isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+                            isOpenPageGreyedOut -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
                         },
                         animationSpec = spring(
                             dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -135,8 +137,12 @@ fun ModernBubbleNavBarScreen(genAIViewModel: GenAIViewModel) {
                     Tab(
                         selected = isSelected,
                         onClick = {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(index)
+                            if (index == chatIndex) {
+                                onChatClick()
+                            } else {
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(index)
+                                }
                             }
                         },
                         modifier = Modifier
@@ -202,7 +208,6 @@ fun ModernBubbleNavBarScreen(genAIViewModel: GenAIViewModel) {
             when (page) {
                 0 -> Location(title = "Location Content Screen")
                 1 -> Alerts(title = "Alerts Content Screen")
-                2 -> AIChat(title = "AI Chat Content Screen", genAIViewModel)
             }
         }
     }

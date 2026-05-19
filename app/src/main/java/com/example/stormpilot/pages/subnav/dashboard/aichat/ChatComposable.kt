@@ -1,37 +1,20 @@
 package com.example.stormpilot.pages.subnav.dashboard.aichat
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -53,30 +36,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.stormpilot.genai.GenAIViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-// Approximate height of the input bar so the LazyColumn
-// can pad its bottom to avoid content hiding behind it.
-private val InputBarHeight = 72.dp
 
 @Composable
 fun ChatPanel(
@@ -90,9 +67,6 @@ fun ChatPanel(
     val chatMessages = viewModel.chatMessages
     val listState = rememberLazyListState()
 
-    // How tall the keyboard currently is (0 when hidden)
-    val imeHeight = WindowInsets.ime.getBottom(LocalDensity.current)
-
     fun scrollToBottom() {
         if (chatMessages.isNotEmpty()) {
             coroutineScope.launch {
@@ -104,26 +78,21 @@ fun ChatPanel(
     fun sendMessage() {
         val prompt = inputText.trim()
         if (prompt.isBlank()) return
+
         inputText = ""
         focusManager.clearFocus()
         viewModel.sendMessage(prompt)
     }
 
     LaunchedEffect(Unit) {
-        if (chatMessages.isNotEmpty()) listState.scrollToItem(chatMessages.lastIndex)
+        if (chatMessages.isNotEmpty()) {
+            listState.scrollToItem(chatMessages.lastIndex)
+        }
     }
 
     LaunchedEffect(chatMessages.size) {
         if (chatMessages.isNotEmpty()) {
             delay(40)
-            listState.animateScrollToItem(chatMessages.lastIndex)
-        }
-    }
-
-    // Scroll to bottom when keyboard opens so the last message stays visible
-    LaunchedEffect(imeHeight) {
-        if (chatMessages.isNotEmpty()) {
-            delay(50)
             listState.animateScrollToItem(chatMessages.lastIndex)
         }
     }
@@ -135,127 +104,60 @@ fun ChatPanel(
     )
 
     Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(30.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
-        tonalElevation = 12.dp,
-        shadowElevation = 18.dp
+        modifier = modifier
+            .fillMaxSize()
+            .padding(start = 20.dp, end = 20.dp, bottom = 18.dp)
+            .imePadding(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f)
+        )
     ) {
-        // Box lets the input bar float over the message list
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.98f))
+                .padding(start = 16.dp, top = 18.dp, end = 16.dp, bottom = 14.dp)
         ) {
-            // ── Message list ──────────────────────────────────────────────
-            // Fills the whole box; bottom padding reserves space for the input bar.
-            // The list itself does NOT react to the keyboard — it just scrolls.
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 18.dp)
-                    .padding(top = 14.dp)
-            ) {
-                ChatPanelHeader()
+            ChatPanelHeader()
 
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    // Bottom padding keeps the last message above the floating input bar
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        bottom = InputBarHeight + 8.dp
-                    )
-                ) {
-                    if (chatMessages.isEmpty()) {
-                        item { EmptyChatState() }
-                    } else {
-                        items(items = chatMessages, key = { it.id }) { message ->
-                            ChatBubble(
-                                message = message,
-                                onAnimatedContentChanged = {
-                                    if (chatMessages.lastOrNull()?.id == message.id) {
-                                        scrollToBottom()
-                                    }
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (chatMessages.isEmpty()) {
+                    item {
+                        EmptyChatState()
+                    }
+                } else {
+                    items(
+                        items = chatMessages,
+                        key = { it.id }
+                    ) { message ->
+                        ChatBubble(
+                            message = message,
+                            onAnimatedContentChanged = {
+                                if (chatMessages.lastOrNull()?.id == message.id) {
+                                    scrollToBottom()
                                 }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // ── Floating input bar ────────────────────────────────────────
-            // Pinned to the bottom of the Box.
-            // windowInsetsPadding(WindowInsets.ime) makes ONLY this bar rise
-            // with the keyboard — the message list above is unaffected.
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.ime)
-                    .padding(horizontal = 18.dp, vertical = 10.dp),
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
-                border = BorderStroke(
-                    1.dp,
-                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 6.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    OutlinedTextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        placeholder = {
-                            Text(
-                                "Ask StormPilot AI anything",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(22.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent,
-                            disabledBorderColor = Color.Transparent,
-                            cursorColor = MaterialTheme.colorScheme.primary,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
-                        ),
-                        maxLines = 4,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                        keyboardActions = KeyboardActions(onSend = { sendMessage() })
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    FilledIconButton(
-                        onClick = { sendMessage() },
-                        enabled = inputText.isNotBlank(),
-                        modifier = Modifier
-                            .padding(bottom = 4.dp)
-                            .scale(sendButtonScale),
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.Send,
-                            contentDescription = "Send prompt"
+                            }
                         )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ChatPanelInput(
+                inputText = inputText,
+                onInputTextChange = { inputText = it },
+                sendButtonScale = sendButtonScale,
+                onSendMessage = { sendMessage() }
+            )
         }
     }
 }
@@ -263,38 +165,115 @@ fun ChatPanel(
 @Composable
 private fun ChatPanelHeader() {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
         ) {
             Icon(
                 imageVector = Icons.Rounded.AutoAwesome,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier
+                    .padding(9.dp)
+                    .size(20.dp)
             )
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(11.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "StormPilot AI",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium,
+                fontSize = 23.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "Chat with a weather-aware agent",
+                text = "Weather-aware route planning",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }
+}
 
-    Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun ChatPanelInput(
+    inputText: String,
+    onInputTextChange: (String) -> Unit,
+    sendButtonScale: Float,
+    onSendMessage: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            OutlinedTextField(
+                value = inputText,
+                onValueChange = onInputTextChange,
+                placeholder = {
+                    Text(
+                        text = "Ask about weather, timing, or route choices",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                    )
+                },
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Transparent,
+                    disabledBorderColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent
+                ),
+                maxLines = 4,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { onSendMessage() })
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            FilledIconButton(
+                onClick = onSendMessage,
+                enabled = inputText.isNotBlank(),
+                modifier = Modifier
+                    .padding(bottom = 4.dp)
+                    .scale(sendButtonScale),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.Send,
+                    contentDescription = "Send prompt"
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -302,14 +281,15 @@ private fun EmptyChatState() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.75f),
+            .padding(horizontal = 24.dp, vertical = 72.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = "Ask for routing help, weather context, or quick planning.",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis
         )
     }

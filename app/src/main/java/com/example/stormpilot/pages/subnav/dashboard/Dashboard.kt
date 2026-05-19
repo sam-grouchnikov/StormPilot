@@ -73,7 +73,10 @@ fun RadarPage(
             verticalArrangement = Arrangement.Top) {
             TopIconRow()
 
-            ModernBubbleNavBarScreen(genAIViewModel)
+            ModernBubbleNavBarScreen(
+                showChat = showChat,
+                onChatClick = { showChat = true }
+            )
 
             if (showChat) {
                 ChatPopup({ showChat = false }, genAIViewModel)

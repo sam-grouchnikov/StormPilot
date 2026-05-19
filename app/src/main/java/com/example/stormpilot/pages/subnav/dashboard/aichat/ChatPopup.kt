@@ -135,7 +135,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
         sheetState = sheetState,
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onSurface,
-        dragHandle = { BottomSheetDefaults.DragHandle() }, // Re-enable the standard handle
+        dragHandle = null, // Re-enable the standard handle
         tonalElevation = 0.dp,
         scrimColor = Color.Black.copy(alpha = 0.42f)
     ) {
