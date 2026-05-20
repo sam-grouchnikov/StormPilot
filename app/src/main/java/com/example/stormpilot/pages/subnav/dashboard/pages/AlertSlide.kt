@@ -1,0 +1,436 @@
+package com.example.stormpilot.pages.subnav.dashboard.pages
+
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Flood
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Tornado
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.viewmodel.AlertsUiState
+import com.example.stormpilot.viewmodel.AlertsViewModel
+import com.example.stormpilot.pages.subnav.maps.viewmodel.MapsViewModel
+import kotlin.time.Duration.Companion.milliseconds
+import org.maplibre.compose.camera.CameraPosition
+import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.expressions.dsl.Feature
+import org.maplibre.compose.expressions.dsl.asString
+import org.maplibre.compose.expressions.dsl.condition
+import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.eq
+import org.maplibre.compose.expressions.dsl.switch
+import org.maplibre.compose.layers.CircleLayer
+import org.maplibre.compose.layers.FillLayer
+import org.maplibre.compose.layers.LineLayer
+import org.maplibre.compose.layers.RasterLayer
+import org.maplibre.compose.map.GestureOptions
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.OrnamentOptions
+import org.maplibre.compose.sources.GeoJsonData
+import org.maplibre.compose.sources.rememberGeoJsonSource
+import org.maplibre.compose.sources.rememberRasterSource
+import org.maplibre.compose.style.BaseStyle
+import org.maplibre.compose.expressions.value.RasterResampling
+import org.maplibre.spatialk.geojson.Position
+
+@Composable
+fun AlertSlide(
+    title: String,
+    alertsViewModel: AlertsViewModel = hiltViewModel(),
+    mapsViewModel: MapsViewModel = hiltViewModel(),
+) {
+    val context = LocalContext.current
+    val alertsState by alertsViewModel.uiState.collectAsStateWithLifecycle()
+    val cityName by alertsViewModel.cityName.collectAsStateWithLifecycle()
+    val location by alertsViewModel.locationRepository.location.collectAsStateWithLifecycle()
+    val mapsState by mapsViewModel.uiState.collectAsStateWithLifecycle()
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        if (isGranted) alertsViewModel.locationRepository.startTracking()
+    }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            alertsViewModel.locationRepository.startTracking()
+        } else {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 15.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        LocationAlertsMapCard(
+            cityName = cityName,
+            position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
+            alertsGeoJson = mapsState.alertsGeoJson,
+        )
+
+        AlertStatusPanel(alertsState = alertsState)
+    }
+}
+
+@Composable
+private fun LocationAlertsMapCard(
+    cityName: String,
+    position: Position?,
+    alertsGeoJson: GeoJsonData?,
+) {
+    val extendedColors = ExtendedColors()
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = extendedColors.mapBackground,
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.LocationOn,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+                Text(
+                    text = cityName,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.W600,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            LocationAlertsMap(
+                position = position,
+                alertsGeoJson = alertsGeoJson,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+            )
+        }
+    }
+}
+
+@Composable
+private fun LocationAlertsMap(
+    position: Position?,
+    alertsGeoJson: GeoJsonData?,
+    modifier: Modifier = Modifier,
+) {
+    var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val mapTarget = position ?: Position(latitude = 39.8283, longitude = -98.5795)
+    val cameraState = rememberCameraState(
+        firstPosition = CameraPosition(
+            target = mapTarget,
+            zoom = if (position == null) 3.0 else 10.5,
+        ),
+    )
+
+    LaunchedEffect(position) {
+        position?.let { target ->
+            cameraState.animateTo(
+                finalPosition = cameraState.position.copy(
+                    target = target,
+                    zoom = 10.5,
+                    tilt = 0.0,
+                    bearing = 0.0,
+                ),
+                duration = 650.milliseconds,
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(300_000L)
+            radarRefreshKey = System.currentTimeMillis()
+        }
+    }
+
+    MaplibreMap(
+        baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/dark/en.json?key=64a5f0a9c35b4ca1"),
+        cameraState = cameraState,
+        modifier = modifier,
+        options = MapOptions(
+            gestureOptions = GestureOptions.AllDisabled,
+            ornamentOptions = OrnamentOptions(
+                padding = PaddingValues(0.dp),
+                isLogoEnabled = false,
+                isAttributionEnabled = false,
+                isCompassEnabled = false,
+                isScaleBarEnabled = false,
+            ),
+        ),
+    ) {
+        val radarSource = rememberRasterSource(
+            tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?v=$radarRefreshKey"),
+            tileSize = 256,
+        )
+        RasterLayer(
+            id = "location-radar-overlay",
+            source = radarSource,
+            opacity = const(0.72f),
+            resampling = const(RasterResampling.Linear),
+            fadeDuration = const(1.milliseconds),
+        )
+
+        val alertsSource = rememberGeoJsonSource(
+            data = alertsGeoJson ?: GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
+        )
+        FillLayer(
+            id = "location-alerts-fill",
+            source = alertsSource,
+            color = switch(
+                condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x22FF0000))),
+                condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x22FFD700))),
+                condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0x2200BB00))),
+                fallback = const(Color.Transparent),
+            ),
+        )
+        LineLayer(
+            id = "location-alerts-outline",
+            source = alertsSource,
+            color = switch(
+                condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0xC8FF3030))),
+                condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0xFFFFB020))),
+                condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0xC800E676))),
+                fallback = const(Color.Transparent),
+            ),
+            width = const(2.dp),
+        )
+
+        position?.let { userPosition ->
+            val locationSource = rememberGeoJsonSource(
+                data = GeoJsonData.JsonString(
+                    """
+                    {
+                      "type": "FeatureCollection",
+                      "features": [{
+                        "type": "Feature",
+                        "geometry": {
+                          "type": "Point",
+                          "coordinates": [${userPosition.longitude}, ${userPosition.latitude}]
+                        },
+                        "properties": {}
+                      }]
+                    }
+                    """.trimIndent()
+                )
+            )
+            CircleLayer(
+                id = "location-current-point",
+                source = locationSource,
+                color = const(MaterialTheme.colorScheme.onPrimary),
+                radius = const(5.dp),
+                strokeColor = const(MaterialTheme.colorScheme.primary),
+                strokeWidth = const(3.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlertStatusPanel(alertsState: AlertsUiState) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            AlertStatusRow(
+                icon = Icons.Outlined.Tornado,
+                label = "Tornado",
+                state = alertState(
+                    warningActive = alertsState.tornadoWarning != null,
+                    watchActive = alertsState.tornadoWatch != null,
+                    warningText = "Tornado Warning",
+                    watchText = "Tornado Watch",
+                    clearText = "No Tornado Alerts",
+                ),
+            )
+            AlertStatusRow(
+                icon = Icons.Outlined.Bolt,
+                label = "Severe Thunderstorm",
+                state = alertState(
+                    warningActive = alertsState.severeThunderstormWarning != null,
+                    watchActive = alertsState.severeThunderstormWatch != null,
+                    warningText = "Severe T-Storm Warning",
+                    watchText = "Severe T-Storm Watch",
+                    clearText = "No Storm Alerts",
+                ),
+            )
+            AlertStatusRow(
+                icon = Icons.Outlined.Flood,
+                label = "Flood",
+                state = alertState(
+                    warningActive = alertsState.flashFloodWarning != null,
+                    watchActive = alertsState.flashFloodWatch != null,
+                    warningText = "Flash Flood Warning",
+                    watchText = "Flash Flood Watch",
+                    clearText = "No Flood Alerts",
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlertStatusRow(
+    icon: ImageVector,
+    label: String,
+    state: LocationAlertState,
+) {
+    val colors = ExtendedColors()
+    val containerTarget = when (state.level) {
+        AlertLevel.Clear -> colors.alertClearContainer
+        AlertLevel.Watch -> colors.alertWatchContainer
+        AlertLevel.Warning -> colors.alertWarningContainer
+    }
+    val contentTarget = when (state.level) {
+        AlertLevel.Clear -> colors.alertClearContent
+        AlertLevel.Watch -> colors.alertWatchContent
+        AlertLevel.Warning -> colors.alertWarningContent
+    }
+    val containerColor by animateColorAsState(
+        targetValue = containerTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_container_color",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = contentTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_content_color",
+    )
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = containerColor,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp),
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = label,
+                    color = contentColor,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                )
+                AnimatedContent(
+                    targetState = state.text,
+                    transitionSpec = {
+                        fadeIn(tween(220, delayMillis = 70)) togetherWith fadeOut(tween(140))
+                    },
+                    label = "alert_status_text",
+                ) { text ->
+                    Text(
+                        text = text,
+                        color = contentColor,
+                        fontWeight = FontWeight.W500,
+                        fontSize = 18.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private enum class AlertLevel {
+    Clear,
+    Watch,
+    Warning,
+}
+
+private data class LocationAlertState(
+    val level: AlertLevel,
+    val text: String,
+)
+
+private fun alertState(
+    warningActive: Boolean,
+    watchActive: Boolean,
+    warningText: String,
+    watchText: String,
+    clearText: String,
+): LocationAlertState = when {
+    warningActive -> LocationAlertState(AlertLevel.Warning, warningText)
+    watchActive -> LocationAlertState(AlertLevel.Watch, watchText)
+    else -> LocationAlertState(AlertLevel.Clear, clearText)
+}

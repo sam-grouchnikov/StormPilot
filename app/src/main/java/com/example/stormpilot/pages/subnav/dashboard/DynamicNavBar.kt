@@ -19,13 +19,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
@@ -47,7 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.pages.subnav.dashboard.pages.Alerts
-import com.example.stormpilot.pages.subnav.dashboard.pages.Location
+import com.example.stormpilot.pages.subnav.dashboard.pages.AlertSlide
 import kotlinx.coroutines.launch
 
 data class BubbleNavigationItem(val title: String, val icon: ImageVector)
@@ -59,8 +59,8 @@ fun ModernBubbleNavBarScreen(
     onChatClick: () -> Unit
 ) {
     val items = listOf(
-        BubbleNavigationItem("Location", Icons.Outlined.LocationOn),
         BubbleNavigationItem("Alerts", Icons.Outlined.WarningAmber),
+        BubbleNavigationItem("Weather", Icons.Outlined.Cloud),
         BubbleNavigationItem("AI Chat", Icons.Outlined.AutoAwesome)
     )
     val chatIndex = items.lastIndex
@@ -91,7 +91,8 @@ fun ModernBubbleNavBarScreen(
                 containerColor = Color.Transparent,
                 // Hide the default ink indicator; we use bubble backgrounds instead
                 indicator = {},
-                divider = {}
+                divider = {},
+                modifier = Modifier.padding(horizontal = 10.dp)
             ) {
                 items.forEachIndexed { index, item ->
                     val isSelected = selectedIndex == index
@@ -206,7 +207,7 @@ fun ModernBubbleNavBarScreen(
                 .weight(1f)
         ) { page ->
             when (page) {
-                0 -> Location(title = "Location Content Screen")
+                0 -> AlertSlide(title = "Location Content Screen")
                 1 -> Alerts(title = "Alerts Content Screen")
             }
         }

@@ -69,7 +69,7 @@ fun RadarPage(
 
 
     StormPilotTheme(darkTheme = isDarkMode) {
-        Column(modifier = Modifier.padding(horizontal = 10.dp),
+        Column(modifier = Modifier.padding(horizontal = 0.dp),
             verticalArrangement = Arrangement.Top) {
             TopIconRow()
 
@@ -93,7 +93,7 @@ fun TopIconRow() {
     val outlineColor = Color(0xFF1E885C)
 
     Row(
-        modifier = Modifier.padding(vertical = 16.dp, horizontal = 15.dp),
+        modifier = Modifier.padding(vertical = 16.dp, horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
