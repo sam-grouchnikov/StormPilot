@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -49,9 +51,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stormpilot.data.StormSpec
 import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.viewmodel.AlertsUiState
 import com.example.stormpilot.viewmodel.AlertsViewModel
+import com.example.stormpilot.viewmodel.WeatherViewModel
 import com.example.stormpilot.pages.subnav.maps.viewmodel.MapsViewModel
 import kotlin.time.Duration.Companion.milliseconds
 import org.maplibre.compose.camera.CameraPosition
@@ -81,6 +85,7 @@ import org.maplibre.spatialk.geojson.Position
 fun AlertSlide(
     title: String,
     alertsViewModel: AlertsViewModel = hiltViewModel(),
+    weatherViewModel: WeatherViewModel = hiltViewModel(),
     mapsViewModel: MapsViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -88,6 +93,7 @@ fun AlertSlide(
     val cityName by alertsViewModel.cityName.collectAsStateWithLifecycle()
     val location by alertsViewModel.locationRepository.location.collectAsStateWithLifecycle()
     val mapsState by mapsViewModel.uiState.collectAsStateWithLifecycle()
+    val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -110,15 +116,18 @@ fun AlertSlide(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 15.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(horizontal = 15.dp, vertical = 16.dp)
+            .verticalScroll(rememberScrollState()),
+
+                verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         LocationAlertsMapCard(
             cityName = cityName,
             position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
             alertsGeoJson = mapsState.alertsGeoJson,
         )
+
+        StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
 
         AlertStatusPanel(alertsState = alertsState)
     }
@@ -181,7 +190,7 @@ private fun LocationAlertsMap(
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
             target = mapTarget,
-            zoom = if (position == null) 3.0 else 10.5,
+            zoom = if (position == null) 9.0 else 9.0,
         ),
     )
 
@@ -190,7 +199,7 @@ private fun LocationAlertsMap(
             cameraState.animateTo(
                 finalPosition = cameraState.position.copy(
                     target = target,
-                    zoom = 10.5,
+                    zoom = 9.0,
                     tilt = 0.0,
                     bearing = 0.0,
                 ),
@@ -289,6 +298,84 @@ private fun LocationAlertsMap(
 }
 
 @Composable
+private fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = "Storm Environment",
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(horizontal = 14.dp),
+            )
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (stormSpecs.isEmpty()) {
+                    StormSpecCard(
+                        spec = StormSpec(
+                            label = "Loading",
+                            value = "--",
+                            detail = "Weather profile",
+                        )
+                    )
+                } else {
+                    stormSpecs.forEach { spec ->
+                        StormSpecCard(spec = spec)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StormSpecCard(spec: StormSpec) {
+    Surface(
+        modifier = Modifier.width(118.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = spec.label,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                maxLines = 1,
+            )
+            Text(
+                text = spec.value,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.sp,
+                maxLines = 1,
+            )
+            Text(
+                text = spec.detail,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Medium,
+                fontSize = 11.sp,
+                lineHeight = 13.sp,
+            )
+        }
+    }
+}
+
+@Composable
 private fun AlertStatusPanel(alertsState: AlertsUiState) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -344,12 +431,22 @@ private fun AlertStatusRow(
 ) {
     val colors = ExtendedColors()
     val containerTarget = when (state.level) {
-        AlertLevel.Clear -> colors.alertClearContainer
+        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerHighest
         AlertLevel.Watch -> colors.alertWatchContainer
         AlertLevel.Warning -> colors.alertWarningContainer
     }
     val contentTarget = when (state.level) {
+        AlertLevel.Clear -> MaterialTheme.colorScheme.onSurfaceVariant
+        AlertLevel.Watch -> colors.alertWatchContent
+        AlertLevel.Warning -> colors.alertWarningContent
+    }
+    val titleTarget = when (state.level) {
         AlertLevel.Clear -> colors.alertClearContent
+        AlertLevel.Watch -> colors.alertWatchContent
+        AlertLevel.Warning -> colors.alertWarningContent
+    }
+    val iconTarget = when (state.level) {
+        AlertLevel.Clear -> colors.alertClearContentAlternate
         AlertLevel.Watch -> colors.alertWatchContent
         AlertLevel.Warning -> colors.alertWarningContent
     }
@@ -362,6 +459,16 @@ private fun AlertStatusRow(
         targetValue = contentTarget,
         animationSpec = tween(durationMillis = 450),
         label = "alert_content_color",
+    )
+    val titleColor by animateColorAsState(
+        targetValue = titleTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_content_color",
+    )
+    val iconColor by animateColorAsState(
+        targetValue = iconTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_icon_color"
     )
 
     Surface(
@@ -378,7 +485,7 @@ private fun AlertStatusRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = contentColor,
+                tint = iconColor,
                 modifier = Modifier.size(24.dp),
             )
             Column(
@@ -389,7 +496,7 @@ private fun AlertStatusRow(
             ) {
                 Text(
                     text = label,
-                    color = contentColor,
+                    color = titleColor,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                 )

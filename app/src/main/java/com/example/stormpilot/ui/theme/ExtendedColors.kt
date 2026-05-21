@@ -8,6 +8,9 @@ public class ExtendedColors {
 
     public var alertClearContainer = Color(0xFF0C3B26)
     public var alertClearContent = Color(0xFFA7E2B3)
+
+    public var alertClearContentAlternate = Color(0xFF62A26F)
+
     public var alertWatchContainer = Color(0xFF5A4212)
     public var alertWatchContent = Color(0xFFFFE09A)
     public var alertWarningContainer = Color(0xFF761A12)

@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Cloud
-import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +45,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stormpilot.pages.subnav.dashboard.pages.Alerts
+import com.example.stormpilot.pages.subnav.dashboard.pages.Weather
 import com.example.stormpilot.pages.subnav.dashboard.pages.AlertSlide
 import kotlinx.coroutines.launch
 
@@ -208,7 +207,7 @@ fun ModernBubbleNavBarScreen(
         ) { page ->
             when (page) {
                 0 -> AlertSlide(title = "Location Content Screen")
-                1 -> Alerts(title = "Alerts Content Screen")
+                1 -> Weather(title = "Alerts Content Screen")
             }
         }
     }
