@@ -51,11 +51,12 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stormpilot.AppSettings
 import com.example.stormpilot.data.StormSpec
 import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.viewmodel.AlertsUiState
 import com.example.stormpilot.viewmodel.AlertsViewModel
-import com.example.stormpilot.viewmodel.WeatherViewModel
+import com.example.stormpilot.data.WeatherViewModel
 import com.example.stormpilot.pages.subnav.maps.viewmodel.MapsViewModel
 import kotlin.time.Duration.Companion.milliseconds
 import org.maplibre.compose.camera.CameraPosition
@@ -69,16 +70,13 @@ import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.FillLayer
 import org.maplibre.compose.layers.LineLayer
-import org.maplibre.compose.layers.RasterLayer
 import org.maplibre.compose.map.GestureOptions
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
-import org.maplibre.compose.sources.rememberRasterSource
 import org.maplibre.compose.style.BaseStyle
-import org.maplibre.compose.expressions.value.RasterResampling
 import org.maplibre.spatialk.geojson.Position
 
 @Composable
@@ -121,15 +119,19 @@ fun AlertSlide(
 
                 verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
+
         LocationAlertsMapCard(
             cityName = cityName,
             position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
             alertsGeoJson = mapsState.alertsGeoJson,
         )
 
+        AlertStatusPanel(alertsState = alertsState)
+
+
+
         StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
 
-        AlertStatusPanel(alertsState = alertsState)
     }
 }
 
@@ -143,7 +145,7 @@ private fun LocationAlertsMapCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = extendedColors.mapBackground,
+        color = extendedColors.blueBackground,
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -187,10 +189,12 @@ private fun LocationAlertsMap(
 ) {
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val mapTarget = position ?: Position(latitude = 39.8283, longitude = -98.5795)
+
+    // 1. Keep camera state stable
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
             target = mapTarget,
-            zoom = if (position == null) 9.0 else 9.0,
+            zoom = 9.0,
         ),
     )
 
@@ -215,8 +219,14 @@ private fun LocationAlertsMap(
         }
     }
 
+    val mapStyle = if (AppSettings.isDarkMode) {
+        "https://api.protomaps.com/styles/v5/dark/en.json?key=64a5f0a9c35b4ca1"
+    } else {
+        "https://api.protomaps.com/styles/v5/white/en.json?key=64a5f0a9c35b4ca1"
+    }
+
     MaplibreMap(
-        baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/dark/en.json?key=64a5f0a9c35b4ca1"),
+        baseStyle = BaseStyle.Uri(mapStyle),
         cameraState = cameraState,
         modifier = modifier,
         options = MapOptions(
@@ -230,21 +240,15 @@ private fun LocationAlertsMap(
             ),
         ),
     ) {
-        val radarSource = rememberRasterSource(
-            tiles = listOf("https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?v=$radarRefreshKey"),
-            tileSize = 256,
-        )
-        RasterLayer(
-            id = "location-radar-overlay",
-            source = radarSource,
-            opacity = const(0.72f),
-            resampling = const(RasterResampling.Linear),
-            fadeDuration = const(1.milliseconds),
-        )
+        // 2. Wrap the sources inside a key tied directly to the data.
+        // Whenever alertsGeoJson updates OR the map reinstantiates, this block recreates seamlessly.
+        val fallbackJson = """{"type":"FeatureCollection","features":[]}"""
+        val safeGeoJson = alertsGeoJson ?: GeoJsonData.JsonString(fallbackJson)
 
         val alertsSource = rememberGeoJsonSource(
-            data = alertsGeoJson ?: GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
+            data = safeGeoJson
         )
+
         FillLayer(
             id = "location-alerts-fill",
             source = alertsSource,
@@ -255,6 +259,7 @@ private fun LocationAlertsMap(
                 fallback = const(Color.Transparent),
             ),
         )
+
         LineLayer(
             id = "location-alerts-outline",
             source = alertsSource,
@@ -299,10 +304,11 @@ private fun LocationAlertsMap(
 
 @Composable
 private fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
+    val colors = ExtendedColors()
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color =  colors.stormContainer,
     ) {
         Column(
             modifier = Modifier.padding(vertical = 14.dp),
@@ -310,7 +316,7 @@ private fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
         ) {
             Text(
                 text = "Storm Environment",
-                color = MaterialTheme.colorScheme.onSurface,
+                color = colors.stormText,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp,
                 modifier = Modifier.padding(horizontal = 14.dp),
@@ -339,12 +345,87 @@ private fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
     }
 }
 
+private fun specToRisk(spec: StormSpec): String {
+    val numericString = spec.value.replace(Regex("[^0-9.-]"), "")
+    val value = numericString.toDoubleOrNull() ?: return "Unknown"
+
+    return when (spec.label) {
+        "CAPE" -> when {
+            value < 1000 -> "Low"
+            value in 1000.0..2500.0 -> "Moderate"
+            value in 2501.0..4000.0 -> "High"
+            else -> "Extreme" // > 4000 J/kg is exceptionally volatile
+        }
+
+        "CIN" -> when {
+            value > 100 -> "Low"       // High capping prevents storms completely
+            value in 25.0..100.0 -> "Moderate" // A healthy cap that can break explosively
+            value in 1.0..24.0 -> "High"      // Very weak cap, storms easily break through
+            else -> "Extreme"          // 0 J/kg means instant, uninhibited development
+        }
+
+        "SRH" -> when {
+            value < 100 -> "Low"
+            value in 100.0..250.0 -> "Moderate"
+            value in 251.0..400.0 -> "High"
+            else -> "Extreme" // > 400 m²/s² indicates violent tornado potential
+        }
+
+        "Lifted" -> when {
+            value >= 0 -> "Low"
+            value in -4.0..-1.0 -> "Moderate"
+            value in -7.0..-5.0 -> "High"
+            else -> "Extreme" // -8° or lower means incredibly violent updrafts
+        }
+
+        "LL Shear" -> when {
+            value < 15 -> "Low"
+            value in 15.0..25.0 -> "Moderate"
+            value in 26.0..40.0 -> "High"
+            else -> "Extreme" // > 40 mph low-level vector is highly dangerous
+        }
+
+        "Dew Pt" -> when {
+            value < 55 -> "Low"
+            value in 55.0..64.0 -> "Moderate"
+            value in 65.0..72.0 -> "High"
+            else -> "Extreme" // 73°F+ is extreme, tropical moisture fuel
+        }
+
+        "RH" -> when {
+            value < 50 -> "Low"
+            value in 50.0..70.0 -> "Moderate"
+            value in 71.0..85.0 -> "High"
+            else -> "Extreme" // > 85% guarantees very low, tornado-favorable cloud bases
+        }
+
+        "Gust" -> when {
+            value < 40 -> "Low"
+            value in 40.0..57.0 -> "Moderate"
+            value in 58.0..74.0 -> "High" // 58 mph is severe warning threshold
+            else -> "Extreme" // 75 mph+ is hurricane-force or violent derecho level
+        }
+
+        else -> "Unknown"
+    }
+}
+
 @Composable
 private fun StormSpecCard(spec: StormSpec) {
+    val colors = ExtendedColors()
+    val risk = specToRisk(spec)
+    val extendedColors = ExtendedColors()
+    val color = when (risk) {
+        "Low" -> extendedColors.lowRisk
+        "Moderate" -> extendedColors.moderateRisk
+        "High" -> extendedColors.highRisk
+        "Extreme" -> extendedColors.extremeRisk
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
     Surface(
         modifier = Modifier.width(118.dp),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        color = colors.stormContainerNested,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -352,7 +433,7 @@ private fun StormSpecCard(spec: StormSpec) {
         ) {
             Text(
                 text = spec.label,
-                color = MaterialTheme.colorScheme.primary,
+                color = colors.stormTextNested,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
                 maxLines = 1,
@@ -365,8 +446,8 @@ private fun StormSpecCard(spec: StormSpec) {
                 maxLines = 1,
             )
             Text(
-                text = spec.detail,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "$risk risk",
+                color = MaterialTheme.colorScheme.outline,
                 fontWeight = FontWeight.Medium,
                 fontSize = 11.sp,
                 lineHeight = 13.sp,
@@ -380,7 +461,7 @@ private fun AlertStatusPanel(alertsState: AlertsUiState) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
             modifier = Modifier.padding(vertical = 14.dp),
@@ -431,7 +512,7 @@ private fun AlertStatusRow(
 ) {
     val colors = ExtendedColors()
     val containerTarget = when (state.level) {
-        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerHighest
+        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerHigh
         AlertLevel.Watch -> colors.alertWatchContainer
         AlertLevel.Warning -> colors.alertWarningContainer
     }

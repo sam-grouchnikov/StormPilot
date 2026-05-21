@@ -46,7 +46,6 @@ import com.example.compose.StormPilotTheme
 
 @Composable
 fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
-    val isDarkMode = remember {mutableStateOf(true)}
     val contentVisible = remember { mutableStateOf(false) }
     val bobbingTransition = rememberInfiniteTransition(label = "welcome_logo_bobbing")
     val logoOffset by bobbingTransition.animateFloat(
@@ -65,7 +64,6 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
     }
 
     StormPilotTheme(
-        darkTheme = isDarkMode.value,
         dynamicColor = false,
         useSurfaceContainerNavigationBar = true
     ) {

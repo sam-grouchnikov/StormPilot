@@ -48,23 +48,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.compose.StormPilotTheme
+import com.example.stormpilot.AppSettings
+import com.example.stormpilot.updateAppCompatNightMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsPage() {
-    var mode by remember { mutableStateOf("system") }
+    var mode by remember { mutableStateOf(AppSettings.mode) }
     var showScale by remember { mutableStateOf("zoom") }
     var smartRerouting by remember { mutableStateOf("on") }
 
     var openDialog by remember { mutableStateOf<String?>(null) }
 
-    val isDarkMode = when (mode) {
-        "dark" -> true
-        "light" -> false
-        else -> true
-    }
-
-    StormPilotTheme(darkTheme = isDarkMode) {
+    StormPilotTheme {
         Scaffold(
             topBar = {
                 TopAppBar(title = { Text("Settings") })
@@ -104,7 +100,7 @@ fun SettingsPage() {
                 title = "Mode",
                 options = listOf("light" to "Light", "dark" to "Dark", "system" to "System default"),
                 selected = mode,
-                onSelect = { mode = it; openDialog = null },
+                onSelect = { mode = it; AppSettings.mode = it; updateAppCompatNightMode(it); openDialog = null },
                 onDismiss = { openDialog = null }
             )
             "scale" -> RadioDialog(

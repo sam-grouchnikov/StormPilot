@@ -57,10 +57,9 @@ sealed class TabDest(val route: String, val title: String, val icon: ImageVector
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun NavSkeleton() {
-    val isDarkMode = remember { mutableStateOf(true) }
     val isMapDestinationSelected = remember { mutableStateOf(false) }
 
-    StormPilotTheme(darkTheme = isDarkMode.value, dynamicColor = false) {
+    StormPilotTheme(dynamicColor = false) {
         val navController = rememberNavController()
         val tabs = listOf(TabDest.Radar, TabDest.Nav, TabDest.Settings)
         val mapContentInsets =
@@ -74,7 +73,7 @@ fun NavSkeleton() {
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            containerColor = Color.Transparent,
+            containerColor = MaterialTheme.colorScheme.surface,
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             bottomBar = {
                 AnimatedVisibility(
@@ -171,14 +170,5 @@ fun NavSkeleton() {
                 }
             }
         }
-    }
-}
-
-
-
-@Composable
-fun PageCenter(text: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text)
     }
 }

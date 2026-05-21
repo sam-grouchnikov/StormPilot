@@ -81,7 +81,6 @@ fun ModernBubbleNavBarScreen(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp
         ) {
             // TabRow instead of ScrollableTabRow → tabs are equally spaced / centered

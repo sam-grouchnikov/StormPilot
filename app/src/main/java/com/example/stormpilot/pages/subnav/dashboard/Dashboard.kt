@@ -43,10 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.compose.StormPilotTheme
-import com.example.stormpilot.pages.subnav.dashboard.widgets.AlertsWidget
-import com.example.stormpilot.pages.subnav.dashboard.widgets.AtmosphereMetricsWidget
-import com.example.stormpilot.pages.subnav.dashboard.widgets.ConnectivityWidget
-import com.example.stormpilot.pages.subnav.dashboard.widgets.LocationWidget
 import com.example.stormpilot.viewmodel.AlertsViewModel
 import com.example.stormpilot.genai.GenAIViewModel
 import com.example.stormpilot.pages.subnav.dashboard.aichat.ChatPopup
@@ -60,7 +56,6 @@ fun RadarPage(
     alertsViewModel: AlertsViewModel = hiltViewModel(),
     genAIViewModel: GenAIViewModel = hiltViewModel()
 ) {
-    var isDarkMode by remember { mutableStateOf(true) }
     val showWidgets = remember { mutableStateOf(false) }
 
     // Inside Dashboard Composable
@@ -68,7 +63,7 @@ fun RadarPage(
 
 
 
-    StormPilotTheme(darkTheme = isDarkMode) {
+    StormPilotTheme {
         Column(modifier = Modifier.padding(horizontal = 0.dp),
             verticalArrangement = Arrangement.Top) {
             TopIconRow()

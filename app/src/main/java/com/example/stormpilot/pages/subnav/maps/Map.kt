@@ -96,6 +96,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.compose.StormPilotTheme
+import com.example.stormpilot.AppSettings
 import com.example.stormpilot.pages.subnav.maps.routing.formatDistance
 import com.example.stormpilot.pages.subnav.maps.routing.formatDuration
 import com.example.stormpilot.pages.subnav.maps.viewmodel.MapsUiState
@@ -332,14 +333,18 @@ fun MapsPage(
     }
 
     StormPilotTheme(
-        darkTheme = true,
         opaqueNavigationBar = true,
     ) {
         val searchContainerColor = MaterialTheme.colorScheme.inverseOnSurface
+        val mapStyle = if (AppSettings.isDarkMode) {
+            "https://api.protomaps.com/styles/v5/black/en.json?key=64a5f0a9c35b4ca1"
+        } else {
+            "https://api.protomaps.com/styles/v5/white/en.json?key=64a5f0a9c35b4ca1"
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             MaplibreMap(
-                baseStyle = BaseStyle.Uri("https://api.protomaps.com/styles/v5/black/en.json?key=64a5f0a9c35b4ca1"),
+                baseStyle = BaseStyle.Uri(mapStyle),
                 cameraState = cameraState,
                 onMapLongClick = { point, _ ->
                     showTripSummary = true

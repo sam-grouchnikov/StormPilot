@@ -50,7 +50,6 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SignIn(onLogin: () -> Unit) {
-    val isDarkMode = remember {mutableStateOf(true)}
     val contentVisible = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(70)
@@ -58,7 +57,6 @@ fun SignIn(onLogin: () -> Unit) {
     }
 
     StormPilotTheme(
-        darkTheme = isDarkMode.value,
         dynamicColor = false,
         useSurfaceContainerNavigationBar = true
     ) {

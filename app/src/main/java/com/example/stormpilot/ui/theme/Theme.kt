@@ -15,6 +15,11 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.example.stormpilot.AppSettings
+import com.example.stormpilot.isAppInDarkMode
+
+// ... (other schemes and classes) ...
+
 
 private val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -258,13 +263,14 @@ val unspecified_scheme = ColorFamily(
 
 @Composable
 fun StormPilotTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = isAppInDarkMode(),
     dynamicColor: Boolean = true,
     isLoading: Boolean = false,
     opaqueNavigationBar: Boolean = true,
     useSurfaceContainerNavigationBar: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    AppSettings.isDarkMode = darkTheme
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current

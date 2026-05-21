@@ -26,7 +26,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        updateAppCompatNightMode(AppSettings.mode)
         super.onCreate(savedInstanceState)
 
         val semiTransparentScrim = android.graphics.Color.argb(0x90, 0x1b, 0x1b, 0x1b)
@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
         window.statusBarColor = semiTransparentScrim
 
         setContent {
-            StormPilotTheme(darkTheme = true) {
+            StormPilotTheme {
                 AppCenter()
             }
         }

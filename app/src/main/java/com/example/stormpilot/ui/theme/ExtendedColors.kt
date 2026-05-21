@@ -1,20 +1,59 @@
 package com.example.stormpilot.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import com.example.stormpilot.AppSettings
 
 public class ExtendedColors {
-    public var exitContainer = Color(0xFF761A12)
-    public var exitText = Color(0xFFFFBEB7)
+    public val isDark: Boolean
+        get() = AppSettings.isDarkMode
 
-    public var alertClearContainer = Color(0xFF0C3B26)
-    public var alertClearContent = Color(0xFFA7E2B3)
+    public val exitContainer: Color
+        get() = if (isDark) Color(0xFF761A12) else Color(0xFFFFDAD7)
 
-    public var alertClearContentAlternate = Color(0xFF62A26F)
+    public val exitText: Color
+        get() = if (isDark) Color(0xFFFFBEB7) else Color(0xFFBA1A1A)
 
-    public var alertWatchContainer = Color(0xFF5A4212)
-    public var alertWatchContent = Color(0xFFFFE09A)
-    public var alertWarningContainer = Color(0xFF761A12)
-    public var alertWarningContent = Color(0xFFFFBEB7)
+    public val alertClearContent: Color
+        get() = if (isDark) Color(0xFF93AD99) else Color(0xFF386A42)
 
-    public var mapBackground = Color(0xFF252538)
+    public val alertClearContentAlternate: Color
+        get() = if (isDark) Color(0xFF62A26F) else Color(0xFF1E4620)
+
+    public val alertWatchContainer: Color
+        get() = if (isDark) Color(0xFF5A4212) else Color(0xFFFFDF9E)
+
+    public val alertWatchContent: Color
+        get() = if (isDark) Color(0xFFFFE09A) else Color(0xFF7B5A00)
+
+    public val alertWarningContainer: Color
+        get() = if (isDark) Color(0xFF761A12) else Color(0xFFFFDAD6)
+
+    public val alertWarningContent: Color
+        get() = if (isDark) Color(0xFFFFBEB7) else Color(0xFF93000A)
+
+    public val blueBackground: Color
+        get() = if (isDark) Color(0xFF252538) else Color(0xFFEEF0F6)
+
+    public val stormContainer: Color
+        get() = if (isDark) Color(0xFF412121) else Color(0xFFFFDAD9)
+
+    public val stormText: Color
+        get() = if (isDark) Color(0xFFFFD0D0) else Color(0xFF410006)
+
+    public val stormTextNested: Color
+        get() = if (isDark) Color(0xFFFFB3B3) else Color(0xFF900C3F)
+
+    public val stormContainerNested: Color
+        get() = if (isDark) Color(0xFF373030) else Color(0xFFF5EEEE)
+
+
+    public val lowRisk: Color
+        get() = alertClearContent
+    public val moderateRisk: Color
+        get() = if (isDark) Color(0xFFACAD93) else Color(0xFF6B6E40)
+    public val highRisk: Color
+        get() = if (isDark) Color(0xFFAD9D93) else Color(0xFF7A573F)
+    public val extremeRisk: Color
+        get() = if (isDark) Color(0xFFA993AD) else Color(0xFF6F4B78)
+
 }

@@ -1,15 +1,9 @@
-package com.example.stormpilot.viewmodel
+package com.example.stormpilot.data
 
 import android.content.Context
 import android.location.Geocoder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stormpilot.data.CurrentWeather
-import com.example.stormpilot.data.DailyWeatherOutlook
-import com.example.stormpilot.data.HourlyForecast
-import com.example.stormpilot.data.LocationRepository
-import com.example.stormpilot.data.StormSpec
-import com.example.stormpilot.data.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale
@@ -27,6 +21,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.round
 
 data class WeatherUiState(
     val current: CurrentWeather? = null,
@@ -64,8 +59,8 @@ class WeatherViewModel @Inject constructor(
                 .map { location ->
                     location?.let {
                         Pair(
-                            kotlin.math.round(it.latitude * 20) / 20.0,
-                            kotlin.math.round(it.longitude * 20) / 20.0,
+                            round(it.latitude * 20) / 20.0,
+                            round(it.longitude * 20) / 20.0,
                         )
                     }
                 }

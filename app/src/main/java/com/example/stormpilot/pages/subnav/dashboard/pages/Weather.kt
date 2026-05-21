@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,8 +45,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.data.CurrentWeather
 import com.example.stormpilot.data.DailyWeatherOutlook
 import com.example.stormpilot.data.HourlyForecast
-import com.example.stormpilot.viewmodel.WeatherUiState
-import com.example.stormpilot.viewmodel.WeatherViewModel
+import com.example.stormpilot.data.WeatherUiState
+import com.example.stormpilot.data.WeatherViewModel
+import com.example.stormpilot.ui.theme.ExtendedColors
 
 @Composable
 fun Weather(
@@ -108,12 +108,13 @@ private fun WeatherContent(
 //                )
 //            }
 //        }
+        ForecastSectionTitle("5 Day Outlook")
+        FiveDayOutlook(daily = uiState.daily)
 
         ForecastSectionTitle("Hourly Forecast")
         HourlyForecastRow(hourly = uiState.hourly)
 
-        ForecastSectionTitle("5 Day Outlook")
-        FiveDayOutlook(daily = uiState.daily)
+
     }
 }
 
@@ -123,10 +124,11 @@ private fun CurrentWeatherCard(
     current: CurrentWeather?,
     isLoading: Boolean,
 ) {
+    val colors = ExtendedColors()
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = colors.blueBackground,
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
@@ -173,27 +175,27 @@ private fun CurrentWeatherCard(
                 )
             }
 
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                CurrentWeatherPill(
-                    label = "Dew",
-                    value = current?.dewPoint?.let { "$it°" } ?: "--",
-                )
-                CurrentWeatherPill(
-                    label = "RH",
-                    value = current?.humidity?.let { "$it%" } ?: "--",
-                )
-                CurrentWeatherPill(
-                    label = "Wind",
-                    value = current?.windSpeed?.let { "$it mph" } ?: "--",
-                )
-                CurrentWeatherPill(
-                    label = "Gust",
-                    value = current?.windGust?.let { "$it mph" } ?: "--",
-                )
-            }
+//            Row(
+//                modifier = Modifier.horizontalScroll(rememberScrollState()),
+//                horizontalArrangement = Arrangement.spacedBy(8.dp),
+//            ) {
+//                CurrentWeatherPill(
+//                    label = "Dew",
+//                    value = current?.dewPoint?.let { "$it°" } ?: "--",
+//                )
+//                CurrentWeatherPill(
+//                    label = "RH",
+//                    value = current?.humidity?.let { "$it%" } ?: "--",
+//                )
+//                CurrentWeatherPill(
+//                    label = "Wind",
+//                    value = current?.windSpeed?.let { "$it mph" } ?: "--",
+//                )
+//                CurrentWeatherPill(
+//                    label = "Gust",
+//                    value = current?.windGust?.let { "$it mph" } ?: "--",
+//                )
+//            }
         }
     }
 }
@@ -305,6 +307,7 @@ private fun HourlyForecastCard(forecast: HourlyForecast) {
 
 @Composable
 private fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
+    val colors = ExtendedColors()
     if (daily.isEmpty()) {
         EmptyWeatherCard("5 day outlook will appear once your location loads.")
         return
@@ -331,6 +334,7 @@ private fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
 
 @Composable
 private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
+    val outlookSPC = if (outlook.spcOutlook.startsWith("General")) "TSTMs" else outlook.spcOutlook
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -365,7 +369,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         ) {
             Text(
-                text = outlook.spcOutlook,
+                text = outlookSPC,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 12.sp,
