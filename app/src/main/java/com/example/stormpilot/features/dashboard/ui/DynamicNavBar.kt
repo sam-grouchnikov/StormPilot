@@ -78,7 +78,8 @@ fun ModernBubbleNavBarScreen(
 
         Surface(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(bottom = 0.dp),
             tonalElevation = 0.dp
         ) {
             TabRow(
@@ -192,9 +193,11 @@ fun ModernBubbleNavBarScreen(
 
         HorizontalPager(
             state = pagerState,
+            beyondViewportPageCount = 1,
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
+                .padding(vertical = 12.dp)
         ) { page ->
             when (page) {
                 0 -> AlertSlide(title = "Location Content Screen")

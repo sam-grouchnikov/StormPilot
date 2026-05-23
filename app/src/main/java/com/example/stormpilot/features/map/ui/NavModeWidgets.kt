@@ -334,7 +334,7 @@ fun TripSummaryCard(
     if (state.address != null) {
         Card(
             modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -447,8 +447,8 @@ fun TripSummaryCard(
                             val warningColor = when {
                                 warningError != null -> MaterialTheme.colorScheme.onSurfaceVariant
                                 warningCount == null -> MaterialTheme.colorScheme.onSurfaceVariant
-                                warningCount == 0 -> Color(0xFF6CBE6C)
-                                else -> Color(0xFFBE746C)
+                                warningCount == 0 -> ExtendedColors().alertClearContent
+                                else -> MaterialTheme.colorScheme.error
                             }
 
                             if (warningCount == null && warningError == null) {
@@ -551,7 +551,7 @@ fun NavigationModeFooter(
     }
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp, bottomStart = 0.dp, bottomEnd = 0.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
         Row(

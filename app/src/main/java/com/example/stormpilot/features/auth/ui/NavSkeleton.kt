@@ -85,7 +85,7 @@ fun NavSkeleton() {
                     NavigationBar(
                         modifier = Modifier
                             .height(125.dp)
-                            .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
+                            .clip(RoundedCornerShape(24.dp)),
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         ) {
                         tabs.forEach { tab ->
@@ -117,15 +117,24 @@ fun NavSkeleton() {
                 }
             }
         ) { innerPadding ->
-            val contentModifier = if (currentRoute == TabDest.Nav.route) {
-                Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(mapContentInsets)
-            } else {
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .windowInsetsPadding(standardContentInsets)
+            val contentModifier = when (currentRoute) {
+                TabDest.Nav.route -> {
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(mapContentInsets)
+                }
+                TabDest.Radar.route -> {
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .windowInsetsPadding(mapContentInsets)
+                }
+                else -> {
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .windowInsetsPadding(standardContentInsets)
+                }
             }
 
             Box(

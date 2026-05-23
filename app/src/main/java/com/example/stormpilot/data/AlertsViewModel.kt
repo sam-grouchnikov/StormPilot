@@ -13,12 +13,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.maplibre.compose.sources.GeoJsonData
 import java.util.Locale
 import kotlin.math.abs
 
@@ -55,11 +57,14 @@ class AlertsViewModel @Inject constructor(
     val uiState: StateFlow<AlertsUiState> = _uiState
     private val _cityName = MutableStateFlow("Locating...")
     val cityName: StateFlow<String> = _cityName.asStateFlow()
+    private val _locationGeoJson = MutableStateFlow(GeoJsonData.JsonString(EMPTY_FEATURE_COLLECTION))
+    val locationGeoJson: StateFlow<GeoJsonData> = _locationGeoJson.asStateFlow()
 
     private var fetchJob: Job? = null
 
     init {
         locationRepository.startTracking()
+        observeLocationForMapOverlay()
         observeLocationChanges()
         startPeriodicRefresh()
         observeLocationForCityName()
@@ -94,6 +99,30 @@ class AlertsViewModel @Inject constructor(
                         reverseGeocode(loc.latitude, loc.longitude)
                     }
                     _cityName.value = name ?: "Unknown Area"
+                }
+        }
+    }
+
+    private fun observeLocationForMapOverlay() {
+        viewModelScope.launch {
+            locationRepository.location
+                .filterNotNull()
+                .collect { loc ->
+                    _locationGeoJson.value = GeoJsonData.JsonString(
+                        """
+                        {
+                          "type": "FeatureCollection",
+                          "features": [{
+                            "type": "Feature",
+                            "geometry": {
+                              "type": "Point",
+                              "coordinates": [${loc.longitude}, ${loc.latitude}]
+                            },
+                            "properties": {}
+                          }]
+                        }
+                        """.trimIndent()
+                    )
                 }
         }
     }
@@ -180,5 +209,9 @@ class AlertsViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         locationRepository.stopTracking()
+    }
+
+    private companion object {
+        private const val EMPTY_FEATURE_COLLECTION = """{"type":"FeatureCollection","features":[]}"""
     }
 }

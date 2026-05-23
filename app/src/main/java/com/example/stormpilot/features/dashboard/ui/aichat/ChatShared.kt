@@ -56,12 +56,7 @@ fun ChatBubble(
 ) {
     val isUser = message.isUser
     val alignment = if (isUser) Alignment.CenterEnd else Alignment.CenterStart
-    val bubbleShape = RoundedCornerShape(
-        topStart = 22.dp,
-        topEnd = 22.dp,
-        bottomStart = if (isUser) 22.dp else 8.dp,
-        bottomEnd = if (isUser) 8.dp else 22.dp
-    )
+    val bubbleShape = RoundedCornerShape(22.dp)
 
     val bubbleBrush = if (isUser) {
         Brush.linearGradient(

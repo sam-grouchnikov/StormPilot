@@ -32,7 +32,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFFFFBEB7) else Color(0xFF93000A)
 
     public val blueBackground: Color
-        get() = if (isDark) Color(0xFF252538) else Color(0xFFEEF0F6)
+        get() = if (isDark) Color(0xFF252538) else Color(0xFFE4EAF6)
 
     public val stormContainer: Color
         get() = if (isDark) Color(0xFF412121) else Color(0xFFFFDAD9)

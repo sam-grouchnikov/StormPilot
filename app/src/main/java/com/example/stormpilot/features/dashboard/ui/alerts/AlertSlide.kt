@@ -30,7 +30,11 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Flood
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Tornado
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,6 +42,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -89,6 +94,7 @@ fun AlertSlide(
     val context = LocalContext.current
     val alertsState by alertsViewModel.uiState.collectAsStateWithLifecycle()
     val cityName by alertsViewModel.cityName.collectAsStateWithLifecycle()
+    val locationGeoJson by alertsViewModel.locationGeoJson.collectAsStateWithLifecycle()
     val location by alertsViewModel.locationRepository.location.collectAsStateWithLifecycle()
     val mapsState by mapsViewModel.uiState.collectAsStateWithLifecycle()
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
@@ -114,7 +120,7 @@ fun AlertSlide(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 15.dp, vertical = 16.dp)
+            .padding(horizontal = 15.dp)
             .verticalScroll(rememberScrollState()),
 
                 verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -123,6 +129,7 @@ fun AlertSlide(
         LocationAlertsMapCard(
             cityName = cityName,
             position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
+            locationGeoJson = locationGeoJson,
             alertsGeoJson = mapsState.alertsGeoJson,
         )
 
@@ -139,8 +146,11 @@ fun AlertSlide(
 private fun LocationAlertsMapCard(
     cityName: String,
     position: Position?,
+    locationGeoJson: GeoJsonData,
     alertsGeoJson: GeoJsonData?,
 ) {
+    var showAlerts by remember { mutableStateOf(true) }
+
     val extendedColors = ExtendedColors()
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -156,26 +166,39 @@ private fun LocationAlertsMapCard(
                     imageVector = Icons.Outlined.LocationOn,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(25.dp),
                 )
                 Text(
                     text = cityName,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.W600,
-                    fontSize = 16.sp,
+                    fontSize = 19.sp,
                     modifier = Modifier.padding(start = 8.dp),
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(
+                    onClick = { showAlerts = !showAlerts },
+                    modifier = Modifier.size(30.dp).padding(end = 5.dp)
+                ) {
+                    Icon(
+                        imageVector = if (showAlerts) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
             LocationAlertsMap(
                 position = position,
+                locationGeoJson = locationGeoJson,
                 alertsGeoJson = alertsGeoJson,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
                     .clip(RoundedCornerShape(12.dp)),
+                showAlerts
             )
         }
     }
@@ -184,8 +207,10 @@ private fun LocationAlertsMapCard(
 @Composable
 private fun LocationAlertsMap(
     position: Position?,
+    locationGeoJson: GeoJsonData,
     alertsGeoJson: GeoJsonData?,
     modifier: Modifier = Modifier,
+    showAlerts: Boolean
 ) {
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val mapTarget = position ?: Position(latitude = 39.8283, longitude = -98.5795)
@@ -202,7 +227,7 @@ private fun LocationAlertsMap(
             cameraState.animateTo(
                 finalPosition = cameraState.position.copy(
                     target = target,
-                    zoom = 9.0,
+                    zoom = 8.0,
                     tilt = 0.0,
                     bearing = 0.0,
                 ),
@@ -246,56 +271,42 @@ private fun LocationAlertsMap(
             data = safeGeoJson
         )
 
-        FillLayer(
-            id = "location-alerts-fill",
-            source = alertsSource,
-            color = switch(
-                condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x22FF0000))),
-                condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x22FFD700))),
-                condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0x2200BB00))),
-                fallback = const(Color.Transparent),
-            ),
-        )
-
-        LineLayer(
-            id = "location-alerts-outline",
-            source = alertsSource,
-            color = switch(
-                condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0xC8FF3030))),
-                condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0xFFFFB020))),
-                condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0xC800E676))),
-                fallback = const(Color.Transparent),
-            ),
-            width = const(2.dp),
-        )
-
-        position?.let { userPosition ->
-            val locationSource = rememberGeoJsonSource(
-                data = GeoJsonData.JsonString(
-                    """
-                    {
-                      "type": "FeatureCollection",
-                      "features": [{
-                        "type": "Feature",
-                        "geometry": {
-                          "type": "Point",
-                          "coordinates": [${userPosition.longitude}, ${userPosition.latitude}]
-                        },
-                        "properties": {}
-                      }]
-                    }
-                    """.trimIndent()
-                )
+        if (showAlerts) {
+            FillLayer(
+                id = "location-alerts-fill",
+                source = alertsSource,
+                color = switch(
+                    condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x22FF0000))),
+                    condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x22FFD700))),
+                    condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0x2200BB00))),
+                    fallback = const(Color.Transparent),
+                ),
             )
-            CircleLayer(
-                id = "location-current-point",
-                source = locationSource,
-                color = const(MaterialTheme.colorScheme.onPrimary),
-                radius = const(5.dp),
-                strokeColor = const(MaterialTheme.colorScheme.primary),
-                strokeWidth = const(3.dp),
+
+            LineLayer(
+                id = "location-alerts-outline",
+                source = alertsSource,
+                color = switch(
+                    condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0xC8FF3030))),
+                    condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0xFFFFB020))),
+                    condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0xC800E676))),
+                    fallback = const(Color.Transparent),
+                ),
+                width = const(2.dp),
             )
         }
+
+
+
+        val locationSource = rememberGeoJsonSource(data = locationGeoJson)
+        CircleLayer(
+            id = "location-current-point",
+            source = locationSource,
+            color = const(MaterialTheme.colorScheme.onPrimary),
+            radius = const(5.dp),
+            strokeColor = const(MaterialTheme.colorScheme.primary),
+            strokeWidth = const(3.dp),
+        )
     }
 }
 
@@ -458,7 +469,7 @@ private fun AlertStatusPanel(alertsState: AlertsUiState) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
         Column(
             modifier = Modifier.padding(vertical = 14.dp),
@@ -509,7 +520,7 @@ private fun AlertStatusRow(
 ) {
     val colors = ExtendedColors()
     val containerTarget = when (state.level) {
-        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerHigh
+        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainer
         AlertLevel.Watch -> colors.alertWatchContainer
         AlertLevel.Warning -> colors.alertWarningContainer
     }

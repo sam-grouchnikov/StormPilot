@@ -5,7 +5,10 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,8 +27,12 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ContainedLoadingIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -87,7 +94,7 @@ private fun WeatherContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 15.dp, vertical = 16.dp)
+            .padding(horizontal = 15.dp)
             .verticalScroll(rememberScrollState()),
 
     verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -104,6 +111,7 @@ private fun WeatherContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun CurrentWeatherCard(
     cityName: String,
@@ -135,12 +143,7 @@ private fun CurrentWeatherCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .width(22.dp)
-                            .height(22.dp),
-                        strokeWidth = 2.dp,
-                    )
+                    LoadingIndicator()
                 }
             }
 
@@ -219,7 +222,7 @@ private fun HourlyForecastCard(forecast: HourlyForecast) {
     Surface(
         modifier = Modifier.width(104.dp),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -281,7 +284,7 @@ private fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
             daily.forEachIndexed { index, outlook ->
@@ -327,11 +330,13 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
             fontSize = 17.sp,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
-        Surface(
-            modifier = Modifier.width(126.dp),
-            shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        Spacer(modifier = Modifier.width(5.dp))
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .width(126.dp)
+                .background(shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh)
+                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape = RoundedCornerShape(10.dp))
         ) {
             Text(
                 text = outlookSPC,
@@ -347,18 +352,24 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun EmptyWeatherCard(text: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp),
-            fontWeight = FontWeight.Medium,
-        )
+        Box(
+            modifier = Modifier.fillMaxWidth().height(100.dp).padding(horizontal = 30.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            LinearWavyProgressIndicator(
+                waveSpeed = 1.dp,
+                wavelength = 50.dp,
+                gapSize = 5.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }

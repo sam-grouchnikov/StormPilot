@@ -399,13 +399,19 @@ fun MapsPage(
                 )
 
                 if (showSevereAlertsOverlay) {
+                    val tornadoFill = MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                    val stormFill = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f)
+                    val floodFill = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    val tornadoOutline = MaterialTheme.colorScheme.error.copy(alpha = 0.72f)
+                    val stormOutline = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.82f)
+                    val floodOutline = MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
                     FillLayer(
                         id = "alerts-fill",
                         source = alertsSource,
                         color = switch(
-                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x00FF0000))),
-                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x00FFD700))),
-                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0x0000BB00))),
+                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(tornadoFill)),
+                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(stormFill)),
+                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(floodFill)),
                             fallback = const(Color.Transparent),
                         ),
                     )
@@ -413,18 +419,9 @@ fun MapsPage(
                         id = "alerts-outline",
                         source = alertsSource,
                         color = switch(
-                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(
-                                0x80FF0000
-                            )
-                            )),
-                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(
-                                0xFFFF8400
-                            )
-                            )),
-                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(
-                                0x8000FF00
-                            )
-                            )),
+                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(tornadoOutline)),
+                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(stormOutline)),
+                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(floodOutline)),
                             fallback = const(Color.Transparent),
                         ),
                         width = const(2.dp),

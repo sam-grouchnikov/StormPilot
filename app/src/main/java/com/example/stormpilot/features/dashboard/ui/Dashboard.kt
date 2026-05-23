@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -55,7 +55,9 @@ fun RadarPage(
     StormPilotTheme {
         Column(modifier = Modifier.padding(horizontal = 0.dp),
             verticalArrangement = Arrangement.Top) {
+            Spacer(modifier = Modifier.height(32.dp))
             TopIconRow()
+            Spacer(modifier = Modifier.height(10.dp))
 
             ModernBubbleNavBarScreen(
                 showChat = showChat,
@@ -74,10 +76,10 @@ fun TopIconRow() {
     val userName = "Sam"
     val avatarLetter = userName.firstOrNull()?.toString() ?: "?"
     val avatarColor = MaterialTheme.colorScheme.surfaceContainerHighest
-    val outlineColor = Color(0xFF1E885C)
+    val outlineColor = MaterialTheme.colorScheme.primary
 
     Row(
-        modifier = Modifier.padding(vertical = 16.dp, horizontal = 20.dp),
+        modifier = Modifier.padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -114,7 +116,7 @@ fun TopIconRow() {
         ) {
             Text(
                 text = avatarLetter,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
             )
