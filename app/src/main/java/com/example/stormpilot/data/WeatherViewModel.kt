@@ -1,15 +1,9 @@
-package com.example.stormpilot.features.weather.presentation
+package com.example.stormpilot.data
 
 import android.content.Context
 import android.location.Geocoder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stormpilot.features.location.data.LocationRepository
-import com.example.stormpilot.features.weather.data.CurrentWeather
-import com.example.stormpilot.features.weather.data.DailyWeatherOutlook
-import com.example.stormpilot.features.weather.data.HourlyForecast
-import com.example.stormpilot.features.weather.data.StormSpec
-import com.example.stormpilot.features.weather.data.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.Locale

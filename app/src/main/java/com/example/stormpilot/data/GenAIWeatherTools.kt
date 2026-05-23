@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.assistant
+package com.example.stormpilot.data
 
 import android.content.Context
 import android.location.Geocoder
@@ -17,10 +17,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -342,7 +342,7 @@ class GenAIWeatherTools(private val context: Context) {
         }
     }
 
-    private fun kotlinx.serialization.json.JsonObjectBuilder.putLocation(location: ResolvedLocation) {
+    private fun JsonObjectBuilder.putLocation(location: ResolvedLocation) {
         put("location", buildJsonObject {
             put("name", location.name)
             put("latitude", location.latitude)

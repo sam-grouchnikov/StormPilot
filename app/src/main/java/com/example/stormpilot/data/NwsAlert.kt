@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.alerts.data
+package com.example.stormpilot.data
 
 data class NwsAlert(
     val id: String,

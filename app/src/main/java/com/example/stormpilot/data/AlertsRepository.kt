@@ -1,8 +1,9 @@
-package com.example.stormpilot.features.alerts.data
+package com.example.stormpilot.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.net.HttpURLConnection
 import java.net.URL
 import javax.inject.Inject
 
@@ -15,7 +16,7 @@ class AlertsRepository @Inject constructor(){
         return withContext(Dispatchers.IO) {
             try {
                 val url = "https://api.weather.gov/alerts/active?point=$latitude,$longitude"
-                val connection = URL(url).openConnection() as java.net.HttpURLConnection
+                val connection = URL(url).openConnection() as HttpURLConnection
                 connection.setRequestProperty("User-Agent", "(StormPilot, sam.grouchnikov@gmail.com)")
                 connection.setRequestProperty("Accept", "application/geo+json")
                 connection.connectTimeout = 10000

@@ -51,7 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stormpilot.features.assistant.GenAIViewModel
+import com.example.stormpilot.data.GenAIViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

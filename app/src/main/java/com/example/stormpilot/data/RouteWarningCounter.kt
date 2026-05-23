@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.map.presentation
+package com.example.stormpilot.data
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray

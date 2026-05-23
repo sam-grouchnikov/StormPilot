@@ -5,8 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.stormpilot.features.assistant.GenAIViewModel
-import com.example.stormpilot.features.dashboard.ui.aichat.ChatPanel
+import com.example.stormpilot.data.GenAIViewModel
 
 @Composable
 fun AIChat(title: String, genAIViewModel: GenAIViewModel) {

@@ -52,12 +52,12 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.core.AppSettings
-import com.example.stormpilot.features.weather.data.StormSpec
+import com.example.stormpilot.data.StormSpec
 import com.example.stormpilot.ui.theme.ExtendedColors
-import com.example.stormpilot.features.alerts.presentation.AlertsUiState
-import com.example.stormpilot.features.alerts.presentation.AlertsViewModel
-import com.example.stormpilot.features.weather.presentation.WeatherViewModel
-import com.example.stormpilot.features.map.presentation.MapsViewModel
+import com.example.stormpilot.data.AlertsUiState
+import com.example.stormpilot.data.AlertsViewModel
+import com.example.stormpilot.data.WeatherViewModel
+import com.example.stormpilot.data.MapsViewModel
 import kotlin.time.Duration.Companion.milliseconds
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState

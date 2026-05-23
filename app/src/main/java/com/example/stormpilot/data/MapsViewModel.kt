@@ -1,12 +1,10 @@
-package com.example.stormpilot.features.map.presentation
+package com.example.stormpilot.data
 
+import android.content.Context
 import android.location.Geocoder
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stormpilot.features.map.data.routing.RouteStep
-import com.example.stormpilot.features.map.data.routing.RoutingParsing
-import com.example.stormpilot.features.map.data.routing.RoutingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +54,7 @@ data class MapsUiState(
 @HiltViewModel
 class MapsViewModel @Inject constructor(
     private val routingRepository: RoutingRepository,
-    @ApplicationContext private val context: android.content.Context
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapsUiState())

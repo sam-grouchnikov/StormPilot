@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.location.data
+package com.example.stormpilot.data
 
 import android.Manifest
 import android.content.Context

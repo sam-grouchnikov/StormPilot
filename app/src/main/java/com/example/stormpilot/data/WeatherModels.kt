@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.weather.data
+package com.example.stormpilot.data
 
 data class WeatherSnapshot(
     val current: CurrentWeather,

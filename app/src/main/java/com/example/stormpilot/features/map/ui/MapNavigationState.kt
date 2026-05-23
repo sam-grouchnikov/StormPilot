@@ -1,6 +1,6 @@
 package com.example.stormpilot.features.map.ui
 
-import com.example.stormpilot.features.map.presentation.MapsUiState
+import com.example.stormpilot.data.MapsUiState
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.atan2
 import kotlin.math.cos

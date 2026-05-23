@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,7 +21,7 @@ import com.example.stormpilot.core.updateAppCompatNightMode
 import com.example.stormpilot.features.auth.ui.SignIn
 import com.example.stormpilot.features.auth.ui.SignUp
 import com.example.stormpilot.features.auth.ui.WelcomePage
-import com.example.stormpilot.features.navigation.NavSkeleton
+import com.example.stormpilot.features.auth.ui.NavSkeleton
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

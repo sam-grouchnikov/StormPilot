@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.assistant
+package com.example.stormpilot.data
 
 import android.content.Context
 import android.util.Log

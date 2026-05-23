@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.weather.data
+package com.example.stormpilot.data
 
 import java.net.HttpURLConnection
 import java.net.URL
@@ -10,7 +10,11 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import kotlin.math.abs
+import kotlin.math.cos
 import kotlin.math.roundToInt
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 /**
  * Fetches Open-Meteo forecast data plus SPC outlooks and merges them into StormPilot weather snapshots.
@@ -190,7 +194,7 @@ class WeatherRepository @Inject constructor() {
         return levels.zipWithNext().sumOf { (lower, upper) ->
             ((upper.first - stormMotion.first) * (lower.second - stormMotion.second)) -
                 ((lower.first - stormMotion.first) * (upper.second - stormMotion.second))
-        }.let { kotlin.math.abs(it) }
+        }.let { abs(it) }
     }
 
     private fun riskForPoint(geoJson: JSONObject, latitude: Double, longitude: Double): String {
@@ -310,11 +314,11 @@ class WeatherRepository @Inject constructor() {
 
     private fun windVector(speed: Double, directionDegrees: Double): Pair<Double, Double> {
         val radians = Math.toRadians(directionDegrees)
-        return Pair(-speed * kotlin.math.sin(radians), -speed * kotlin.math.cos(radians))
+        return Pair(-speed * sin(radians), -speed * cos(radians))
     }
 
     private fun vectorMagnitude(u: Double, v: Double): Double =
-        kotlin.math.sqrt(u * u + v * v)
+        sqrt(u * u + v * v)
 
     private fun formatDay(value: String, index: Int): String =
         when (index) {

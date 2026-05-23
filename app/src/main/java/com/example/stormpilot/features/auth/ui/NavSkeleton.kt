@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.navigation
+package com.example.stormpilot.features.auth.ui
 
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
@@ -9,6 +9,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -33,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -65,7 +65,7 @@ fun NavSkeleton() {
         val tabs = listOf(TabDest.Radar, TabDest.Nav, TabDest.Settings)
         val mapContentInsets =
             WindowInsets.safeDrawing
-                .only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal)
+                .only(WindowInsetsSides.Horizontal)
                 .union(WindowInsets.displayCutout)
         val standardContentInsets = WindowInsets.safeDrawing.union(WindowInsets.displayCutout)
 

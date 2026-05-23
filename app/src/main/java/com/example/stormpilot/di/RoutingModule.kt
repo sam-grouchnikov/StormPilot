@@ -1,7 +1,7 @@
 package com.example.stormpilot.di
 
-import com.example.stormpilot.features.map.data.routing.RoutingRepository
-import com.example.stormpilot.features.map.data.routing.RoutingRepositoryImpl
+import com.example.stormpilot.data.RoutingRepository
+import com.example.stormpilot.data.RoutingRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
