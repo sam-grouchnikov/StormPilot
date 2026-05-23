@@ -1,4 +1,4 @@
-package com.example.compose
+package com.example.stormpilot.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -15,10 +15,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
-import com.example.stormpilot.AppSettings
-import com.example.stormpilot.isAppInDarkMode
-
-// ... (other schemes and classes) ...
+import com.example.stormpilot.core.AppSettings
+import com.example.stormpilot.core.isAppInDarkMode
 
 
 private val lightScheme = lightColorScheme(
@@ -314,4 +312,3 @@ fun StormPilotTheme(
         content = content
     )
 }
-

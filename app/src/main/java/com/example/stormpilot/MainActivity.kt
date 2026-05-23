@@ -16,11 +16,13 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.compose.StormPilotTheme
-import com.example.stormpilot.pages.NavSkeleton
-import com.example.stormpilot.pages.SignIn
-import com.example.stormpilot.pages.SignUp
-import com.example.stormpilot.pages.WelcomePage
+import com.example.stormpilot.ui.theme.StormPilotTheme
+import com.example.stormpilot.core.AppSettings
+import com.example.stormpilot.core.updateAppCompatNightMode
+import com.example.stormpilot.features.auth.ui.SignIn
+import com.example.stormpilot.features.auth.ui.SignUp
+import com.example.stormpilot.features.auth.ui.WelcomePage
+import com.example.stormpilot.features.navigation.NavSkeleton
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -32,7 +34,6 @@ class MainActivity : ComponentActivity() {
         val semiTransparentScrim = android.graphics.Color.argb(0x90, 0x1b, 0x1b, 0x1b)
 
         enableEdgeToEdge(
-            // This still handles icon colors (light/dark text) appropriately
             statusBarStyle = SystemBarStyle.auto(
                 lightScrim = Color.TRANSPARENT,
                 darkScrim = Color.TRANSPARENT

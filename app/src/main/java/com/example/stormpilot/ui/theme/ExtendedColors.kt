@@ -1,7 +1,7 @@
 package com.example.stormpilot.ui.theme
 
 import androidx.compose.ui.graphics.Color
-import com.example.stormpilot.AppSettings
+import com.example.stormpilot.core.AppSettings
 
 public class ExtendedColors {
     public val isDark: Boolean
