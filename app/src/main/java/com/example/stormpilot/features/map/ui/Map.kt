@@ -399,19 +399,22 @@ fun MapsPage(
                 )
 
                 if (showSevereAlertsOverlay) {
-                    val tornadoFill = MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
-                    val stormFill = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f)
-                    val floodFill = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    val tornadoOutline = MaterialTheme.colorScheme.error.copy(alpha = 0.72f)
-                    val stormOutline = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.82f)
-                    val floodOutline = MaterialTheme.colorScheme.primary.copy(alpha = 0.72f)
                     FillLayer(
                         id = "alerts-fill",
                         source = alertsSource,
                         color = switch(
-                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(tornadoFill)),
-                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(stormFill)),
-                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(floodFill)),
+                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(
+                                0x3DFF0000
+                            )
+                            )),
+                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(
+                                0x3EFF9F15
+                            )
+                            )),
+                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(
+                                0x3D00BB00
+                            )
+                            )),
                             fallback = const(Color.Transparent),
                         ),
                     )
@@ -419,9 +422,18 @@ fun MapsPage(
                         id = "alerts-outline",
                         source = alertsSource,
                         color = switch(
-                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(tornadoOutline)),
-                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(stormOutline)),
-                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(floodOutline)),
+                            condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(
+                                0x80FF0000
+                            )
+                            )),
+                            condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(
+                                0xFFD26D03
+                            )
+                            )),
+                            condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(
+                                0x8000FF00
+                            )
+                            )),
                             fallback = const(Color.Transparent),
                         ),
                         width = const(2.dp),

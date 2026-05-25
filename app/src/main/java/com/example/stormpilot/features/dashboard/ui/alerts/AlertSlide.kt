@@ -35,6 +35,7 @@ import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -336,17 +337,22 @@ private fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 if (stormSpecs.isEmpty()) {
-                    StormSpecCard(
-                        spec = StormSpec(
-                            label = "Loading",
-                            value = "--",
-                            detail = "Weather profile",
-                        )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    LinearWavyProgressIndicator(
+                        waveSpeed = 1.dp,
+                        wavelength = 50.dp,
+                        gapSize = 5.dp,
+                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 5.dp),
+                        color = colors.stormText,
+                        trackColor = colors.stormContainer
                     )
+                    Spacer(modifier = Modifier.height(10.dp))
+
                 } else {
                     stormSpecs.forEach { spec ->
                         StormSpecCard(spec = spec)
                     }
+
                 }
             }
         }
