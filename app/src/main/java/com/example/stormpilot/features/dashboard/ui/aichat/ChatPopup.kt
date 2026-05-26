@@ -1,7 +1,13 @@
 package com.example.stormpilot.features.dashboard.ui.aichat
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -48,8 +54,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -58,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import com.example.stormpilot.data.GenAIViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,34 +135,111 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
         tonalElevation = 0.dp,
         scrimColor = Color.Black.copy(alpha = 0.42f)
     ) {
-        Surface(
+        val infiniteTransition = rememberInfiniteTransition(label = "infinite")
+        val angle by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 3000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "angle"
+        )
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.88f)
-                .padding(horizontal = 10.dp, vertical = 8.dp)
+                .padding(horizontal = 18.dp, vertical = 16.dp)
                 .navigationBarsPadding()
-                .imePadding(),
-            shape = RoundedCornerShape(30.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f),
-            border = BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
-            ),
-            tonalElevation = 12.dp,
-            shadowElevation = 18.dp
+                .imePadding()
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.98f)
-                    )
+                    .matchParentSize()
+                    .drawWithCache {
+                        val androidColors = intArrayOf(
+                            android.graphics.Color.parseColor("#4285F4"),
+                            android.graphics.Color.parseColor("#EA4335"),
+                            android.graphics.Color.parseColor("#FBBC05"),
+                            android.graphics.Color.parseColor("#34A853"),
+                            android.graphics.Color.parseColor("#4285F4")
+                        )
+                        
+                        onDrawBehind {
+                            val shader = android.graphics.SweepGradient(
+                                size.width / 2f,
+                                size.height / 2f,
+                                androidColors,
+                                null
+                            )
+                            val matrix = android.graphics.Matrix()
+                            matrix.setRotate(angle, size.width / 2f, size.height / 2f)
+                            shader.setLocalMatrix(matrix)
+
+                            val paint = androidx.compose.ui.graphics.Paint().apply {
+                                isAntiAlias = true
+                                this.shader = shader
+                            }
+                            
+                            val shadowPaint = androidx.compose.ui.graphics.Paint().apply {
+                                isAntiAlias = true
+                                this.shader = shader
+                            }.apply {
+                                asFrameworkPaint().maskFilter = android.graphics.BlurMaskFilter(
+                                    20.dp.toPx(),
+                                    android.graphics.BlurMaskFilter.Blur.NORMAL
+                                )
+                            }
+                            
+                            val cornerRadius = 30.dp.toPx()
+                            val rect = androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height)
+
+                            drawIntoCanvas { canvas ->
+                                canvas.drawRoundRect(
+                                    left = rect.left,
+                                    top = rect.top,
+                                    right = rect.right,
+                                    bottom = rect.bottom,
+                                    radiusX = cornerRadius,
+                                    radiusY = cornerRadius,
+                                    paint = shadowPaint
+                                )
+                                canvas.drawRoundRect(
+                                    left = rect.left,
+                                    top = rect.top,
+                                    right = rect.right,
+                                    bottom = rect.bottom,
+                                    radiusX = cornerRadius,
+                                    radiusY = cornerRadius,
+                                    paint = paint
+                                )
+                            }
+                        }
+                    }
+            )
+
+            Surface(
+                modifier = Modifier
+                    .matchParentSize()
+                    .padding(1.5.dp),
+                shape = RoundedCornerShape(28.5.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f),
+                tonalElevation = 12.dp,
+                shadowElevation = 18.dp
             ) {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 14.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.98f)
+                        )
                 ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp, vertical = 14.dp)
+                    ) {
                     ChatPopupHeader(onDismiss = onDismiss)
 
                     LazyColumn(
@@ -242,6 +333,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                             }
                         }
                     }
+                }
                 }
             }
         }
