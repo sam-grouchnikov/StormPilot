@@ -72,6 +72,7 @@ import com.example.stormpilot.data.GenAIViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.sqrt
+import androidx.core.graphics.toColorInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -159,11 +160,11 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                     .matchParentSize()
                     .drawWithCache {
                         val androidColors = intArrayOf(
-                            android.graphics.Color.parseColor("#4285F4"),
-                            android.graphics.Color.parseColor("#EA4335"),
-                            android.graphics.Color.parseColor("#FBBC05"),
-                            android.graphics.Color.parseColor("#34A853"),
-                            android.graphics.Color.parseColor("#4285F4")
+                            "#4285F4".toColorInt(),
+                            "#EA4335".toColorInt(),
+                            "#FBBC05".toColorInt(),
+                            "#34A853".toColorInt(),
+                            "#4285F4".toColorInt()
                         )
                         
                         onDrawBehind {
