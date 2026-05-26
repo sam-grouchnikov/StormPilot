@@ -99,6 +99,10 @@ fun MapsPage(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val selectedLocation by viewModel.selectedLocation.collectAsStateWithLifecycle()
+    val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
     var navMode by remember { mutableStateOf(false) }
     var navigationCameraTrackingEnabled by remember { mutableStateOf(false) }
@@ -245,7 +249,15 @@ fun MapsPage(
         onDestinationSelectedStateChanged(uiState.destination != null)
     }
 
-    var query by remember { mutableStateOf("") }
+    LaunchedEffect(selectedLocation) {
+        selectedLocation?.let { feature ->
+            cameraState.animateTo(
+                finalPosition = cameraState.position.copy(target = feature.geometry, zoom = 14.0),
+                duration = 1.seconds,
+            )
+        }
+    }
+
     var active by remember { mutableStateOf(false) }
     var showTripSummary by remember { mutableStateOf(false) }
     var showRadarOverlay by remember { mutableStateOf(false) }
@@ -631,12 +643,14 @@ fun MapsPage(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .fillMaxSize(),
-                    query = query,
+                    query = searchQuery,
                     active = active,
-                    onQueryChange = { query = it },
+                    searchResults = searchResults,
+                    onQueryChange = viewModel::onSearchQueryChanged,
                     onActiveChange = { active = it },
                     onResultClick = { selected ->
-                        query = selected
+                        viewModel.onLocationSelected(selected)
+                        showTripSummary = true
                         active = false
                     },
                     containerColor = searchContainerColor,

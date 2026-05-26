@@ -86,6 +86,7 @@ import androidx.compose.ui.unit.sp
 import com.example.stormpilot.data.formatDistance
 import com.example.stormpilot.data.formatDuration
 import com.example.stormpilot.data.MapsUiState
+import com.example.stormpilot.data.PhotonFeature
 import kotlinx.coroutines.delay
 import com.example.stormpilot.ui.theme.ExtendedColors
 
@@ -97,9 +98,10 @@ fun SearchScaffold(
     modifier: Modifier = Modifier,
     query: String,
     active: Boolean,
+    searchResults: List<PhotonFeature>,
     onQueryChange: (String) -> Unit,
     onActiveChange: (Boolean) -> Unit,
-    onResultClick: (String) -> Unit,
+    onResultClick: (PhotonFeature) -> Unit,
     containerColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -249,7 +251,7 @@ fun SearchScaffold(
                 }
 
                 AnimatedVisibility(
-                    visible = active,
+                    visible = active && searchResults.isNotEmpty(),
                     modifier = Modifier.weight(1f),
                     enter = fadeIn(animationSpec = tween(180, delayMillis = 140, easing = FastOutSlowInEasing)) +
                         slideInVertically(
@@ -259,7 +261,6 @@ fun SearchScaffold(
                     exit = fadeOut(animationSpec = tween(90, easing = FastOutSlowInEasing)) +
                         shrinkVertically(animationSpec = tween(150, easing = FastOutSlowInEasing)),
                 ) {
-                    val recents = List(3) { index -> "Recent Location ${index + 1}" }
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -267,25 +268,28 @@ fun SearchScaffold(
                         contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp, bottom = 18.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        items(recents) { result ->
+                        items(searchResults) { result ->
                             ListItem(
                                 headlineContent = {
                                     Text(
-                                        text = result,
+                                        text = result.name,
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                 },
                                 supportingContent = {
-                                    Text(
-                                        text = "123 Street Name, City",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
+                                    val address = listOfNotNull(result.city, result.state).joinToString(", ")
+                                    if (address.isNotEmpty()) {
+                                        Text(
+                                            text = address,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
                                 },
                                 leadingContent = {
                                     Icon(
-                                        imageVector = Icons.Default.History,
+                                        imageVector = Icons.Default.Search,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                     )

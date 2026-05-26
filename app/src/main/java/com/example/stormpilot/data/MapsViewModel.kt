@@ -20,6 +20,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.collectLatest
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.spatialk.geojson.Position
 import java.net.HttpURLConnection
@@ -52,13 +55,27 @@ data class MapsUiState(
  * Owns map search, routing, alert overlays, and navigation progress state for the map screen.
  */
 @HiltViewModel
+@OptIn(FlowPreview::class)
 class MapsViewModel @Inject constructor(
     private val routingRepository: RoutingRepository,
+    private val photonApiClient: PhotonApiClient,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapsUiState())
     val uiState: StateFlow<MapsUiState> = _uiState.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _searchResults = MutableStateFlow<List<PhotonFeature>>(emptyList())
+    val searchResults: StateFlow<List<PhotonFeature>> = _searchResults.asStateFlow()
+
+    private val _selectedLocation = MutableStateFlow<PhotonFeature?>(null)
+    val selectedLocation: StateFlow<PhotonFeature?> = _selectedLocation.asStateFlow()
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
     private var currentRoutePolyline: List<Position> = emptyList()
     private var rerouteDebounceJob: Job? = null
@@ -97,6 +114,58 @@ class MapsViewModel @Inject constructor(
                 delay(300_000L)
             }
         }
+
+        viewModelScope.launch {
+            _searchQuery
+                .debounce(500)
+                .collectLatest { query ->
+                    if (query.length > 2) {
+                        _isSearching.value = true
+                        _searchResults.value = photonApiClient.search(query, _uiState.value.origin)
+                        _isSearching.value = false
+                    } else {
+                        _searchResults.value = emptyList()
+                        _isSearching.value = false
+                    }
+                }
+        }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _searchQuery.value = query
+        if (query.isEmpty()) {
+            _searchResults.value = emptyList()
+            _isSearching.value = false
+        } else if (query.length > 2) {
+            _isSearching.value = true
+        }
+    }
+
+    fun onLocationSelected(feature: PhotonFeature) {
+        _selectedLocation.value = feature
+        _searchQuery.value = feature.name
+        _searchResults.value = emptyList()
+
+        val featureAddress = listOfNotNull(feature.name, feature.city, feature.state).joinToString(", ")
+
+        _uiState.value = _uiState.value.copy(
+            destination = feature.geometry,
+            routeGeoJson = null,
+            distanceMeters = null,
+            durationSeconds = null,
+            remainingDistanceMeters = null,
+            remainingDurationSeconds = null,
+            steps = emptyList(),
+            currentStepIndex = 0,
+            routeError = null,
+            isLoadingRoute = false,
+            address = featureAddress,
+            routeWarningCount = null,
+            routeWarningError = null,
+        )
+        currentRoutePolyline = emptyList()
+        routeWarningsJob?.cancel()
+        requestRoute()
     }
 
     private suspend fun fetchAlerts() {
