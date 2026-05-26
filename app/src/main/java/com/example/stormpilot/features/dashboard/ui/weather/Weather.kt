@@ -23,9 +23,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AcUnit
+import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Thunderstorm
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.WbSunny
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -125,8 +129,8 @@ private fun CurrentWeatherCard(
         color = colors.blueBackground,
     ) {
         Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(horizontal = 25.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -138,29 +142,42 @@ private fun CurrentWeatherCard(
                     text = cityName,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
                     modifier = Modifier.padding(start = 8.dp),
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                if (isLoading) {
-                    LoadingIndicator()
-                }
             }
 
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    text = current?.let { "${it.temperature}°" } ?: "--°",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 54.sp,
-                    lineHeight = 56.sp,
-                )
-                Text(
-                    text = current?.conditions ?: "Waiting for weather",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(start = 12.dp, bottom = 8.dp),
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.weight(1f)) {
+                    if(isLoading)  {
+                        LoadingIndicator()
+                    }
+                    Text(
+                        text = current?.let { "${it.temperature}°" } ?: "",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 54.sp,
+                        lineHeight = 56.sp,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                    Text(
+                        text = current?.conditions ?: "Waiting on Weather",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(start = 8.dp, bottom = 10.dp),
+                    )
+
+                }
+
+
+                AnimatedWeatherIcon(
+                    condition = current?.conditions ?: "",
+                    modifier = Modifier.padding(bottom = 4.dp, end = 12.dp)
                 )
             }
 
@@ -236,7 +253,7 @@ private fun HourlyForecastCard(forecast: HourlyForecast) {
                 fontSize = 13.sp,
             )
             Icon(
-                imageVector = Icons.Outlined.WbSunny,
+                imageVector = getWeatherIconForCondition(forecast.conditions),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )
@@ -371,5 +388,16 @@ private fun EmptyWeatherCard(text: String) {
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+private fun getWeatherIconForCondition(condition: String): ImageVector {
+    return when (condition) {
+        "Clear", "Mainly clear" -> Icons.Outlined.WbSunny
+        "Partly cloudy", "Overcast", "Fog" -> Icons.Outlined.Cloud
+        "Drizzle", "Freezing drizzle", "Rain", "Freezing rain", "Rain showers" -> Icons.Outlined.WaterDrop
+        "Snow", "Snow grains", "Snow showers" -> Icons.Outlined.AcUnit
+        "Thunderstorms", "Severe storms" -> Icons.Outlined.Thunderstorm
+        else -> Icons.Outlined.WbSunny
     }
 }
