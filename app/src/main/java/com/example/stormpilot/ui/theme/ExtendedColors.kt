@@ -60,7 +60,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFFFFB3B3) else Color(0xFF900C3F)
 
     public val stormContainerNested: Color
-        get() = if (isDark) Color(0xFF373030) else Color(0xFFF5EEEE)
+        get() = if (isDark) Color(0xFF503737) else Color(0xFFF5EEEE)
 
 
     public val lowRisk: Color
