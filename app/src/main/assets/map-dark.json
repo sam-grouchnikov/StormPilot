@@ -23,7 +23,7 @@
       "filter": ["==", "$type", "Polygon"],
       "source": "protomaps",
       "source-layer": "earth",
-      "paint": { "fill-color": "#0a1221" }
+      "paint": { "fill-color": "#16212b" }
     },
     {
       "id": "landuse_park",
@@ -34,7 +34,7 @@
       "paint": {
         "fill-opacity": ["interpolate",["linear"],["zoom"],6,0,11,1],
         "fill-color": ["case",
-          ["in",["get","kind"],["literal",["national_park","park","cemetery","protected_area","nature_reserve","forest","golf_course"]]],"#1a2b20",
+          ["in",["get","kind"],["literal",["national_park","park","cemetery","protected_area","nature_reserve","forest","golf_course"]]],"#162b1f",
           ["==",["get","kind"],"wood"],"#1c2e22",
           ["in",["get","kind"],["literal",["scrub","grassland","grass"]]],"#1e2e24",
           ["==",["get","kind"],"glacier"],"#1e2a38",
@@ -50,7 +50,7 @@
       "source": "protomaps",
       "source-layer": "landuse",
       "filter": ["in","kind","allotments","village_green","playground"],
-      "paint": { "fill-color": "#1a2b20", "fill-opacity": 0.7 }
+      "paint": { "fill-color": "#1b241e", "fill-opacity": 0.7 }
     },
     {
       "id": "landuse_hospital",

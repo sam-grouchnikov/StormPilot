@@ -292,7 +292,7 @@ fun MapsPage(
     StormPilotTheme(
         opaqueNavigationBar = true,
     ) {
-        val searchContainerColor = MaterialTheme.colorScheme.inverseOnSurface
+        val searchContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         val mapStyle = if (AppSettings.isDarkMode) {
             "asset://map-dark.json"
         } else {
@@ -551,7 +551,7 @@ fun MapsPage(
                         onClick = { showRadarOverlay = !showRadarOverlay },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = if (showRadarOverlay) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.inverseOnSurface,
+                            else MaterialTheme.colorScheme.surfaceContainerHigh,
                         ),
                     ) {
                         Icon(

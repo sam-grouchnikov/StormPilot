@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -48,7 +47,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
@@ -150,13 +148,13 @@ private fun FloatingNavBar(
 //                    spread = 1.dp
 //                )
                 .clip(CircleShape)
-                .background(colors.greenSurfaceContainer)
+                .background(colors.purpleSurfaceContainer)
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             content = {
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(colors.greenPrimaryContainer)
+                        .background(colors.purplePrimaryContainer)
                 )
 
                 // Nav items

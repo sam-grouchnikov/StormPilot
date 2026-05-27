@@ -102,7 +102,7 @@ fun SearchScaffold(
     onQueryChange: (String) -> Unit,
     onActiveChange: (Boolean) -> Unit,
     onResultClick: (PhotonFeature) -> Unit,
-    containerColor: Color = MaterialTheme.colorScheme.inverseOnSurface,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -338,8 +338,8 @@ fun TripSummaryCard(
     if (state.address != null) {
         Card(
             modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!state.isLoadingRoute) {
@@ -555,8 +555,8 @@ fun NavigationModeFooter(
     }
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Row(
             modifier = Modifier
