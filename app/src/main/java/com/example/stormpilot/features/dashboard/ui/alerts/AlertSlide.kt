@@ -122,7 +122,8 @@ fun AlertSlide(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 15.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 50.dp),
 
                 verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -315,7 +316,7 @@ private fun LocationAlertsMap(
 private fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
     val colors = ExtendedColors()
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(bottom = 50.dp),
         shape = RoundedCornerShape(14.dp),
         color =  colors.stormContainer,
     ) {

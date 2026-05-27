@@ -99,7 +99,8 @@ private fun WeatherContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 15.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 30.dp),
 
     verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -227,7 +228,7 @@ private fun HourlyForecastRow(hourly: List<HourlyForecast>) {
         return
     }
 
-    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(bottom = 60.dp)) {
         items(hourly) { forecast ->
             HourlyForecastCard(forecast = forecast)
         }
