@@ -1,0 +1,156 @@
+{
+  "version": 8,
+  "name": "StormPilot Light Blue",
+  "glyphs": "https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf",
+  "sprite": "https://protomaps.github.io/basemaps-assets/sprites/v4/light",
+  "sources": {
+    "protomaps": {
+      "attribution": "<a href=\"https://github.com/protomaps/basemaps\">Protomaps</a> © <a href=\"https://openstreetmap.org\">OpenStreetMap</a>",
+      "type": "vector",
+      "tiles": ["https://api.protomaps.com/tiles/v4/{z}/{x}/{y}.mvt?key=64a5f0a9c35b4ca1"],
+      "maxzoom": 15
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": { "background-color": "#eef3fb" }
+    },
+    {
+      "id": "earth",
+      "type": "fill",
+      "filter": ["==", "$type", "Polygon"],
+      "source": "protomaps",
+      "source-layer": "earth",
+      "paint": { "fill-color": "#e3eaf6" }
+    },
+    {
+      "id": "landuse_park",
+      "type": "fill",
+      "source": "protomaps",
+      "source-layer": "landuse",
+      "filter": ["in","kind","national_park","park","cemetery","protected_area","nature_reserve","forest","golf_course","wood","scrub","grassland","grass","glacier","sand","military","naval_base","airfield"],
+      "paint": {
+        "fill-opacity": ["interpolate",["linear"],["zoom"],6,0,11,1],
+        "fill-color": ["case",
+          ["in",["get","kind"],["literal",["national_park","park","cemetery","protected_area","nature_reserve","forest","golf_course"]]],"#dcefe3",
+          ["==",["get","kind"],"wood"],"#d7ebdf",
+          ["in",["get","kind"],["literal",["scrub","grassland","grass"]]],"#e1efe7",
+          ["==",["get","kind"],"glacier"],"#dde6f5",
+          ["==",["get","kind"],"sand"],"#e9edf5",
+          ["in",["get","kind"],["literal",["military","naval_base","airfield"]]],"#e3e9f4",
+          "#e5ebf6"
+        ]
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "filter": ["==","$type","Polygon"],
+      "source": "protomaps",
+      "source-layer": "water",
+      "paint": { "fill-color": "#cfe0f5" }
+    },
+    {
+      "id": "water_river",
+      "type": "line",
+      "source": "protomaps",
+      "source-layer": "water",
+      "paint": {
+        "line-color": "#a9c7ea",
+        "line-width": ["interpolate",["exponential",1.6],["zoom"],9,0,9.5,1,18,12]
+      }
+    },
+    {
+      "id": "water_stream",
+      "type": "line",
+      "source": "protomaps",
+      "source-layer": "water",
+      "paint": {
+        "line-color": "#b7d2ee",
+        "line-width": 0.5
+      }
+    },
+    {
+      "id": "buildings",
+      "type": "fill",
+      "source": "protomaps",
+      "source-layer": "buildings",
+      "paint": {
+        "fill-color": "#d6e0ef",
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "roads_major",
+      "type": "line",
+      "source": "protomaps",
+      "source-layer": "roads",
+      "filter": ["==","kind","major_road"],
+      "paint": {
+        "line-color": "#7f9bb8",
+        "line-width": ["interpolate",["exponential",1.6],["zoom"],6,0,12,1.6,15,3,18,13]
+      }
+    },
+    {
+      "id": "roads_highway",
+      "type": "line",
+      "source": "protomaps",
+      "source-layer": "roads",
+      "filter": ["==","kind","highway"],
+      "paint": {
+        "line-color": "#6f8fb0",
+        "line-width": ["interpolate",["exponential",1.6],["zoom"],3,0,6,1.1,12,1.6,15,5,18,15]
+      }
+    },
+    {
+      "id": "roads_minor",
+      "type": "line",
+      "source": "protomaps",
+      "source-layer": "roads",
+      "filter": ["==","kind","minor_road"],
+      "paint": {
+        "line-color": "#9fb3cc",
+        "line-width": ["interpolate",["exponential",1.6],["zoom"],11,0,12.5,0.5,15,2,18,11]
+      }
+    },
+    {
+      "id": "roads_other",
+      "type": "line",
+      "source": "protomaps",
+      "source-layer": "roads",
+      "filter": ["in","kind","other","path"],
+      "paint": {
+        "line-color": "#b8c7dc",
+        "line-width": ["interpolate",["exponential",1.6],["zoom"],14,0.5,20,12]
+      }
+    },
+    {
+      "id": "boundaries",
+      "type": "line",
+      "source": "protomaps",
+      "source-layer": "boundaries",
+      "paint": {
+        "line-color": "#9bb0c8",
+        "line-width": 0.5
+      }
+    },
+    {
+      "id": "labels",
+      "type": "symbol",
+      "source": "protomaps",
+      "source-layer": "places",
+      "layout": {
+        "text-field": ["get","name"],
+        "text-font": ["Noto Sans Regular"],
+        "text-size": 12
+      },
+      "paint": {
+        "text-color": "#2a3b52",
+        "text-halo-color": "#ffffff",
+        "text-halo-width": 1.5
+      }
+    }
+  ]
+}

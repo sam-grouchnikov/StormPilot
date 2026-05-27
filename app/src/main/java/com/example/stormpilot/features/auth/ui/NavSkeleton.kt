@@ -144,11 +144,11 @@ private fun FloatingNavBar(
     ) {
         Layout(
             modifier = Modifier
-                .coloredShadow(
-                    color = colors.greenShadow,
-                    blurRadius = 6.dp,
-                    spread = 1.dp
-                )
+//                .coloredShadow(
+//                    color = colors.greenShadow,
+//                    blurRadius = 6.dp,
+//                    spread = 1.dp
+//                )
                 .clip(CircleShape)
                 .background(colors.greenSurfaceContainer)
                 .padding(horizontal = 8.dp, vertical = 8.dp),
@@ -216,7 +216,7 @@ private fun FloatingNavItem(
 ) {
     val colors = ExtendedColors()
     val interactionSource = remember { MutableInteractionSource() }
-    val selectedColor = colors.greenPrimary
+    val selectedColor = MaterialTheme.colorScheme.tertiary
     val unselectedColor = MaterialTheme.colorScheme.onSurface
 
     Box(

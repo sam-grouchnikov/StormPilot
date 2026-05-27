@@ -84,6 +84,7 @@ import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.compose.expressions.value.RasterResampling
+import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
 import kotlin.math.log
@@ -293,10 +294,11 @@ fun MapsPage(
     ) {
         val searchContainerColor = MaterialTheme.colorScheme.inverseOnSurface
         val mapStyle = if (AppSettings.isDarkMode) {
-            "https://api.protomaps.com/styles/v5/black/en.json?key=64a5f0a9c35b4ca1"
+            "asset://map-dark.json"
         } else {
-            "https://api.protomaps.com/styles/v5/white/en.json?key=64a5f0a9c35b4ca1"
+            "asset://map-light.json"
         }
+
 
         Box(modifier = Modifier.fillMaxSize()) {
             MaplibreMap(
