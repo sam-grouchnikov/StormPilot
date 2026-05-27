@@ -236,10 +236,11 @@ private fun HourlyForecastRow(hourly: List<HourlyForecast>) {
 
 @Composable
 private fun HourlyForecastCard(forecast: HourlyForecast) {
+    val colors = ExtendedColors()
     Surface(
         modifier = Modifier.width(104.dp),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = colors.purpleBackground,
     ) {
         Column(
             modifier = Modifier.padding(12.dp),

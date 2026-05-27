@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -53,15 +56,20 @@ fun RadarPage(
 
 
     StormPilotTheme {
-        Column(modifier = Modifier.padding(horizontal = 0.dp),
-            verticalArrangement = Arrangement.Top) {
-            Spacer(modifier = Modifier.height(32.dp))
-            TopIconRow()
-            Spacer(modifier = Modifier.height(10.dp))
-
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Content fills the entire screen
             ModernBubbleNavBarScreen(
                 showChat = showChat,
                 onChatClick = { showChat = true }
+            )
+
+            // TopIconRow floats above the content with status bar padding
+            TopIconRow(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(top = 8.dp)
             )
 
             if (showChat) {
@@ -72,14 +80,14 @@ fun RadarPage(
 }
 
 @Composable
-fun TopIconRow() {
+fun TopIconRow(modifier: Modifier = Modifier) {
     val userName = "Sam"
     val avatarLetter = userName.firstOrNull()?.toString() ?: "?"
     val avatarColor = MaterialTheme.colorScheme.surfaceContainerHighest
-    val outlineColor = MaterialTheme.colorScheme.primary
+    val outlineColor = MaterialTheme.colorScheme.inversePrimary
 
     Row(
-        modifier = Modifier.padding(horizontal = 20.dp),
+        modifier = modifier.padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(

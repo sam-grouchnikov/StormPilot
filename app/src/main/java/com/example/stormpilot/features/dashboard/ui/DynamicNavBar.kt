@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -47,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.dashboard.ui.weather.Weather
 import com.example.stormpilot.features.dashboard.ui.alerts.AlertSlide
+import com.example.stormpilot.ui.theme.ExtendedColors
 import kotlinx.coroutines.launch
 
 data class BubbleNavigationItem(val title: String, val icon: ImageVector)
@@ -74,7 +76,8 @@ fun ModernBubbleNavBarScreen(
     }
     val selectedIndex = if (showChat) chatIndex else selectedPageIndex
 
-    Column(modifier = Modifier.fillMaxSize()) {
+
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(top = 58.dp)) {
 
         Surface(
             modifier = Modifier

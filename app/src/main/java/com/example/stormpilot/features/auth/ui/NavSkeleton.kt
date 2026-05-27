@@ -3,8 +3,6 @@ package com.example.stormpilot.features.auth.ui
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -25,9 +23,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -36,7 +32,6 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Radar
@@ -52,14 +47,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -71,11 +69,44 @@ import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.features.dashboard.ui.RadarPage
 import com.example.stormpilot.features.map.ui.MapsPage
 import com.example.stormpilot.features.settings.ui.SettingsPage
+import com.example.stormpilot.ui.theme.ExtendedColors
 
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
     data object Radar : TabDest("graphs", "Dashboard", Icons.Outlined.Radar)
     data object Nav : TabDest("home", "Home", Icons.Outlined.LocationOn)
     data object Settings : TabDest("terminal", "Settings", Icons.Outlined.Settings)
+}
+
+fun Modifier.coloredShadow(
+    color: Color,
+    borderRadius: Dp = 50.dp,
+    blurRadius: Dp = 20.dp,
+    offsetY: Dp = 0.dp,
+    spread: Dp = 0.dp,
+) = this.drawBehind {
+    drawIntoCanvas { canvas ->
+        val paint = Paint().apply {
+            asFrameworkPaint().apply {
+                isAntiAlias = true
+                this.color = android.graphics.Color.TRANSPARENT
+                setShadowLayer(
+                    blurRadius.toPx(),
+                    0f,
+                    offsetY.toPx(),
+                    color.copy(alpha = 0.5f).toArgb()
+                )
+            }
+        }
+        canvas.drawRoundRect(
+            left = -spread.toPx(),
+            top = -spread.toPx(),
+            right = size.width + spread.toPx(),
+            bottom = size.height + spread.toPx(),
+            radiusX = borderRadius.toPx(),
+            radiusY = borderRadius.toPx(),
+            paint = paint
+        )
+    }
 }
 
 @Composable
@@ -93,103 +124,88 @@ private fun FloatingNavBar(
 
     val animatedPillX by animateIntAsState(
         targetValue = itemOffsets.value.getOrElse(selectedIndex) { 0 },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = tween(durationMillis = 150),
         label = "pillX"
     )
     val animatedPillWidth by animateIntAsState(
         targetValue = itemWidths.value.getOrElse(selectedIndex) { 0 },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
+        animationSpec = tween(durationMillis = 150),
         label = "pillWidth"
     )
+
+    val colors = ExtendedColors()
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(vertical = 8.dp, horizontal = 5.dp),
+            .padding(bottom = 16.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars),
         contentAlignment = Alignment.Center
     ) {
-        Box(
+        Layout(
             modifier = Modifier
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(vertical = 16.dp, horizontal = 5.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            // Use a Layout so we can read each item's measured x + width
-            Layout(
-                modifier = Modifier
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = CircleShape,
-                        ambientColor = Color.Black.copy(alpha = 0.15f),
-                        spotColor = Color.Black.copy(alpha = 0.25f)
-                    )
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                content = {
-                    // Sliding pill (drawn first so it sits behind the items)
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f))
-                    )
-
-                    // Nav items
-                    tabs.forEachIndexed { index, tab ->
-                        FloatingNavItem(
-                            tab = tab,
-                            selected = currentRoute == tab.route,
-                            onClick = { onTabSelected(tab) }
-                        )
-                    }
-                }
-            ) { measurables, constraints ->
-                // measurables[0] = pill, measurables[1..] = items
-                val itemMeasurables = measurables.drop(1)
-                val pillMeasurable = measurables[0]
-
-                val itemPlaceables = itemMeasurables.map { it.measure(constraints.copy(minWidth = 0)) }
-
-                val totalWidth = itemPlaceables.sumOf { it.width }
-                val height = itemPlaceables.maxOf { it.height }
-
-                // Record x offsets and widths for animation
-                var xCursor = 0
-                val offsets = IntArray(itemPlaceables.size)
-                val widths = IntArray(itemPlaceables.size)
-                itemPlaceables.forEachIndexed { i, p ->
-                    offsets[i] = xCursor
-                    widths[i] = p.width
-                    xCursor += p.width
-                }
-                itemOffsets.value = offsets
-                itemWidths.value = widths
-
-                val pillPlaceable = pillMeasurable.measure(
-                    Constraints.fixed(animatedPillWidth, height)
+                .coloredShadow(
+                    color = colors.greenShadow,
+                    blurRadius = 6.dp,
+                    spread = 1.dp
+                )
+                .clip(CircleShape)
+                .background(colors.greenSurfaceContainer)
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            content = {
+                Box(
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(colors.greenPrimaryContainer)
                 )
 
-                layout(totalWidth, height) {
-                    // Place pill at animated position
-                    pillPlaceable.placeRelative(animatedPillX, 0)
-                    // Place items on top
-                    var x = 0
-                    itemPlaceables.forEach { p ->
-                        p.placeRelative(x, 0)
-                        x += p.width
-                    }
+                // Nav items
+                tabs.forEachIndexed { index, tab ->
+                    FloatingNavItem(
+                        tab = tab,
+                        selected = currentRoute == tab.route,
+                        onClick = { onTabSelected(tab) }
+                    )
+                }
+            }
+        ) { measurables, constraints ->
+            val itemMeasurables = measurables.drop(1)
+            val pillMeasurable = measurables[0]
+
+            val itemPlaceables = itemMeasurables.map { it.measure(constraints.copy(minWidth = 0)) }
+
+            val totalWidth = itemPlaceables.sumOf { it.width }
+            val height = itemPlaceables.maxOf { it.height }
+
+            var xCursor = 0
+            val offsets = IntArray(itemPlaceables.size)
+            val widths = IntArray(itemPlaceables.size)
+            itemPlaceables.forEachIndexed { i, p ->
+                offsets[i] = xCursor
+                widths[i] = p.width
+                xCursor += p.width
+            }
+            itemOffsets.value = offsets
+            itemWidths.value = widths
+
+            val pillPlaceable = pillMeasurable.measure(
+                Constraints.fixed(animatedPillWidth, height)
+            )
+
+            layout(totalWidth, height) {
+                // Place pill at animated position
+                pillPlaceable.placeRelative(animatedPillX, 0)
+                // Place items on top
+                var x = 0
+                itemPlaceables.forEach { p ->
+                    p.placeRelative(x, 0)
+                    x += p.width
                 }
             }
         }
     }
 }
+
 
 @Composable
 private fun FloatingNavItem(
@@ -198,8 +214,9 @@ private fun FloatingNavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = ExtendedColors()
     val interactionSource = remember { MutableInteractionSource() }
-    val selectedColor = MaterialTheme.colorScheme.primary
+    val selectedColor = colors.greenPrimary
     val unselectedColor = MaterialTheme.colorScheme.onSurface
 
     Box(
@@ -211,7 +228,7 @@ private fun FloatingNavItem(
                 indication = null,
                 onClick = onClick
             )
-            .padding(vertical = 10.dp, horizontal = 15.dp),
+            .padding(vertical = 6.dp, horizontal = 15.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -293,19 +310,20 @@ fun NavSkeleton() {
             }
         ) { innerPadding ->
             val contentModifier = when (currentRoute) {
-                TabDest.Nav.route -> Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(mapContentInsets)
+                TabDest.Nav.route ->
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(mapContentInsets)
 
-                TabDest.Radar.route -> Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .windowInsetsPadding(mapContentInsets)
+                TabDest.Radar.route ->
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(mapContentInsets)
 
-                else -> Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .windowInsetsPadding(standardContentInsets)
+                else ->
+                    Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(mapContentInsets)
             }
 
             Box(modifier = contentModifier) {
