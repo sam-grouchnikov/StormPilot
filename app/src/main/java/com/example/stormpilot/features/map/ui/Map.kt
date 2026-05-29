@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.MyLocation
@@ -34,6 +35,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ScrollFieldDefaults.colors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -55,6 +58,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.data.MapsViewModel
+import com.example.stormpilot.features.auth.ui.coloredShadow
+import com.example.stormpilot.ui.theme.ExtendedColors
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -534,7 +539,7 @@ fun MapsPage(
                         .padding(top = 8.dp, start = 8.dp, end = 8.dp),
                 )
             }
-
+            val colors = ExtendedColors()
             AnimatedVisibility(
                 visible = !active,
                 enter = fadeIn(tween(220)),
@@ -551,8 +556,12 @@ fun MapsPage(
                         onClick = { showRadarOverlay = !showRadarOverlay },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = if (showRadarOverlay) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            else MaterialTheme.colorScheme.inverseOnSurface,
                         ),
+                        modifier = Modifier.coloredShadow(
+                            color = colors.purpleShadow,
+                            blurRadius = 2.dp
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Shield,
@@ -568,6 +577,10 @@ fun MapsPage(
                             containerColor = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.inverseOnSurface,
                         ),
+                        modifier = Modifier.coloredShadow(
+                            color = colors.purpleShadow,
+                            blurRadius = 2.dp
+                        )
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.WarningAmber,
@@ -612,6 +625,10 @@ fun MapsPage(
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.inverseOnSurface,
                                 ),
+                                modifier = Modifier.coloredShadow(
+                                    color = colors.purpleShadow,
+                                    blurRadius = 2.dp
+                                )
                             ) {
                                 Icon(
                                     imageVector = if (!is2dNavView) Icons.Outlined.Navigation else Icons.Filled.Crop,
@@ -628,6 +645,10 @@ fun MapsPage(
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.inverseOnSurface,
                                 ),
+                                modifier = Modifier.coloredShadow(
+                                    color = colors.purpleShadow,
+                                    blurRadius = 2.dp
+                                )
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.MyLocation,

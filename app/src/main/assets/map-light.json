@@ -23,7 +23,7 @@
       "filter": ["==", "$type", "Polygon"],
       "source": "protomaps",
       "source-layer": "earth",
-      "paint": { "fill-color": "#e3eaf6" }
+      "paint": { "fill-color": "#E5EAF6" }
     },
     {
       "id": "landuse_park",

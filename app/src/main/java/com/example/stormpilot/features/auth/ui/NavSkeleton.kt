@@ -142,11 +142,11 @@ private fun FloatingNavBar(
     ) {
         Layout(
             modifier = Modifier
-//                .coloredShadow(
-//                    color = colors.greenShadow,
-//                    blurRadius = 6.dp,
-//                    spread = 1.dp
-//                )
+                .coloredShadow(
+                    color = colors.purpleShadow,
+                    blurRadius = 6.dp,
+                    spread = 1.dp
+                )
                 .clip(CircleShape)
                 .background(colors.purpleSurfaceContainer)
                 .padding(horizontal = 8.dp, vertical = 8.dp),
