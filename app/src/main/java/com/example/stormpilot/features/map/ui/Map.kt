@@ -1,7 +1,10 @@
 package com.example.stormpilot.features.map.ui
 
 import android.Manifest
+import android.R
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -50,7 +53,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -75,6 +81,7 @@ import org.maplibre.compose.expressions.dsl.Feature
 import org.maplibre.compose.expressions.dsl.asString
 import org.maplibre.compose.expressions.dsl.condition
 import org.maplibre.compose.expressions.dsl.const
+import org.maplibre.compose.expressions.dsl.image
 import org.maplibre.compose.expressions.dsl.switch
 import org.maplibre.compose.layers.CircleLayer
 import org.maplibre.compose.layers.FillLayer
@@ -90,6 +97,7 @@ import org.maplibre.compose.style.BaseStyle
 import org.maplibre.compose.util.ClickResult
 import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.compose.expressions.value.RasterResampling
+import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.abs
@@ -98,6 +106,7 @@ import kotlin.math.max
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapsPage(
@@ -141,6 +150,9 @@ fun MapsPage(
     ) { isGranted ->
         hasLocationPermission = isGranted
     }
+
+    val styleState = rememberStyleState()
+
 
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
@@ -354,14 +366,16 @@ fun MapsPage(
                 }
 
                 val userLocationSource = rememberGeoJsonSource(data = userLocationFeatureCollection)
-                CircleLayer(
-                    id = "user-location",
-                    source = userLocationSource,
-                    color = const(MaterialTheme.colorScheme.onPrimary),
-                    radius = const(6.dp),
-                    strokeColor = const(MaterialTheme.colorScheme.primary),
-                    strokeWidth = const(3.dp),
-                )
+                    CircleLayer(
+                        id = "user-location",
+                        source = userLocationSource,
+                        color = const(MaterialTheme.colorScheme.onPrimary),
+                        radius = const(6.dp),
+                        strokeColor = const(MaterialTheme.colorScheme.primary),
+                        strokeWidth = const(3.dp),
+                    )
+
+
 
                 val destinationFeatureCollection = remember(uiState.destination) {
                     val json = if (uiState.destination != null) {
