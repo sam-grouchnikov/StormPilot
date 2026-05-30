@@ -264,7 +264,6 @@ fun NavSkeleton() {
         val mapContentInsets =
             WindowInsets.safeDrawing
                 .only(WindowInsetsSides.Horizontal)
-                .union(WindowInsets.displayCutout)
         val standardContentInsets = WindowInsets.safeDrawing.union(WindowInsets.displayCutout)
 
         val backStackEntry by navController.currentBackStackEntryAsState()
@@ -321,7 +320,7 @@ fun NavSkeleton() {
                 else ->
                     Modifier
                         .fillMaxSize()
-                        .windowInsetsPadding(mapContentInsets)
+                        .windowInsetsPadding(standardContentInsets)
             }
 
             Box(modifier = contentModifier) {
