@@ -669,8 +669,14 @@ fun MapsPage(
                     query = searchQuery,
                     active = active,
                     searchResults = searchResults,
+                    isSearching = isSearching,
                     onQueryChange = viewModel::onSearchQueryChanged,
                     onActiveChange = { active = it },
+                    onSearchSubmit = {
+                        viewModel.onSearchSubmitted()
+                        showTripSummary = true
+                        active = false
+                    },
                     onResultClick = { selected ->
                         viewModel.onLocationSelected(selected)
                         showTripSummary = true

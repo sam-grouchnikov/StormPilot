@@ -59,7 +59,7 @@ data class MapsUiState(
 class MapsViewModel @Inject constructor(
     private val routingRepository: RoutingRepository,
     private val photonApiClient: PhotonApiClient,
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapsUiState())
@@ -119,14 +119,7 @@ class MapsViewModel @Inject constructor(
             _searchQuery
                 .debounce(500)
                 .collectLatest { query ->
-                    if (query.length > 2) {
-                        _isSearching.value = true
-                        _searchResults.value = photonApiClient.search(query, _uiState.value.origin)
-                        _isSearching.value = false
-                    } else {
-                        _searchResults.value = emptyList()
-                        _isSearching.value = false
-                    }
+                    runSearch(query)
                 }
         }
     }
@@ -138,6 +131,22 @@ class MapsViewModel @Inject constructor(
             _isSearching.value = false
         } else if (query.length > 2) {
             _isSearching.value = true
+        }
+    }
+
+    fun onSearchSubmitted() {
+        val query = _searchQuery.value.trim()
+        if (query.length <= 2) return
+
+        viewModelScope.launch {
+            if (_searchResults.value.isEmpty() || _isSearching.value) {
+                runSearch(query)
+            }
+
+            val selectedResult = _searchResults.value.getOrNull(9)
+                ?: _searchResults.value.lastOrNull()
+                ?: return@launch
+            onLocationSelected(selectedResult)
         }
     }
 
@@ -166,6 +175,32 @@ class MapsViewModel @Inject constructor(
         currentRoutePolyline = emptyList()
         routeWarningsJob?.cancel()
         requestRoute()
+    }
+
+    private suspend fun runSearch(query: String) {
+        val trimmedQuery = query.trim()
+        if (trimmedQuery.length <= 2) {
+            _searchResults.value = emptyList()
+            _isSearching.value = false
+            return
+        }
+
+        _isSearching.value = true
+        val origin = _uiState.value.origin
+        val baseResults = photonApiClient.search(trimmedQuery, origin)
+            .withStraightLineDistances(origin)
+            .sortedByClosest()
+        currentCoroutineContext().ensureActive()
+        _searchResults.value = baseResults
+
+        if (origin != null && baseResults.isNotEmpty()) {
+            val enrichedResults = photonApiClient.enrichWithDrivingMetrics(origin, baseResults)
+                .sortedByClosest()
+            currentCoroutineContext().ensureActive()
+            _searchResults.value = enrichedResults
+        }
+
+        _isSearching.value = false
     }
 
     private suspend fun fetchAlerts() {
@@ -430,6 +465,20 @@ private fun minDistanceMetersToPolyline(point: Position, polyline: List<Position
         distancePointToSegmentMeters(point, segment[0], segment[1])
     }
 }
+
+private fun List<PhotonFeature>.withStraightLineDistances(origin: Position?): List<PhotonFeature> {
+    if (origin == null) return this
+    return map { feature ->
+        feature.copy(straightLineDistanceMeters = haversineMeters(origin, feature.geometry))
+    }
+}
+
+private fun List<PhotonFeature>.sortedByClosest(): List<PhotonFeature> =
+    sortedWith(
+        compareBy<PhotonFeature> {
+            it.driveDistanceMeters ?: it.straightLineDistanceMeters ?: Double.MAX_VALUE
+        }.thenBy { it.name }
+    )
 
 private fun distancePointToSegmentMeters(point: Position, start: Position, end: Position): Double {
     val lat0 = Math.toRadians(point.latitude)

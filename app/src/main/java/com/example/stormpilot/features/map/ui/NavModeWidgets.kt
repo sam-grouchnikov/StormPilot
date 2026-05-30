@@ -99,8 +99,10 @@ fun SearchScaffold(
     query: String,
     active: Boolean,
     searchResults: List<PhotonFeature>,
+    isSearching: Boolean,
     onQueryChange: (String) -> Unit,
     onActiveChange: (Boolean) -> Unit,
+    onSearchSubmit: () -> Unit,
     onResultClick: (PhotonFeature) -> Unit,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
@@ -201,6 +203,7 @@ fun SearchScaffold(
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(
                             onSearch = {
+                                onSearchSubmit()
                                 onActiveChange(false)
                                 focusManager.clearFocus()
                             },
@@ -228,24 +231,34 @@ fun SearchScaffold(
                     )
 
                     AnimatedVisibility(
-                        visible = active,
+                        visible = active || isSearching,
                         enter = fadeIn(animationSpec = tween(140, delayMillis = 90)),
                         exit = fadeOut(animationSpec = tween(90)),
                     ) {
-                        IconButton(
-                            onClick = {
-                                if (query.isNotEmpty()) {
-                                    onQueryChange("")
-                                } else {
-                                    onActiveChange(false)
-                                }
-                            },
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Clear search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        if (isSearching) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .padding(horizontal = 14.dp)
+                                    .size(22.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.primary,
                             )
+                        } else {
+                            IconButton(
+                                onClick = {
+                                    if (query.isNotEmpty()) {
+                                        onQueryChange("")
+                                    } else {
+                                        onActiveChange(false)
+                                    }
+                                },
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Clear search",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
@@ -279,12 +292,17 @@ fun SearchScaffold(
                                 },
                                 supportingContent = {
                                     val address = listOfNotNull(result.city, result.state).joinToString(", ")
-                                    if (address.isNotEmpty()) {
-                                        Text(
-                                            text = address,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        if (address.isNotEmpty()) {
+                                            Text(
+                                                text = address,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
+                                        SearchResultMetrics(result)
                                     }
                                 },
                                 leadingContent = {
@@ -314,6 +332,55 @@ fun SearchScaffold(
 }
 
 private const val SearchTransitionDurationMillis = 420
+
+@Composable
+private fun SearchResultMetrics(result: PhotonFeature) {
+    val distance = result.driveDistanceMeters ?: result.straightLineDistanceMeters
+    val duration = result.driveDurationSeconds
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (duration != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DriveEta,
+                    contentDescription = null,
+                    modifier = Modifier.size(15.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = formatDuration(duration),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        if (distance != null) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Straight,
+                    contentDescription = null,
+                    modifier = Modifier.size(15.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = formatDistance(distance),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
 
 
 @Composable

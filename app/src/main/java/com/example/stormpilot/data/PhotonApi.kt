@@ -1,6 +1,7 @@
 package com.example.stormpilot.data
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
@@ -19,13 +20,27 @@ data class PhotonFeature(
     val city: String?,
     val state: String?,
     val country: String?,
-    val geometry: Position
+    val geometry: Position,
+    val straightLineDistanceMeters: Double? = null,
+    val driveDistanceMeters: Double? = null,
+    val driveDurationSeconds: Double? = null,
+)
+
+data class PhotonBoundingBox(
+    val minLon: Double,
+    val minLat: Double,
+    val maxLon: Double,
+    val maxLat: Double
 )
 
 class PhotonApiClient @Inject constructor() {
     private val json = Json { ignoreUnknownKeys = true }
 
-    suspend fun search(query: String, locationBias: Position? = null): List<PhotonFeature> {
+    suspend fun search(
+        query: String,
+        locationBias: Position? = null,
+        bbox: PhotonBoundingBox? = null
+    ): List<PhotonFeature> {
         return withContext(Dispatchers.IO) {
             try {
                 val encodedQuery = URLEncoder.encode(query, "UTF-8")
@@ -33,24 +48,80 @@ class PhotonApiClient @Inject constructor() {
                 if (locationBias != null) {
                     urlString += "&lat=${locationBias.latitude}&lon=${locationBias.longitude}"
                 }
+                if (bbox != null) {
+                    urlString += "&bbox=${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}"
+                }
                 val url = URL(urlString)
                 
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
-                    connectTimeout = 10_000
-                    readTimeout = 10_000
+                    connectTimeout = 3_500
+                    readTimeout = 3_500
                     setRequestProperty("Accept", "application/json")
+                    setRequestProperty("User-Agent", "StormPilot/1.0")
                 }
 
-                val responseCode = connection.responseCode
-                if (responseCode !in 200..299) {
-                    return@withContext emptyList()
-                }
+                try {
+                    val responseCode = connection.responseCode
+                    if (responseCode !in 200..299) {
+                        return@withContext emptyList()
+                    }
 
-                val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
-                parsePhotonResponse(responseBody)
+                    val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+                    parsePhotonResponse(responseBody)
+                } finally {
+                    connection.disconnect()
+                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 emptyList()
+            }
+        }
+    }
+
+    suspend fun enrichWithDrivingMetrics(
+        origin: Position,
+        results: List<PhotonFeature>,
+    ): List<PhotonFeature> {
+        if (results.isEmpty()) return results
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val coordinates = buildString {
+                    append("${origin.longitude},${origin.latitude}")
+                    results.forEach { result ->
+                        append(";${result.geometry.longitude},${result.geometry.latitude}")
+                    }
+                }
+                val destinations = (1..results.size).joinToString(";")
+                val url = URL(
+                    "https://routing.openstreetmap.de/routed-car/table/v1/driving/$coordinates" +
+                            "?sources=0&destinations=$destinations&annotations=distance,duration"
+                )
+                val connection = (url.openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 3_500
+                    readTimeout = 3_500
+                    setRequestProperty("Accept", "application/json")
+                    setRequestProperty("User-Agent", "StormPilot/1.0")
+                }
+
+                try {
+                    val responseCode = connection.responseCode
+                    if (responseCode !in 200..299) {
+                        return@withContext results
+                    }
+
+                    val responseBody = connection.inputStream.bufferedReader().use { it.readText() }
+                    applyRouteMetrics(results, responseBody)
+                } finally {
+                    connection.disconnect()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                results
             }
         }
     }
@@ -88,6 +159,27 @@ class PhotonApiClient @Inject constructor() {
             } catch (e: Exception) {
                 null
             }
+        }
+    }
+
+    private fun applyRouteMetrics(results: List<PhotonFeature>, payload: String): List<PhotonFeature> {
+        val root = json.parseToJsonElement(payload).jsonObject
+        val distances = root["distances"]?.jsonArray?.firstOrNull()?.jsonArray
+        val durations = root["durations"]?.jsonArray?.firstOrNull()?.jsonArray
+
+        return results.mapIndexed { index, result ->
+            result.copy(
+                driveDistanceMeters = distances
+                    ?.getOrNull(index)
+                    ?.jsonPrimitive
+                    ?.contentOrNull
+                    ?.toDoubleOrNull(),
+                driveDurationSeconds = durations
+                    ?.getOrNull(index)
+                    ?.jsonPrimitive
+                    ?.contentOrNull
+                    ?.toDoubleOrNull(),
+            )
         }
     }
 }
