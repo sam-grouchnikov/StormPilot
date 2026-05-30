@@ -51,6 +51,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -81,6 +82,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.data.formatDistance
@@ -89,7 +91,7 @@ import com.example.stormpilot.data.MapsUiState
 import com.example.stormpilot.data.PhotonFeature
 import kotlinx.coroutines.delay
 import com.example.stormpilot.ui.theme.ExtendedColors
-
+import java.util.Calendar
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -408,7 +410,7 @@ fun TripSummaryCard(
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         ) {
-            Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(modifier = Modifier.navigationBarsPadding().padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 if (!state.isLoadingRoute) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -564,12 +566,13 @@ fun NavigationModeHeader(
     onExitNavigation: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val colors = ExtendedColors()
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 0.dp, start = 2.dp, end = 2.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        colors = CardDefaults.cardColors(containerColor = colors.routingHeader),
     ) {
         val directionIcon = when {
             instruction.startsWith("Turn left", ignoreCase = true) -> Icons.Filled.TurnLeft
@@ -587,7 +590,7 @@ fun NavigationModeHeader(
             Icon(
                 imageVector = directionIcon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                tint = Color.White,
                 modifier = Modifier
                     .size(40.dp)
                     .padding(end = 6.dp, bottom = 4.dp),
@@ -597,6 +600,7 @@ fun NavigationModeHeader(
                 modifier = Modifier.weight(1f),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 21.sp,
+                color = Color.White
             )
         }
     }
@@ -612,10 +616,10 @@ fun NavigationModeFooter(
 
     if (remainingDistanceMeters == null || remainingDurationSeconds == null) return
     val eta = remember(remainingDurationSeconds) {
-        val cal = java.util.Calendar.getInstance()
-        cal.add(java.util.Calendar.SECOND, remainingDurationSeconds.toInt())
-        val hour = cal.get(java.util.Calendar.HOUR_OF_DAY)
-        val minute = cal.get(java.util.Calendar.MINUTE)
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.SECOND, remainingDurationSeconds.toInt())
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val minute = cal.get(Calendar.MINUTE)
         val amPm = if (hour >= 12) "PM" else "AM"
         val displayHour = if (hour % 12 == 0) 12 else hour % 12
         "$displayHour:${minute.toString().padStart(2, '0')} $amPm"
@@ -624,10 +628,12 @@ fun NavigationModeFooter(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-    ) {
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+        ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(horizontal = 25.dp, vertical = 20.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,

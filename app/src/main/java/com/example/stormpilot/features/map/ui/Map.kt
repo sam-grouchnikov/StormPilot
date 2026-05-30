@@ -67,6 +67,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.maplibre.android.style.expressions.Expression.literal
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.camera.rememberCameraState
@@ -116,6 +117,8 @@ fun MapsPage(
     var is2dNavView by remember { mutableStateOf(false) }
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var alertsRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
+    val colors = ExtendedColors()
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -295,7 +298,7 @@ fun MapsPage(
     }
 
     StormPilotTheme(
-        opaqueNavigationBar = true,
+        opaqueNavigationBar = false,
     ) {
         val searchContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         val mapStyle = if (AppSettings.isDarkMode) {
@@ -394,11 +397,13 @@ fun MapsPage(
                 val routeSource = rememberGeoJsonSource(
                     data = uiState.routeGeoJson ?: GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
                 )
+
+
                 LineLayer(
                     id = "route-line",
                     source = routeSource,
-                    color = const(MaterialTheme.colorScheme.primary),
-                    width = const(5.dp),
+                    color = const(colors.routingLine),
+                    width = const(if (navMode) 12.dp else 5.dp)
                 )
 
                 val radarSource = rememberRasterSource(
@@ -493,8 +498,7 @@ fun MapsPage(
                             fadeOut(animationSpec = tween(durationMillis = 140))
                 },
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding(),
+                    .align(Alignment.BottomCenter),
                 label = "maps_footer_transition",
             ) { activeFooter ->
                 when (activeFooter) {

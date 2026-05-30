@@ -37,6 +37,12 @@ public class ExtendedColors {
     public val purpleBackground: Color
         get() = if (isDark) Color(0xFF312538) else Color(0xFFEDE4F6)
 
+    public val routingLine: Color
+        get() = if (isDark) Color(0xFF9ACBFA) else Color(0xFF0046D9)
+
+    public val routingHeader: Color
+        get() = if (isDark) Color(0xFF0B4A72) else Color(0xFF2E628C)
+
     public val greenPrimary: Color
         get() = if (isDark) Color(0xFFD8BDE4) else Color(0xFF6C5677)
 
