@@ -34,7 +34,7 @@
       "paint": {
         "fill-opacity": ["interpolate",["linear"],["zoom"],6,0,11,1],
         "fill-color": ["case",
-          ["in",["get","kind"],["literal",["national_park","park","cemetery","protected_area","nature_reserve","forest","golf_course"]]],"#dcefe3",
+          ["in",["get","kind"],["literal",["national_park","park","cemetery","protected_area","nature_reserve","forest","golf_course"]]],"#BBE6CA",
           ["==",["get","kind"],"wood"],"#d7ebdf",
           ["in",["get","kind"],["literal",["scrub","grassland","grass"]]],"#e1efe7",
           ["==",["get","kind"],"glacier"],"#dde6f5",
@@ -78,7 +78,7 @@
       "source": "protomaps",
       "source-layer": "buildings",
       "paint": {
-        "fill-color": "#d6e0ef",
+        "fill-color": "#D4DFED",
         "fill-opacity": 0.7
       }
     },
