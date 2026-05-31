@@ -49,13 +49,11 @@ fun RadarPage(
 
     StormPilotTheme {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Content fills the entire screen
             ModernBubbleNavBarScreen(
                 showChat = showChat,
                 onChatClick = { showChat = true }
             )
 
-            // TopIconRow floats above the content with status bar padding
             TopIconRow(
                 modifier = Modifier
                     .align(Alignment.TopCenter)

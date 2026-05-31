@@ -177,7 +177,7 @@ fun SearchScaffold(
                         .fillMaxWidth()
                         .height(60.dp)
                         .clickable(enabled = !active) { onActiveChange(true) }
-                        .padding(start = 4.dp, end = 4.dp),
+                        .padding(start = 4.dp, end = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(

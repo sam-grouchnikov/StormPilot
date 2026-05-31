@@ -77,7 +77,7 @@ fun ModernBubbleNavBarScreen(
     val selectedIndex = if (showChat) chatIndex else selectedPageIndex
 
 
-    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(top = 58.dp)) {
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().padding(top = 62.dp)) {
 
         Surface(
             modifier = Modifier

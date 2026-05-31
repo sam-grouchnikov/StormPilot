@@ -69,6 +69,9 @@ public class ExtendedColors {
     public val stormContainerNested: Color
         get() = if (isDark) Color(0xFF503737) else Color(0xFFF5EEEE)
 
+    public val profileIcon: Color
+        get() = if (isDark) Color(0xFF1E6718) else Color(0xFF72C96A)
+
 
     public val lowRisk: Color
         get() = alertClearContent
