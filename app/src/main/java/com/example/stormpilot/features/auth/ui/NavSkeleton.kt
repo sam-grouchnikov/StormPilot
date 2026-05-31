@@ -34,7 +34,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Radar
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -70,9 +69,8 @@ import com.example.stormpilot.features.settings.ui.SettingsPage
 import com.example.stormpilot.ui.theme.ExtendedColors
 
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
-    data object Radar : TabDest("graphs", "Dashboard", Icons.Outlined.Radar)
-    data object Nav : TabDest("home", "Home", Icons.Outlined.LocationOn)
-    data object Settings : TabDest("terminal", "Settings", Icons.Outlined.Settings)
+    data object Radar : TabDest("dashboard", "Dashboard", Icons.Outlined.Radar)
+    data object Nav : TabDest("navigation", "Navigation", Icons.Outlined.LocationOn)
 }
 
 fun Modifier.coloredShadow(
@@ -256,10 +254,11 @@ private fun FloatingNavItem(
 @Composable
 fun NavSkeleton() {
     val isMapDestinationSelected = remember { mutableStateOf(false) }
+    val showSettings = remember { mutableStateOf(false) }
 
     StormPilotTheme(dynamicColor = false) {
         val navController = rememberNavController()
-        val tabs = listOf(TabDest.Radar, TabDest.Nav, TabDest.Settings)
+        val tabs = listOf(TabDest.Radar, TabDest.Nav)
 
         val mapContentInsets =
             WindowInsets.safeDrawing
@@ -269,98 +268,119 @@ fun NavSkeleton() {
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = backStackEntry?.destination?.route
 
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            bottomBar = {
-                AnimatedVisibility(
-                    visible = !isMapDestinationSelected.value,
-                    enter = fadeIn(animationSpec = tween(300)) +
-                            slideInVertically(
-                                initialOffsetY = { it },
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessMedium
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                bottomBar = {
+                    AnimatedVisibility(
+                        visible = !isMapDestinationSelected.value,
+                        enter = fadeIn(animationSpec = tween(300)) +
+                                slideInVertically(
+                                    initialOffsetY = { it },
+                                    animationSpec = spring(
+                                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                                        stiffness = Spring.StiffnessMedium
+                                    )
+                                ),
+                        exit = fadeOut(animationSpec = tween(180)) +
+                                slideOutVertically(
+                                    targetOffsetY = { it },
+                                    animationSpec = tween(200)
                                 )
-                            ),
-                    exit = fadeOut(animationSpec = tween(180)) +
-                            slideOutVertically(
-                                targetOffsetY = { it },
-                                animationSpec = tween(200)
-                            )
-                ) {
-                    FloatingNavBar(
-                        tabs = tabs,
-                        currentRoute = currentRoute,
-                        onTabSelected = { tab ->
-                            navController.navigate(tab.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                    ) {
+                        FloatingNavBar(
+                            tabs = tabs,
+                            currentRoute = currentRoute,
+                            onTabSelected = { tab ->
+                                navController.navigate(tab.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
-                }
-            }
-        ) { innerPadding ->
-            val contentModifier = when (currentRoute) {
-                TabDest.Nav.route ->
-                    Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(mapContentInsets)
-
-                TabDest.Radar.route ->
-                    Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(mapContentInsets)
-
-                else ->
-                    Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(standardContentInsets)
-            }
-
-            Box(modifier = contentModifier) {
-                NavHost(
-                    navController = navController,
-                    startDestination = TabDest.Nav.route,
-                    enterTransition = {
-                        slideInHorizontally(
-                            initialOffsetX = { it / 8 },
-                            animationSpec = tween(380)
-                        ) + fadeIn(animationSpec = tween(260))
-                    },
-                    exitTransition = {
-                        slideOutHorizontally(
-                            targetOffsetX = { -it / 10 },
-                            animationSpec = tween(260)
-                        ) + fadeOut(animationSpec = tween(180))
-                    },
-                    popEnterTransition = {
-                        slideInHorizontally(
-                            initialOffsetX = { -it / 8 },
-                            animationSpec = tween(340)
-                        ) + fadeIn(animationSpec = tween(220))
-                    },
-                    popExitTransition = {
-                        slideOutHorizontally(
-                            targetOffsetX = { it / 8 },
-                            animationSpec = tween(240)
-                        ) + fadeOut(animationSpec = tween(160))
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    composable(TabDest.Nav.route) {
-                        MapsPage(onDestinationSelectedStateChanged = { isSelected ->
-                            isMapDestinationSelected.value = isSelected
-                        })
+                        )
                     }
-                    composable(TabDest.Radar.route) { RadarPage() }
-                    composable(TabDest.Settings.route) { SettingsPage() }
                 }
+            ) { innerPadding ->
+                val contentModifier = when (currentRoute) {
+                    TabDest.Nav.route ->
+                        Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(mapContentInsets)
+
+                    TabDest.Radar.route ->
+                        Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(mapContentInsets)
+
+                    else ->
+                        Modifier
+                            .fillMaxSize()
+                            .windowInsetsPadding(standardContentInsets)
+                }
+
+                Box(modifier = contentModifier) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = TabDest.Nav.route,
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it / 8 },
+                                animationSpec = tween(380)
+                            ) + fadeIn(animationSpec = tween(260))
+                        },
+                        exitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { -it / 10 },
+                                animationSpec = tween(260)
+                            ) + fadeOut(animationSpec = tween(180))
+                        },
+                        popEnterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { -it / 8 },
+                                animationSpec = tween(340)
+                            ) + fadeIn(animationSpec = tween(220))
+                        },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it / 8 },
+                                animationSpec = tween(240)
+                            ) + fadeOut(animationSpec = tween(160))
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        composable(TabDest.Nav.route) {
+                            MapsPage(
+                                onDestinationSelectedStateChanged = { isSelected ->
+                                    isMapDestinationSelected.value = isSelected
+                                },
+                                onOpenSettings = { showSettings.value = true },
+                            )
+                        }
+                        composable(TabDest.Radar.route) {
+                            RadarPage(onOpenSettings = { showSettings.value = true })
+                        }
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showSettings.value,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(420),
+                ) + fadeIn(animationSpec = tween(180)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(320),
+                ) + fadeOut(animationSpec = tween(140)),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                SettingsPage(onDismiss = { showSettings.value = false })
             }
         }
     }

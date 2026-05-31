@@ -8,260 +8,136 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ExitToApp
-import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.core.AppSettings
+import com.example.stormpilot.core.isAppInDarkMode
 import com.example.stormpilot.core.updateAppCompatNightMode
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsPage() {
-    var mode by remember { mutableStateOf(AppSettings.mode) }
-    var showScale by remember { mutableStateOf("zoom") }
-    var smartRerouting by remember { mutableStateOf("on") }
+fun SettingsPage(
+    onDismiss: () -> Unit = {},
+) {
+    val isDarkMode = isAppInDarkMode()
 
-    var openDialog by remember { mutableStateOf<String?>(null) }
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding(),
+        ) {
+            SettingsHeader(onDismiss = onDismiss)
 
-    StormPilotTheme {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Scrollable content fills the full screen, padded to clear the floating header
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .padding(top = 58.dp)
-            ) {
-                SettingsSectionHeader("Display")
-                SettingsItem(
-                    label = "Mode",
-                    value = mapOf("light" to "Light", "dark" to "Dark", "system" to "System default")[mode]!!,
-                    onClick = { openDialog = "mode" }
-                )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                SettingsItem(
-                    label = "Show scale on map",
-                    value = mapOf("zoom" to "When zooming", "always" to "Always", "never" to "Never")[showScale]!!,
-                    onClick = { openDialog = "scale" }
-                )
-                SettingsSectionHeader("Navigation")
-                SettingsItem(
-                    label = "Smart rerouting",
-                    value = if (smartRerouting == "on") "On" else "Off",
-                    onClick = { openDialog = "rerouting" }
-                )
-                SettingsSectionHeader("Account")
-                SettingsItem(
-                    label = "Profile",
-                    value = "Manage your account",
-                    onClick = { openDialog = "profile" }
-                )
-            }
+            Text(
+                text = "Settings",
+                style = MaterialTheme.typography.headlineLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 18.dp),
+            )
 
-            // Floating header overlaid at the top
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f))
+
+            ThemeSettingRow(
+                checked = isDarkMode,
+                onCheckedChange = { checked ->
+                    val mode = if (checked) "dark" else "light"
+                    AppSettings.mode = mode
+                    updateAppCompatNightMode(mode)
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SettingsHeader(
+    onDismiss: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onDismiss) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Close settings",
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ThemeSettingRow(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(role = Role.Switch) { onCheckedChange(!checked) }
+            .padding(horizontal = 24.dp, vertical = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier.size(40.dp),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Settings,
+                    imageVector = Icons.Outlined.DarkMode,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .size(22.dp)
-                        .padding(end = 0.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Settings",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-        }
 
-        when (openDialog) {
-            "mode" -> RadioDialog(
-                title = "Mode",
-                options = listOf("light" to "Light", "dark" to "Dark", "system" to "System default"),
-                selected = mode,
-                onSelect = { mode = it; AppSettings.mode = it; updateAppCompatNightMode(it); openDialog = null },
-                onDismiss = { openDialog = null }
-            )
-            "scale" -> RadioDialog(
-                title = "Show scale on map",
-                options = listOf("zoom" to "When zooming", "always" to "Always", "never" to "Never"),
-                selected = showScale,
-                onSelect = { showScale = it; openDialog = null },
-                onDismiss = { openDialog = null }
-            )
-            "rerouting" -> RadioDialog(
-                title = "Smart rerouting",
-                options = listOf("on" to "On", "off" to "Off"),
-                selected = smartRerouting,
-                onSelect = { smartRerouting = it; openDialog = null },
-                onDismiss = { openDialog = null }
-            )
-            "profile" -> ProfileDialog(
-                onDismiss = { openDialog = null }
-            )
-        }
-    }
-}
+            Spacer(modifier = Modifier.width(16.dp))
 
-@Composable
-fun RadioDialog(
-    title: String,
-    options: List<Pair<String, String>>,
-    selected: String,
-    onSelect: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
             Column {
-                options.forEach { (key, label) ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onSelect(key) }
-                            .padding(vertical = 3.dp)
-                    ) {
-                        RadioButton(selected = selected == key, onClick = { onSelect(key) })
-                        Spacer(Modifier.width(8.dp))
-                        Text(label)
-                    }
-                }
+                Text(
+                    text = "Dark mode",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = if (checked) "On" else "Off",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
         }
-    )
-}
 
-@Composable
-fun SettingsSectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 6.dp)
-    )
-}
-
-@Composable
-fun SettingsItem(
-    label: String,
-    value: String,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
         )
     }
-}
-
-@Composable
-fun ProfileDialog(
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                Icons.Outlined.Person,
-                contentDescription = null,
-                modifier = Modifier.size(35.dp))
-        },
-        title = { Text("Account Username") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-
-                TextButton(
-                    onClick = {  },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Lock,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Change Password",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                HorizontalDivider()
-                TextButton(
-                    onClick = {  },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ExitToApp,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text = "Log Out",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
-        }
-    )
 }

@@ -112,6 +112,7 @@ import kotlin.time.Duration.Companion.seconds
 fun MapsPage(
     viewModel: MapsViewModel = hiltViewModel(),
     onDestinationSelectedStateChanged: (Boolean) -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -700,6 +701,7 @@ fun MapsPage(
                         showTripSummary = true
                         active = false
                     },
+                    onOpenSettings = onOpenSettings,
                     containerColor = searchContainerColor,
                 )
             }

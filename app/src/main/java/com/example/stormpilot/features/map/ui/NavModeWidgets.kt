@@ -90,6 +90,7 @@ import com.example.stormpilot.data.formatDuration
 import com.example.stormpilot.data.MapsUiState
 import com.example.stormpilot.data.PhotonFeature
 import kotlinx.coroutines.delay
+import com.example.stormpilot.features.common.ui.ProfileAvatar
 import com.example.stormpilot.ui.theme.ExtendedColors
 import java.util.Calendar
 
@@ -106,6 +107,7 @@ fun SearchScaffold(
     onActiveChange: (Boolean) -> Unit,
     onSearchSubmit: () -> Unit,
     onResultClick: (PhotonFeature) -> Unit,
+    onOpenSettings: () -> Unit = {},
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -232,6 +234,8 @@ fun SearchScaffold(
                         },
                     )
 
+                    Spacer(modifier = Modifier.width(6.dp))
+
                     AnimatedVisibility(
                         visible = active || isSearching,
                         enter = fadeIn(animationSpec = tween(140, delayMillis = 90)),
@@ -262,6 +266,17 @@ fun SearchScaffold(
                                 )
                             }
                         }
+                    }
+
+                    AnimatedVisibility(
+                        visible = !active && !isSearching,
+                        enter = fadeIn(animationSpec = tween(140, delayMillis = 90)),
+                        exit = fadeOut(animationSpec = tween(90)),
+                    ) {
+                        ProfileAvatar(
+                            modifier = Modifier.size(40.dp),
+                            onClick = onOpenSettings,
+                        )
                     }
                 }
 

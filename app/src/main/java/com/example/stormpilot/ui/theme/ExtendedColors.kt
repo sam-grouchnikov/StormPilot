@@ -41,7 +41,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF81C3FF) else Color(0xFF0046D9)
 
     public val routingHeader: Color
-        get() = if (isDark) Color(0xFF175646) else Color(0xFF165E4C)
+        get() = if (isDark) Color(0xFF175646) else Color(0xFF215446)
 
     public val greenPrimary: Color
         get() = if (isDark) Color(0xFFD8BDE4) else Color(0xFF6C5677)

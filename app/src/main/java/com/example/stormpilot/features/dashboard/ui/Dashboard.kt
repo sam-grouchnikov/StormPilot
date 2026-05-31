@@ -1,29 +1,21 @@
 package com.example.stormpilot.features.dashboard.ui
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,22 +24,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.data.AlertsViewModel
 import com.example.stormpilot.data.GenAIViewModel
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatPopup
 import com.example.stormpilot.R
+import com.example.stormpilot.features.common.ui.AccountMenuAnchor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun RadarPage(
     alertsViewModel: AlertsViewModel = hiltViewModel(),
-    genAIViewModel: GenAIViewModel = hiltViewModel()
+    genAIViewModel: GenAIViewModel = hiltViewModel(),
+    onOpenSettings: () -> Unit = {},
 ) {
     val showWidgets = remember { mutableStateOf(false) }
 
@@ -69,7 +61,8 @@ fun RadarPage(
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(top = 8.dp)
+                    .padding(top = 8.dp),
+                onOpenSettings = onOpenSettings,
             )
 
             if (showChat) {
@@ -80,12 +73,10 @@ fun RadarPage(
 }
 
 @Composable
-fun TopIconRow(modifier: Modifier = Modifier) {
-    val userName = "Sam"
-    val avatarLetter = userName.firstOrNull()?.toString() ?: "?"
-    val avatarColor = MaterialTheme.colorScheme.surfaceContainerHighest
-    val outlineColor = MaterialTheme.colorScheme.inversePrimary
-
+fun TopIconRow(
+    modifier: Modifier = Modifier,
+    onOpenSettings: () -> Unit = {},
+) {
     Row(
         modifier = modifier.padding(horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -111,23 +102,7 @@ fun TopIconRow(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(color = avatarColor, shape = CircleShape)
-                .border(
-                    border = BorderStroke(width = 2.0.dp, color = outlineColor),
-                    shape = CircleShape
-                )
-            ,
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = avatarLetter,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        AccountMenuAnchor(onClick = onOpenSettings)
+
     }
 }
