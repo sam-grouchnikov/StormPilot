@@ -136,7 +136,7 @@ private fun SettingsHeader(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close settings",
-                tint = MaterialTheme.colorScheme.error,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(30.dp)
             )
         }
