@@ -41,7 +41,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF81C3FF) else Color(0xFF0046D9)
 
     public val routingHeader: Color
-        get() = if (isDark) Color(0xFF175646) else Color(0xFF215446)
+        get() = if (isDark) Color(0xFF175646) else Color(0xFF296C59)
 
     public val greenPrimary: Color
         get() = if (isDark) Color(0xFFD8BDE4) else Color(0xFF6C5677)
@@ -70,7 +70,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF503737) else Color(0xFFF5EEEE)
 
     public val profileIcon: Color
-        get() = if (isDark) Color(0xFF1E6718) else Color(0xFF72C96A)
+        get() = if (isDark) Color(0xFF5D8F33) else Color(0xFF679F38)
 
 
     public val lowRisk: Color
