@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 object AppSettings {
     var mode by mutableStateOf("system")
     var isDarkMode by mutableStateOf(true)
+
+    var avoidStorms by mutableStateOf(true)
 }
 
 @Composable
@@ -19,6 +21,11 @@ fun isAppInDarkMode(): Boolean {
         "dark" -> true
         else -> isSystemInDarkTheme()
     }
+}
+
+@Composable
+fun isAppInAvoidStormMode(): Boolean {
+    return AppSettings.avoidStorms
 }
 
 fun updateAppCompatNightMode(mode: String) {

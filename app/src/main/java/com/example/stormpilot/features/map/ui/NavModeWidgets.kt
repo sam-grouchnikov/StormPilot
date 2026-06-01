@@ -274,7 +274,7 @@ fun SearchScaffold(
                         exit = fadeOut(animationSpec = tween(90)),
                     ) {
                         ProfileAvatar(
-                            modifier = Modifier.size(40.dp),
+                            circleSize = 40,
                             onClick = onOpenSettings,
                         )
                     }

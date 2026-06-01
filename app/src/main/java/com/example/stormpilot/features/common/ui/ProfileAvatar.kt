@@ -16,11 +16,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.stormpilot.ui.theme.ExtendedColors
 
 @Composable
 fun ProfileAvatar(
     modifier: Modifier = Modifier,
+    circleSize: Int,
+    textSize: Int = 15,
     userName: String = "Sam",
     onClick: () -> Unit,
 ) {
@@ -29,7 +32,7 @@ fun ProfileAvatar(
     val colors = ExtendedColors()
     Box(
         modifier = modifier
-            .size(40.dp)
+            .size(circleSize.dp)
             .clip(CircleShape)
             .border(2.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
             .background(colors.profileIcon)
@@ -38,7 +41,7 @@ fun ProfileAvatar(
     ) {
         Text(
             text = avatarLetter,
-            style = MaterialTheme.typography.titleMedium,
+            fontSize = textSize.sp,
             color = Color.White,
             fontWeight = FontWeight.SemiBold,
         )
@@ -52,6 +55,8 @@ fun AccountMenuAnchor(
 ) {
     ProfileAvatar(
         modifier = modifier,
+        circleSize = 40,
+        textSize = 15,
         onClick = onClick,
     )
 }
