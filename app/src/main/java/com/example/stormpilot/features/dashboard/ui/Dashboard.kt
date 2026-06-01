@@ -94,7 +94,7 @@ fun TopIconRow(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             contentDescription = null,
             modifier = Modifier
-                .size(40.dp)
+                .size(36.dp)
                 .padding(top = 3.dp)
         )
 

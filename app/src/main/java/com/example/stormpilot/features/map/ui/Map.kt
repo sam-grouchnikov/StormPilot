@@ -324,7 +324,6 @@ fun MapsPage(
             radarTileUrl(
                 product = radarProduct,
                 frameOffsetMinutes = frameOffsetMinutes,
-                radarSite = radarSite,
                 refreshKey = radarRefreshKey,
             )
         }
@@ -653,16 +652,9 @@ fun MapsPage(
                     ),
             ) {
                 RadarControlsPopup(
-                    product = radarProduct,
                     frameCount = radarFrameCount,
                     frameOffsetMinutes = selectedRadarFrameOffset,
                     isPlaying = radarReplayPlaying,
-                    radarSite = radarSite,
-                    onProductChange = {
-                        radarProduct = it
-                        radarReplayPlaying = false
-                        radarFrameIndex = radarFrames.lastIndex
-                    },
                     onFrameCountChange = {
                         radarFrameCount = it
                         radarReplayPlaying = false
@@ -839,20 +831,12 @@ private enum class RadarProduct(
         nationalLayer = "nexrad-n0q",
         siteProductCode = "N0Q",
     ),
-    Velocity(
-        displayName = "Velocity",
-        nationalLayer = "",
-        siteProductCode = "N0U",
-    ),
 }
 @Composable
 private fun RadarControlsPopup(
-    product: RadarProduct,
     frameCount: Int,
     frameOffsetMinutes: Int,
     isPlaying: Boolean,
-    radarSite: NexradSite,
-    onProductChange: (RadarProduct) -> Unit,
     onFrameCountChange: (Int) -> Unit,
     onPlayPause: () -> Unit,
 ) {
@@ -862,7 +846,7 @@ private fun RadarControlsPopup(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
     ) {
@@ -873,7 +857,6 @@ private fun RadarControlsPopup(
                 .fillMaxWidth()
                 .padding(horizontal = 18.dp, vertical = 8.dp),
         ) {
-            // Frame count dropdown
             Box {
                 TextButton(
                     onClick = { frameCountDropdownExpanded = true },
@@ -894,7 +877,10 @@ private fun RadarControlsPopup(
                 DropdownMenu(
                     expanded = frameCountDropdownExpanded,
                     onDismissRequest = { frameCountDropdownExpanded = false },
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    shadowElevation = 7.dp
                 ) {
+                    Text("Frames", fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 10.dp, top = 5.dp, bottom = 5.dp), color = MaterialTheme.colorScheme.tertiary)
                     listOf(7, 14, 21, 30).forEach { count ->
                         DropdownMenuItem(
                             text = { Text("${count}f", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
@@ -917,14 +903,6 @@ private fun RadarControlsPopup(
             )
 
             Spacer(modifier = Modifier.weight(1f))
-
-            if (product == RadarProduct.Velocity) {
-                Text(
-                    text = radarSite.id,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
 
             // Play/pause
             FilledIconButton(
@@ -950,23 +928,12 @@ private fun radarFrameOffsets(frameCount: Int): List<Int> {
 private fun radarTileUrl(
     product: RadarProduct,
     frameOffsetMinutes: Int,
-    radarSite: NexradSite,
     refreshKey: Long,
 ): String {
-    val layer = when (product) {
-        RadarProduct.Reflectivity -> if (frameOffsetMinutes == 0) {
-            "${product.nationalLayer}-900913"
-        } else {
-            "ridge::USCOMP-${product.siteProductCode}-${radarArchiveTimestamp(refreshKey, frameOffsetMinutes)}"
-        }
-        RadarProduct.Velocity -> {
-            val frameSuffix = if (frameOffsetMinutes == 0) {
-                "900913"
-            } else {
-                "900913-m${frameOffsetMinutes.coerceAtMost(50).toString().padStart(2, '0')}m"
-            }
-            "ridge::${radarSite.id.removePrefix("K")}-${product.siteProductCode}-$frameSuffix"
-        }
+    val layer = if (frameOffsetMinutes == 0) {
+        "${product.nationalLayer}-900913"
+    } else {
+        "ridge::USCOMP-${product.siteProductCode}-${radarArchiveTimestamp(refreshKey, frameOffsetMinutes)}"
     }
     return "https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/$layer/{z}/{x}/{y}.png?v=$refreshKey"
 }
