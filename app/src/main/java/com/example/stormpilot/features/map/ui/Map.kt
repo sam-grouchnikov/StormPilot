@@ -32,6 +32,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Crop
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Pause
@@ -42,6 +44,8 @@ import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
@@ -69,7 +73,9 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -425,13 +431,13 @@ fun MapsPage(
                 }
 
                 val userLocationSource = rememberGeoJsonSource(data = userLocationFeatureCollection)
-                    CircleLayer(
-                        id = "user-location",
-                        source = userLocationSource,
-                        color = const(MaterialTheme.colorScheme.onPrimary),
-                        radius = const(6.dp),
-                        strokeColor = const(MaterialTheme.colorScheme.primary),
-                        strokeWidth = const(3.dp),
+                CircleLayer(
+                    id = "user-location",
+                    source = userLocationSource,
+                    color = const(MaterialTheme.colorScheme.onPrimary),
+                    radius = const(6.dp),
+                    strokeColor = const(MaterialTheme.colorScheme.primary),
+                    strokeWidth = const(3.dp),
                     )
 
 
@@ -839,7 +845,6 @@ private enum class RadarProduct(
         siteProductCode = "N0U",
     ),
 }
-
 @Composable
 private fun RadarControlsPopup(
     product: RadarProduct,
@@ -851,6 +856,8 @@ private fun RadarControlsPopup(
     onFrameCountChange: (Int) -> Unit,
     onPlayPause: () -> Unit,
 ) {
+    var frameCountDropdownExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
@@ -859,85 +866,83 @@ private fun RadarControlsPopup(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 8.dp),
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                RadarProduct.entries.forEach { option ->
-                    FilterChip(
-                        selected = product == option,
-                        onClick = { onProductChange(option) },
-                        label = { Text(option.displayName) },
+            // Frame count dropdown
+            Box {
+                TextButton(
+                    onClick = { frameCountDropdownExpanded = true },
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                ) {
+                    Text("${frameCount}f")
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
+                DropdownMenu(
+                    expanded = frameCountDropdownExpanded,
+                    onDismissRequest = { frameCountDropdownExpanded = false },
+                ) {
+                    listOf(7, 14, 21, 30).forEach { count ->
+                        DropdownMenuItem(
+                            text = { Text("${count}f", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+                            onClick = {
+                                onFrameCountChange(count)
+                                frameCountDropdownExpanded = false
+                            },
+                            trailingIcon = if (frameCount == count) {
+                                { Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(19.dp)) }
+                            } else null,
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text = if (frameOffsetMinutes == 0) "Now" else "${frameOffsetMinutes}m ago",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            if (product == RadarProduct.Velocity) {
                 Text(
-                    text = if (frameOffsetMinutes == 0) "Now" else "${frameOffsetMinutes}m ago",
-                    style = MaterialTheme.typography.labelLarge,
+                    text = radarSite.id,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
+            // Play/pause
+            FilledIconButton(
+                onClick = onPlayPause,
+                modifier = Modifier.size(36.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                ),
             ) {
-                listOf(7, 14, 21, 30).forEach { count ->
-                    TextButton(
-                        onClick = { onFrameCountChange(count) },
-                        colors = ButtonDefaults.textButtonColors(
-                            containerColor = if (frameCount == count) {
-                                MaterialTheme.colorScheme.primaryContainer
-                            } else {
-                                Color.Transparent
-                            },
-                            contentColor = if (frameCount == count) {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            },
-                        ),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    ) {
-                        Text("${count}f")
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                if (product == RadarProduct.Velocity) {
-                    Text(
-                        text = radarSite.id,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                }
-
-                FilledIconButton(
-                    onClick = onPlayPause,
-                    modifier = Modifier.size(42.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ),
-                ) {
-                    Icon(
-                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = if (isPlaying) "Pause radar replay" else "Play radar replay",
-                    )
-                }
+                Icon(
+                    imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (isPlaying) "Pause radar replay" else "Play radar replay",
+                )
             }
         }
     }
 }
-
 private fun radarFrameOffsets(frameCount: Int): List<Int> {
     return (frameCount - 1 downTo 0).map { it * 5 }
 }
