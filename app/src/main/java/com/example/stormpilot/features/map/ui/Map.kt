@@ -305,17 +305,23 @@ fun MapsPage(
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
     val radarOverlayOpacity = if (showRadarOverlay) 0.75f else 0f
     val radarFrames = remember(radarFrameCount) { radarFrameOffsets(radarFrameCount) }
+    val allRadarFrames = remember { radarFrameOffsets(RADAR_MAX_FRAME_COUNT) }
+    val selectedRadarFrameSlot = (
+        allRadarFrames.size - radarFrames.size + radarFrameIndex
+    ).coerceIn(allRadarFrames.indices)
     val selectedRadarFrameOffset = radarFrames.getOrElse(radarFrameIndex) { 0 }
     val radarSite = remember(uiState.origin, cameraState.position.target) {
         nearestNexradSite(uiState.origin ?: cameraState.position.target)
     }
-    val radarTileUrl = remember(radarProduct, selectedRadarFrameOffset, radarRefreshKey, radarSite) {
-        radarTileUrl(
-            product = radarProduct,
-            frameOffsetMinutes = selectedRadarFrameOffset,
-            radarSite = radarSite,
-            refreshKey = radarRefreshKey,
-        )
+    val radarTileUrls = remember(radarProduct, allRadarFrames, radarRefreshKey, radarSite) {
+        allRadarFrames.map { frameOffsetMinutes ->
+            radarTileUrl(
+                product = radarProduct,
+                frameOffsetMinutes = frameOffsetMinutes,
+                radarSite = radarSite,
+                refreshKey = radarRefreshKey,
+            )
+        }
     }
     val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.85f else 0f
     val footerState = when {
@@ -473,21 +479,29 @@ fun MapsPage(
                     width = const(if (navMode) 12.dp else 5.dp)
                 )
 
-                val radarSource = rememberRasterSource(
-                    tiles = listOf(radarTileUrl),
-                    options = TileSetOptions(
-                        minZoom = 1,
-                        maxZoom = 6,
-                    ),
-                    tileSize = 256,
-                )
-                RasterLayer(
-                    id = "radar-overlay-layer",
-                    source = radarSource,
-                    opacity = const(radarOverlayOpacity),
-                    resampling = const(RasterResampling.Linear),
-                    fadeDuration = const(RADAR_TILE_FADE_DURATION),
-                )
+                radarTileUrls.forEachIndexed { frameIndex, radarTileUrl ->
+                    val radarSource = rememberRasterSource(
+                        tiles = listOf(radarTileUrl),
+                        options = TileSetOptions(
+                            minZoom = 1,
+                            maxZoom = 12,
+                        ),
+                        tileSize = 256,
+                    )
+                    RasterLayer(
+                        id = "radar-overlay-layer-$frameIndex",
+                        source = radarSource,
+                        opacity = const(
+                            if (frameIndex == selectedRadarFrameSlot) {
+                                radarOverlayOpacity
+                            } else {
+                                0f
+                            },
+                        ),
+                        resampling = const(RasterResampling.Linear),
+                        fadeDuration = const(RADAR_TILE_FADE_DURATION),
+                    )
+                }
 
                 val alertsSource = rememberGeoJsonSource(
                     data = uiState.alertsGeoJson ?: GeoJsonData.JsonString("""{"type":"FeatureCollection","features":[]}""")
@@ -806,6 +820,7 @@ fun MapsPage(
 
 private val RADAR_TILE_FADE_DURATION = 1.milliseconds
 private const val RADAR_REPLAY_FRAME_DELAY_MS = 650L
+private const val RADAR_MAX_FRAME_COUNT = 30
 private const val RADAR_NATIVE_ZOOM = 6
 
 private enum class RadarProduct(
