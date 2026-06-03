@@ -53,11 +53,11 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.stormpilot.data.CurrentWeather
-import com.example.stormpilot.data.DailyWeatherOutlook
-import com.example.stormpilot.data.HourlyForecast
-import com.example.stormpilot.data.WeatherUiState
-import com.example.stormpilot.data.WeatherViewModel
+import com.example.stormpilot.features.weather.data.CurrentWeather
+import com.example.stormpilot.features.weather.data.DailyWeatherOutlook
+import com.example.stormpilot.features.weather.data.HourlyForecast
+import com.example.stormpilot.features.weather.presentation.WeatherUiState
+import com.example.stormpilot.features.weather.presentation.WeatherViewModel
 import com.example.stormpilot.ui.theme.ExtendedColors
 
 @Composable

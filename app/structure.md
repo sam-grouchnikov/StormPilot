@@ -18,13 +18,16 @@ com/example/stormpilot/
 │   │   └── presentation/
 │   │       └── AlertsViewModel.kt
 │   ├── assistant/
-│   │   ├── GenAIViewModel.kt
-│   │   └── GenAIWeatherTools.kt
+│   │   ├── data/
+│   │   │   └── GenAIWeatherTools.kt
+│   │   └── presentation/
+│   │       └── GenAIViewModel.kt
 │   ├── auth/
 │   │   └── ui/
 │   │       ├── SignIn.kt
 │   │       ├── SignUp.kt
-│   │       └── WelcomePage.kt
+│   │       ├── WelcomePage.kt
+│   │       └── components/
 │   ├── dashboard/
 │   │   └── ui/
 │   │       ├── Dashboard.kt
@@ -36,11 +39,18 @@ com/example/stormpilot/
 │   │   └── data/
 │   │       └── LocationRepository.kt
 │   ├── map/
-│   │   ├── data/routing/
+│   │   ├── data/
+│   │   │   ├── routing/
+│   │   │   └── search/
 │   │   ├── presentation/
 │   │   └── ui/
+│   │       ├── navigation/
+│   │       ├── radar/
+│   │       └── search/
 │   ├── navigation/
-│   │   └── NavSkeleton.kt
+│   │   └── ui/
+│   │       ├── NavSkeleton.kt
+│   │       └── components/
 │   ├── settings/
 │   │   └── ui/
 │   │       └── Settings.kt
@@ -65,13 +75,15 @@ com/example/stormpilot/
 - Dashboard alert map and alert summary UI: `features/dashboard/ui/alerts`.
 - Dashboard forecast UI: `features/dashboard/ui/weather`.
 - Dashboard AI chat UI: `features/dashboard/ui/aichat`.
-- AI chat state and weather tools: `features/assistant`.
+- AI chat state and weather tools: `features/assistant/data` and `features/assistant/presentation`.
 - Shared device location tracking: `features/location/data`.
 - NWS alert models and fetching: `features/alerts/data`.
 - Alert grouping and city-name state: `features/alerts/presentation`.
 - Weather API models and fetching: `features/weather/data`.
 - Weather screen state: `features/weather/presentation`.
-- Map screen UI: `features/map/ui`.
+- Map screen UI: `features/map/ui`, with navigation widgets in `features/map/ui/navigation` and search chrome in `features/map/ui/search`.
 - Map state, search, routing progress, and alert overlays: `features/map/presentation`.
 - Routing API clients, parsing, models, and formatters: `features/map/data/routing`.
+- Search geocoding and drive-metric enrichment: `features/map/data/search`.
+- App shell navigation: `features/navigation/ui`.
 - Color, typography, and Material theme code: `ui/theme`.

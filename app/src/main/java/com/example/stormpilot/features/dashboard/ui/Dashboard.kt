@@ -27,8 +27,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.stormpilot.ui.theme.StormPilotTheme
-import com.example.stormpilot.data.AlertsViewModel
-import com.example.stormpilot.data.GenAIViewModel
+import com.example.stormpilot.features.alerts.presentation.AlertsViewModel
+import com.example.stormpilot.features.assistant.presentation.GenAIViewModel
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatPopup
 import com.example.stormpilot.R
 import com.example.stormpilot.features.common.ui.AccountMenuAnchor

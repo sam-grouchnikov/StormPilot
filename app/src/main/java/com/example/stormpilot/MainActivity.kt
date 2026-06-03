@@ -21,7 +21,7 @@ import com.example.stormpilot.core.updateAppCompatNightMode
 import com.example.stormpilot.features.auth.ui.SignIn
 import com.example.stormpilot.features.auth.ui.SignUp
 import com.example.stormpilot.features.auth.ui.WelcomePage
-import com.example.stormpilot.features.auth.ui.NavSkeleton
+import com.example.stormpilot.features.navigation.ui.NavSkeleton
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
