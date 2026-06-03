@@ -1,0 +1,179 @@
+package com.example.stormpilot.features.navigation.ui
+
+import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Radar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.stormpilot.features.dashboard.ui.RadarPage
+import com.example.stormpilot.features.map.ui.MapsPage
+import com.example.stormpilot.features.navigation.ui.components.FloatingNavBar
+import com.example.stormpilot.features.settings.ui.SettingsPage
+import com.example.stormpilot.ui.theme.StormPilotTheme
+
+sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
+    data object Radar : TabDest("dashboard", "Dashboard", Icons.Outlined.Radar)
+    data object Nav : TabDest("navigation", "Navigation", Icons.Outlined.LocationOn)
+}
+
+/**
+ * Hosts the two top-level destinations and the shared floating tab bar, while
+ * letting map-specific overlays temporarily take over the full screen.
+ */
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun NavSkeleton() {
+    val isMapDestinationSelected = remember { mutableStateOf(false) }
+    val showSettings = remember { mutableStateOf(false) }
+
+    StormPilotTheme(dynamicColor = false) {
+        val navController = rememberNavController()
+        val tabs = listOf(TabDest.Radar, TabDest.Nav)
+        val mapContentInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+        val standardContentInsets = WindowInsets.safeDrawing.union(WindowInsets.displayCutout)
+
+        val backStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = backStackEntry?.destination?.route
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                bottomBar = {
+                    AnimatedVisibility(
+                        visible = !isMapDestinationSelected.value,
+                        enter = fadeIn(animationSpec = tween(300)) +
+                            slideInVertically(
+                                initialOffsetY = { it },
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium,
+                                ),
+                            ),
+                        exit = fadeOut(animationSpec = tween(180)) +
+                            slideOutVertically(
+                                targetOffsetY = { it },
+                                animationSpec = tween(200),
+                            ),
+                    ) {
+                        FloatingNavBar(
+                            tabs = tabs,
+                            currentRoute = currentRoute,
+                            onTabSelected = { tab ->
+                                navController.navigate(tab.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                        )
+                    }
+                },
+            ) {
+                val contentModifier = when (currentRoute) {
+                    TabDest.Nav.route,
+                    TabDest.Radar.route -> Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(mapContentInsets)
+
+                    else -> Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(standardContentInsets)
+                }
+
+                Box(modifier = contentModifier) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = TabDest.Nav.route,
+                        enterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { it / 8 },
+                                animationSpec = tween(380),
+                            ) + fadeIn(animationSpec = tween(260))
+                        },
+                        exitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { -it / 10 },
+                                animationSpec = tween(260),
+                            ) + fadeOut(animationSpec = tween(180))
+                        },
+                        popEnterTransition = {
+                            slideInHorizontally(
+                                initialOffsetX = { -it / 8 },
+                                animationSpec = tween(340),
+                            ) + fadeIn(animationSpec = tween(220))
+                        },
+                        popExitTransition = {
+                            slideOutHorizontally(
+                                targetOffsetX = { it / 8 },
+                                animationSpec = tween(240),
+                            ) + fadeOut(animationSpec = tween(160))
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                    ) {
+                        composable(TabDest.Nav.route) {
+                            MapsPage(
+                                onDestinationSelectedStateChanged = { isSelected ->
+                                    isMapDestinationSelected.value = isSelected
+                                },
+                                onOpenSettings = { showSettings.value = true },
+                            )
+                        }
+                        composable(TabDest.Radar.route) {
+                            RadarPage(onOpenSettings = { showSettings.value = true })
+                        }
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showSettings.value,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(420),
+                ) + fadeIn(animationSpec = tween(180)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(320),
+                ) + fadeOut(animationSpec = tween(140)),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                SettingsPage(onDismiss = { showSettings.value = false })
+            }
+        }
+    }
+}

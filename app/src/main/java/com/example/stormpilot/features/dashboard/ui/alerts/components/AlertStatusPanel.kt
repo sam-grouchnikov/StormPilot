@@ -1,0 +1,198 @@
+package com.example.stormpilot.features.dashboard.ui.alerts.components
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bolt
+import androidx.compose.material.icons.outlined.Flood
+import androidx.compose.material.icons.outlined.Tornado
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.stormpilot.features.alerts.presentation.AlertsUiState
+import com.example.stormpilot.ui.theme.ExtendedColors
+
+@Composable
+fun AlertStatusPanel(alertsState: AlertsUiState) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            modifier = Modifier.padding(vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            AlertStatusRow(
+                icon = Icons.Outlined.Tornado,
+                label = "Tornado",
+                state = alertState(
+                    warningActive = alertsState.tornadoWarning != null,
+                    watchActive = alertsState.tornadoWatch != null,
+                    warningText = "Tornado Warning",
+                    watchText = "Tornado Watch",
+                    clearText = "No Tornado Alerts",
+                ),
+            )
+            AlertStatusRow(
+                icon = Icons.Outlined.Bolt,
+                label = "Severe Thunderstorm",
+                state = alertState(
+                    warningActive = alertsState.severeThunderstormWarning != null,
+                    watchActive = alertsState.severeThunderstormWatch != null,
+                    warningText = "Severe T-Storm Warning",
+                    watchText = "Severe T-Storm Watch",
+                    clearText = "No Storm Alerts",
+                ),
+            )
+            AlertStatusRow(
+                icon = Icons.Outlined.Flood,
+                label = "Flood",
+                state = alertState(
+                    warningActive = alertsState.flashFloodWarning != null,
+                    watchActive = alertsState.flashFloodWatch != null,
+                    warningText = "Flash Flood Warning",
+                    watchText = "Flash Flood Watch",
+                    clearText = "No Flood Alerts",
+                ),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AlertStatusRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    state: LocationAlertState,
+) {
+    val colors = ExtendedColors()
+    val containerTarget = when (state.level) {
+        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainer
+        AlertLevel.Watch -> colors.alertWatchContainer
+        AlertLevel.Warning -> colors.alertWarningContainer
+    }
+    val contentTarget = when (state.level) {
+        AlertLevel.Clear -> MaterialTheme.colorScheme.onSurfaceVariant
+        AlertLevel.Watch -> colors.alertWatchContent
+        AlertLevel.Warning -> colors.alertWarningContent
+    }
+    val titleTarget = when (state.level) {
+        AlertLevel.Clear -> colors.alertClearContent
+        AlertLevel.Watch -> colors.alertWatchContent
+        AlertLevel.Warning -> colors.alertWarningContent
+    }
+    val iconTarget = when (state.level) {
+        AlertLevel.Clear -> colors.alertClearContentAlternate
+        AlertLevel.Watch -> colors.alertWatchContent
+        AlertLevel.Warning -> colors.alertWarningContent
+    }
+    val containerColor by animateColorAsState(
+        targetValue = containerTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_container_color",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = contentTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_content_color",
+    )
+    val titleColor by animateColorAsState(
+        targetValue = titleTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_title_color",
+    )
+    val iconColor by animateColorAsState(
+        targetValue = iconTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_icon_color",
+    )
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = containerColor,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(24.dp),
+            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    text = label,
+                    color = titleColor,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                )
+                AnimatedContent(
+                    targetState = state.text,
+                    transitionSpec = {
+                        fadeIn(tween(220, delayMillis = 70)) togetherWith fadeOut(tween(140))
+                    },
+                    label = "alert_status_text",
+                ) { text ->
+                    Text(
+                        text = text,
+                        color = contentColor,
+                        fontWeight = FontWeight.W500,
+                        fontSize = 18.sp,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private enum class AlertLevel {
+    Clear,
+    Watch,
+    Warning,
+}
+
+private data class LocationAlertState(
+    val level: AlertLevel,
+    val text: String,
+)
+
+private fun alertState(
+    warningActive: Boolean,
+    watchActive: Boolean,
+    warningText: String,
+    watchText: String,
+    clearText: String,
+): LocationAlertState = when {
+    warningActive -> LocationAlertState(AlertLevel.Warning, warningText)
+    watchActive -> LocationAlertState(AlertLevel.Watch, watchText)
+    else -> LocationAlertState(AlertLevel.Clear, clearText)
+}
