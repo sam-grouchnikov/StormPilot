@@ -14,11 +14,20 @@ private val json = Json { ignoreUnknownKeys = true }
 
 object RoutingParsing {
     fun parseOsrmRoute(payload: String): RouteResult {
+        return parseOsrmRoutes(payload).first()
+    }
+
+    fun parseOsrmRoutes(payload: String): List<RouteResult> {
         val root = json.parseToJsonElement(payload).jsonObject
         val routes = root["routes"]?.jsonArray.orEmpty()
         require(routes.isNotEmpty()) { "No route returned" }
-        val route = routes.first().jsonObject
 
+        return routes.map { routeElement ->
+            parseOsrmRouteObject(routeElement.jsonObject)
+        }
+    }
+
+    private fun parseOsrmRouteObject(route: kotlinx.serialization.json.JsonObject): RouteResult {
         val geometry = route["geometry"]?.jsonObject
             ?.get("coordinates")?.jsonArray.orEmpty()
             .map { coordinate ->

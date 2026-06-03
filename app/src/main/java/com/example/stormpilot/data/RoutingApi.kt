@@ -9,22 +9,31 @@ import javax.inject.Inject
 
 interface RoutingApiClient {
     suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult>
+    suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>>
 }
 
 class ValhallaRoutingApiClient @Inject constructor() : RoutingApiClient {
     override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
         return Result.failure(UnsupportedOperationException("Valhalla endpoint not configured"))
     }
+
+    override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
+        return fetchRoute(origin, destination).map { listOf(it) }
+    }
 }
 
 class OsrmRoutingApiClient @Inject constructor() : RoutingApiClient {
     override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
+        return fetchRouteCandidates(origin, destination).map { it.first() }
+    }
+
+    override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
         return withContext(Dispatchers.IO) {
             runCatching {
                 val coordinates = "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}"
                 val url = URL(
                     "https://routing.openstreetmap.de/routed-car/route/v1/driving/$coordinates" +
-                            "?overview=full&geometries=geojson&steps=true"
+                            "?overview=full&geometries=geojson&steps=true&alternatives=true"
                 )
                 val connection = (url.openConnection() as HttpURLConnection).apply {
                     requestMethod = "GET"
@@ -33,7 +42,7 @@ class OsrmRoutingApiClient @Inject constructor() : RoutingApiClient {
                     setRequestProperty("Accept", "application/json")
                 }
                 connection.inputStream.bufferedReader().use { reader ->
-                    RoutingParsing.parseOsrmRoute(reader.readText())
+                    RoutingParsing.parseOsrmRoutes(reader.readText())
                 }
             }
         }
@@ -51,6 +60,13 @@ class RoutingRepositoryImpl @Inject constructor(
         return valhallaClient.fetchRoute(origin, destination)
             .recoverCatching {
                 osrmClient.fetchRoute(origin, destination).getOrThrow()
+            }
+    }
+
+    override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
+        return valhallaClient.fetchRouteCandidates(origin, destination)
+            .recoverCatching {
+                osrmClient.fetchRouteCandidates(origin, destination).getOrThrow()
             }
     }
 }

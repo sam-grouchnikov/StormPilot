@@ -3,6 +3,7 @@ package com.example.stormpilot.data
 import android.content.Context
 import android.location.Geocoder
 import android.util.Log
+import com.example.stormpilot.core.AppSettings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -81,6 +82,7 @@ class MapsViewModel @Inject constructor(
     private var rerouteDebounceJob: Job? = null
     private var routeWarningsJob: Job? = null
     private var latestAlertsGeoJson: String? = null
+    private var stormAvoidanceForCurrentTrip = false
 
     fun onUserLocationUpdated(position: Position) {
         val updatedState = _uiState.value.copy(origin = position)
@@ -173,6 +175,7 @@ class MapsViewModel @Inject constructor(
             routeWarningError = null,
         )
         currentRoutePolyline = emptyList()
+        stormAvoidanceForCurrentTrip = false
         routeWarningsJob?.cancel()
         requestRoute()
     }
@@ -208,6 +211,7 @@ class MapsViewModel @Inject constructor(
             val geojson = fetchAlertsGeoJson()
             latestAlertsGeoJson = geojson
             _uiState.update { it.copy(alertsGeoJson = GeoJsonData.JsonString(geojson)) }
+            rerouteIfStormAwareRouteHasWarnings(geojson)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -258,6 +262,7 @@ class MapsViewModel @Inject constructor(
             routeWarningError = null,
         )
         currentRoutePolyline = emptyList()
+        stormAvoidanceForCurrentTrip = false
         routeWarningsJob?.cancel()
 
         viewModelScope.launch {
@@ -276,8 +281,14 @@ class MapsViewModel @Inject constructor(
         requestRoute()
     }
 
+    fun requestSafeDirections() {
+        stormAvoidanceForCurrentTrip = true
+        requestRoute()
+    }
+
     fun clearRoute() {
         currentRoutePolyline = emptyList()
+        stormAvoidanceForCurrentTrip = false
         routeWarningsJob?.cancel()
         _uiState.value = _uiState.value.copy(
             destination = null,
@@ -321,8 +332,9 @@ class MapsViewModel @Inject constructor(
                 routeWarningCount = null,
                 routeWarningError = null,
             )
-            routingRepository.fetchRoute(origin, destination)
-                .onSuccess { route ->
+            fetchRouteSelection(origin, destination, shouldAvoidStorms())
+                .onSuccess { selection ->
+                    val route = selection.route
                     currentRoutePolyline = route.polyline
                     val geoJson = GeoJsonData.JsonString(
                         RoutingParsing.toGeoJsonLineString(route.polyline)
@@ -339,10 +351,12 @@ class MapsViewModel @Inject constructor(
                         currentStepIndex = 0,
                         isLoadingRoute = false,
                         routeError = null,
-                        routeWarningCount = null,
-                        routeWarningError = null,
+                        routeWarningCount = selection.warningCount,
+                        routeWarningError = selection.warningError,
                     )
-                    checkRouteWarnings(route.polyline)
+                    if (selection.warningCount == null && selection.warningError == null) {
+                        checkRouteWarnings(route.polyline)
+                    }
                 }
                 .onFailure { error ->
                     routeWarningsJob?.cancel()
@@ -355,6 +369,89 @@ class MapsViewModel @Inject constructor(
                 }
             Log.d("Routing", "Route finished in ${System.currentTimeMillis() - start}ms")
 
+        }
+    }
+
+    private fun shouldAvoidStorms(): Boolean = AppSettings.avoidStorms || stormAvoidanceForCurrentTrip
+
+    private suspend fun fetchRouteSelection(
+        origin: Position,
+        destination: Position,
+        avoidStorms: Boolean,
+    ): Result<RouteSelection> {
+        if (!avoidStorms) {
+            return routingRepository.fetchRoute(origin, destination)
+                .map { route -> RouteSelection(route = route) }
+        }
+
+        return runCatching {
+            val alertsGeoJson = fetchFreshAlertsForRouting()
+            val candidates = routingRepository.fetchRouteCandidates(origin, destination).getOrThrow()
+            require(candidates.isNotEmpty()) { "No route returned" }
+
+            if (alertsGeoJson == null) {
+                return@runCatching RouteSelection(
+                    route = candidates.first(),
+                    warningError = "Warnings unavailable",
+                )
+            }
+
+            val scoredRoutes = withContext(Dispatchers.Default) {
+                candidates.map { route ->
+                    ScoredRoute(
+                        route = route,
+                        warningCount = RouteWarningCounter.countWarningsIntersectingRoute(
+                            alertsGeoJson = alertsGeoJson,
+                            routePolyline = route.polyline,
+                        ),
+                    )
+                }
+            }
+
+            val bestRoute = scoredRoutes.minWith(
+                compareBy<ScoredRoute> { it.warningCount }
+                    .thenBy { it.route.durationSeconds }
+                    .thenBy { it.route.distanceMeters }
+            )
+
+            RouteSelection(
+                route = bestRoute.route,
+                warningCount = bestRoute.warningCount,
+            )
+        }
+    }
+
+    private suspend fun fetchFreshAlertsForRouting(): String? {
+        return try {
+            fetchAlertsGeoJson().also { geojson ->
+                latestAlertsGeoJson = geojson
+                _uiState.update { it.copy(alertsGeoJson = GeoJsonData.JsonString(geojson)) }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e("StormRouting", "Failed to fetch alerts for storm-aware routing: ${e.message}")
+            latestAlertsGeoJson
+        }
+    }
+
+    private suspend fun rerouteIfStormAwareRouteHasWarnings(alertsGeoJson: String) {
+        if (!shouldAvoidStorms() || currentRoutePolyline.size < 2) return
+
+        val warningCount = withContext(Dispatchers.Default) {
+            RouteWarningCounter.countWarningsIntersectingRoute(alertsGeoJson, currentRoutePolyline)
+        }
+        currentCoroutineContext().ensureActive()
+
+        _uiState.update {
+            it.copy(
+                routeWarningCount = warningCount,
+                routeWarningError = null,
+            )
+        }
+
+        if (warningCount > 0 && _uiState.value.destination != null && !_uiState.value.isLoadingRoute) {
+            scheduleReroute()
         }
     }
 
@@ -403,6 +500,17 @@ class MapsViewModel @Inject constructor(
             }
         }
     }
+
+    private data class RouteSelection(
+        val route: RouteResult,
+        val warningCount: Int? = null,
+        val warningError: String? = null,
+    )
+
+    private data class ScoredRoute(
+        val route: RouteResult,
+        val warningCount: Int,
+    )
 
     companion object {
         private const val OFF_ROUTE_THRESHOLD_METERS = 40.0

@@ -405,6 +405,7 @@ fun TripSummaryCard(
     state: MapsUiState,
     onRetry: () -> Unit,
     onDirectionsClick: () -> Unit,
+    onSafeDirectionsClick: () -> Unit,
     onClearRoute: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -498,7 +499,7 @@ fun TripSummaryCard(
                         }
 
                         Button(
-                            onClick = {  },
+                            onClick = onSafeDirectionsClick,
                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,

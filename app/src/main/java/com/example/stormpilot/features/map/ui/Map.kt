@@ -568,6 +568,13 @@ fun MapsPage(
                 navigationCameraTrackingEnabled = true
             }
 
+            fun onSafeDirClick() {
+                viewModel.requestSafeDirections()
+                navMode = true
+                is2dNavView = false
+                navigationCameraTrackingEnabled = true
+            }
+
 
 
             val scope = rememberCoroutineScope()
@@ -596,6 +603,7 @@ fun MapsPage(
                         state = uiState,
                         onRetry = viewModel::retryRoute,
                         onDirectionsClick = { onDirClick() },
+                        onSafeDirectionsClick = { onSafeDirClick() },
                         onClearRoute = { onClose() },
                         modifier = Modifier.fillMaxWidth(),
                     )

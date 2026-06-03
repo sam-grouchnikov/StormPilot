@@ -10,4 +10,9 @@ interface RoutingRepository {
      * Fetches a route between [origin] and [destination].
      */
     suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult>
+
+    /**
+     * Fetches route candidates between [origin] and [destination].
+     */
+    suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>>
 }
