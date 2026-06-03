@@ -376,7 +376,7 @@ fun MapsPage(
     StormPilotTheme(
         opaqueNavigationBar = false,
     ) {
-        val searchContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        val searchContainerColor = colors.searchBarColor
         val mapStyle = if (AppSettings.isDarkMode) {
             "asset://map-dark.json"
         } else {
@@ -673,7 +673,7 @@ fun MapsPage(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .statusBarsPadding()
-                    .padding(end = 9.dp, top = 74.dp),
+                    .padding(end = 13.dp, top = 74.dp),
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -682,7 +682,7 @@ fun MapsPage(
                         onClick = { showRadarOverlay = !showRadarOverlay },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = if (showRadarOverlay) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.inverseOnSurface,
+                            else colors.iconButtonColor,
                         ),
                         modifier = Modifier.coloredShadow(
                             color = colors.purpleShadow,
@@ -701,7 +701,7 @@ fun MapsPage(
                         onClick = { showSevereAlertsOverlay = !showSevereAlertsOverlay },
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = if (showSevereAlertsOverlay) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.inverseOnSurface,
+                            else colors.iconButtonColor,
                         ),
                         modifier = Modifier.coloredShadow(
                             color = colors.purpleShadow,
@@ -749,7 +749,7 @@ fun MapsPage(
                                     }
                                 },
                                 colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.inverseOnSurface,
+                                    containerColor = colors.searchBarColor,
                                 ),
                                 modifier = Modifier.coloredShadow(
                                     color = colors.purpleShadow,
@@ -769,7 +769,7 @@ fun MapsPage(
                                     is2dNavView = false
                                 },
                                 colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.inverseOnSurface,
+                                    containerColor = colors.searchBarColor,
                                 ),
                                 modifier = Modifier.coloredShadow(
                                     color = colors.purpleShadow,

@@ -35,7 +35,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF252538) else Color(0xFFE4EAF6)
 
     public val purpleBackground: Color
-        get() = if (isDark) Color(0xFF312538) else Color(0xFFEDE4F6)
+        get() = if (isDark) Color(0xFF312538) else Color(0xFFEFE8F6)
 
     public val routingLine: Color
         get() = if (isDark) Color(0xFF81C3FF) else Color(0xFF0046D9)
@@ -50,11 +50,16 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF533F5F) else Color(0xFFDCBCEA)
 
     public val purpleSurfaceContainer: Color
-        get() = if (isDark) Color(0xFF211B21) else Color(0xFFEEECF1)
+        get() = if (isDark) Color(0xFF201A20) else Color(0xFFF8F8F8)
 
     public val purpleShadow: Color
         get() = if (isDark) Color(0xFF1D1A20) else Color(0xFFD7D1DC)
 
+    public val searchBarColor: Color
+        get() = if (isDark) Color(0xFF282A2F) else Color(0xFFFFFFFF)
+
+    public val iconButtonColor: Color
+        get() = if (isDark) Color(0xFF32353A) else Color(0xFFFFFFFF)
 
 
     public val stormContainer: Color

@@ -108,7 +108,7 @@ fun SearchScaffold(
     onSearchSubmit: () -> Unit,
     onResultClick: (PhotonFeature) -> Unit,
     onOpenSettings: () -> Unit = {},
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    containerColor: Color,
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
