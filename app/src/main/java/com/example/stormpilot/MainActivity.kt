@@ -90,13 +90,23 @@ fun AppCenter() {
 
         composable("signin") {
             SignIn(
-                onLogin = { navController.navigate("skeleton") }
+                onLogin = { navController.navigate("skeleton") },
+                onSwitchToSignUp = {
+                    navController.navigate("signup") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
         composable("signup") {
             SignUp(
-                onLogin = { navController.navigate("skeleton") }
+                onLogin = { navController.navigate("skeleton") },
+                onSwitchToSignIn = {
+                    navController.navigate("signin") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 
