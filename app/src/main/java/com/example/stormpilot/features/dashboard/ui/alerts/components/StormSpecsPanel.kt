@@ -1,21 +1,33 @@
 package com.example.stormpilot.features.dashboard.ui.alerts.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Thunderstorm
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.weather.data.StormSpec
@@ -27,44 +39,73 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
 
     Surface(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 50.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(14.dp),
-        color = colors.stormContainer,
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
     ) {
-        Column(
-            modifier = Modifier.padding(vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Text(
-                text = "Storm Environment",
-                color = colors.stormText,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(horizontal = 14.dp),
-            )
-            androidx.compose.foundation.layout.Row(
-                modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Box {
+            Column(
+                modifier = Modifier.padding(vertical = 15.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                if (stormSpecs.isEmpty()) {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    LinearWavyProgressIndicator(
-                        waveSpeed = 1.dp,
-                        wavelength = 50.dp,
-                        gapSize = 5.dp,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 10.dp, bottom = 5.dp),
-                        color = colors.stormText,
-                        trackColor = colors.stormContainer,
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                } else {
-                    stormSpecs.forEach { spec ->
-                        StormSpecCard(spec = spec)
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Surface(
+                        modifier = Modifier.size(40.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f)),
+                    ) {
+                        Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Outlined.Thunderstorm,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(23.dp),
+                            )
+                        }
+                    }
+                    Column(modifier = Modifier.padding(start = 11.dp)) {
+                        Text(
+                            text = "Storm Environment",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 20.sp,
+                        )
+                        Text(
+                            text = "Convective ingredients near you",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    if (stormSpecs.isEmpty()) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        LinearWavyProgressIndicator(
+                            waveSpeed = 1.dp,
+                            wavelength = 50.dp,
+                            gapSize = 5.dp,
+                            modifier = Modifier
+                                .width(250.dp)
+                                .padding(top = 10.dp, bottom = 5.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                    } else {
+                        stormSpecs.forEach { spec ->
+                            StormSpecCard(spec = spec)
+                        }
                     }
                 }
             }
@@ -142,35 +183,75 @@ private fun StormSpecCard(spec: StormSpec) {
     }
 
     Surface(
-        modifier = Modifier.width(118.dp),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-        color = colors.stormContainerNested,
+        modifier = Modifier.width(136.dp),
+        shape = RoundedCornerShape(18.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.18f)),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp),
         ) {
-            Text(
-                text = spec.label,
-                color = colors.stormTextNested,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
-                maxLines = 1,
-            )
+            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text(
+                    text = spec.label,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f),
+                )
+                Surface(shape = CircleShape, color = riskColor.copy(alpha = 0.14f)) {
+                    Text(
+                        text = risk,
+                        color = riskColor,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                    )
+                }
+            }
             Text(
                 text = spec.value,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.Bold,
-                fontSize = 17.sp,
+                fontWeight = FontWeight.Black,
+                fontSize = 20.sp,
                 maxLines = 1,
             )
+            RiskMeter(risk = risk, color = riskColor)
             Text(
-                text = "$risk risk",
-                color = riskColor,
+                text = spec.detail,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
                 fontSize = 11.sp,
                 lineHeight = 13.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Composable
+private fun RiskMeter(risk: String, color: Color) {
+    val progress = when (risk) {
+        "Low" -> 0.28f
+        "Moderate" -> 0.52f
+        "High" -> 0.76f
+        "Extreme" -> 1f
+        else -> 0.18f
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(7.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress)
+                .height(7.dp)
+                .background(color, CircleShape),
+        )
     }
 }

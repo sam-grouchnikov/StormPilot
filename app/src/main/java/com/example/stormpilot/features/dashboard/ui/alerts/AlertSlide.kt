@@ -7,7 +7,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -68,10 +71,10 @@ fun AlertSlide(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 15.dp)
+                .padding(horizontal = 14.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 50.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(bottom = dashboardBottomContentPadding()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             LocationAlertsMapCard(
                 cityName = cityName,
@@ -104,3 +107,7 @@ fun AlertSlide(
         )
     }
 }
+
+@Composable
+private fun dashboardBottomContentPadding() =
+    112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()

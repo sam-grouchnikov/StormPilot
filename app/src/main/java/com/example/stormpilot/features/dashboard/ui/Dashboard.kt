@@ -1,6 +1,7 @@
 package com.example.stormpilot.features.dashboard.ui
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -15,7 +16,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,16 +79,22 @@ fun TopIconRow(
     onOpenSettings: () -> Unit = {},
 ) {
     Row(
-        modifier = modifier.padding(horizontal = 20.dp),
+        modifier = modifier.padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.logo),
-            contentDescription = "Description of the image for accessibility",
-            modifier = Modifier
-                .size(42.dp)
-                .padding(top = 3.dp)
-        )
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "StormPilot",
+                modifier = Modifier
+                    .size(46.dp)
+                    .padding(8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -94,13 +103,13 @@ fun TopIconRow(
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             contentDescription = null,
             modifier = Modifier
-                .size(36.dp)
+                .size(33.dp)
                 .padding(top = 3.dp)
         )
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(15.dp))
 
-        AccountMenuAnchor(onClick = onOpenSettings)
+        AccountMenuAnchor(onClick = onOpenSettings, circleSize = 43, textSize = 15)
 
     }
 }

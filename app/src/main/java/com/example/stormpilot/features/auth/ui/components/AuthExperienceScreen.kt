@@ -97,18 +97,6 @@ fun AuthExperienceScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = heroText,
-                        style = MaterialTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 50.sp,
-                        ),
-                        color = scheme.onSurface,
-                        modifier = Modifier.signInEntrance(contentVisible.value, 1),
-                    )
-
-                    Spacer(modifier = Modifier.height(28.dp))
-
                     Surface(
                         modifier = Modifier.signInEntrance(contentVisible.value, 3),
                         shape = RoundedCornerShape(36.dp),

@@ -2,17 +2,23 @@ package com.example.stormpilot.features.dashboard.ui.alerts.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
@@ -26,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,13 +47,35 @@ fun AlertStatusPanel(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.94f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f)),
     ) {
         Column(
             modifier = Modifier.padding(vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Alert Radar",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 21.sp,
+                    )
+                    Text(
+                        text = "Tap active rows for details",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                    )
+                }
+            }
             AlertStatusRow(
                 icon = Icons.Outlined.Tornado,
                 label = "Tornado",
@@ -139,27 +168,48 @@ private fun AlertStatusRow(
         animationSpec = tween(durationMillis = 450),
         label = "alert_icon_color",
     )
+    val scale by animateFloatAsState(
+        targetValue = if (state.level == AlertLevel.Warning) 1.018f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow,
+        ),
+        label = "alert_row_scale",
+    )
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp)
+            .scale(scale)
             .clickable(enabled = alert != null) {
                 alert?.let(onAlertClick)
             },
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(18.dp),
         color = containerColor,
+        border = BorderStroke(
+            width = 1.dp,
+            color = contentColor.copy(alpha = if (state.level == AlertLevel.Clear) 0.08f else 0.22f),
+        ),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 13.dp, vertical = 11.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(24.dp),
-            )
+            Surface(
+                shape = CircleShape,
+                color = contentColor.copy(alpha = if (state.level == AlertLevel.Clear) 0.08f else 0.16f),
+                modifier = Modifier.size(42.dp),
+            ) {
+                Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(23.dp),
+                    )
+                }
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -169,7 +219,7 @@ private fun AlertStatusRow(
                 Text(
                     text = label,
                     color = titleColor,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                 )
                 AnimatedContent(
@@ -182,7 +232,7 @@ private fun AlertStatusRow(
                     Text(
                         text = text,
                         color = contentColor,
-                        fontWeight = FontWeight.W500,
+                        fontWeight = FontWeight.Black,
                         fontSize = 18.sp,
                     )
                 }

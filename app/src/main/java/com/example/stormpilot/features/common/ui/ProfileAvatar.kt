@@ -52,11 +52,13 @@ fun ProfileAvatar(
 fun AccountMenuAnchor(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
+    circleSize: Int = 40,
+    textSize: Int = 15,
 ) {
     ProfileAvatar(
         modifier = modifier,
-        circleSize = 40,
-        textSize = 15,
+        circleSize = circleSize,
+        textSize = textSize,
         onClick = onClick,
     )
 }
