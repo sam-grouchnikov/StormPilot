@@ -200,6 +200,7 @@ fun TripSummaryCard(
                             val warningCount = state.routeWarningCount
                             val warningError = state.routeWarningError
                             val warningColor = when {
+                                warningError != null && (warningCount ?: 0) > 0 -> MaterialTheme.colorScheme.error
                                 warningError != null -> MaterialTheme.colorScheme.onSurfaceVariant
                                 warningCount == null -> MaterialTheme.colorScheme.onSurfaceVariant
                                 warningCount == 0 -> ExtendedColors().alertClearContent
@@ -223,7 +224,7 @@ fun TripSummaryCard(
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = when {
-                                    warningError != null -> warningError
+                                    warningError != null -> "No route found avoiding storm warnings"
                                     warningCount == null -> "Checking warnings en route"
                                     warningCount == 0 -> "No warnings en route"
                                     warningCount == 1 -> "1 warning en route"

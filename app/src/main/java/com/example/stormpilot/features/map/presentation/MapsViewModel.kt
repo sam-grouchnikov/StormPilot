@@ -14,6 +14,8 @@ import com.example.stormpilot.features.map.data.routing.RouteStep
 import com.example.stormpilot.features.map.data.routing.RouteWarningCounter
 import com.example.stormpilot.features.map.data.routing.RoutingParsing
 import com.example.stormpilot.features.map.data.routing.RoutingRepository
+import com.example.stormpilot.features.map.data.routing.StormDetourPlanner
+import com.example.stormpilot.features.map.data.routing.StormRoutePolicy
 import com.example.stormpilot.features.map.data.search.PhotonApiClient
 import com.example.stormpilot.features.map.data.search.PhotonFeature
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,6 +25,9 @@ import kotlinx.coroutines.currentCoroutineContext
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,6 +69,7 @@ data class MapsUiState(
     val selectedAlert: NwsAlert? = null,
     val isAlertDetailLoading: Boolean = false,
     val alertDetailError: String? = null,
+    val stormRouteAlertMessage: String? = null,
 )
 
 /**
@@ -189,6 +195,7 @@ class MapsViewModel @Inject constructor(
             address = featureAddress,
             routeWarningCount = null,
             routeWarningError = null,
+            stormRouteAlertMessage = null,
         )
         currentRoutePolyline = emptyList()
         stormAvoidanceForCurrentTrip = false
@@ -276,6 +283,7 @@ class MapsViewModel @Inject constructor(
             address = "Locating...",
             routeWarningCount = null,
             routeWarningError = null,
+            stormRouteAlertMessage = null,
         )
         currentRoutePolyline = emptyList()
         stormAvoidanceForCurrentTrip = false
@@ -315,6 +323,10 @@ class MapsViewModel @Inject constructor(
                 alertDetailError = null,
             )
         }
+    }
+
+    fun dismissStormRouteAlert() {
+        _uiState.update { it.copy(stormRouteAlertMessage = null) }
     }
 
     fun onAlertPolygonTapped(position: Position, eventType: String) {
@@ -387,6 +399,7 @@ class MapsViewModel @Inject constructor(
             address = null,
             routeWarningCount = null,
             routeWarningError = null,
+            stormRouteAlertMessage = null,
         )
     }
 
@@ -412,6 +425,7 @@ class MapsViewModel @Inject constructor(
                 routeError = null,
                 routeWarningCount = null,
                 routeWarningError = null,
+                stormRouteAlertMessage = null,
             )
             fetchRouteSelection(origin, destination, shouldAvoidStorms())
                 .onSuccess { selection ->
@@ -434,6 +448,7 @@ class MapsViewModel @Inject constructor(
                         routeError = null,
                         routeWarningCount = selection.warningCount,
                         routeWarningError = selection.warningError,
+                        stormRouteAlertMessage = selection.stormRouteAlertMessage,
                     )
                     if (selection.warningCount == null && selection.warningError == null) {
                         checkRouteWarnings(route.polyline)
@@ -446,6 +461,7 @@ class MapsViewModel @Inject constructor(
                         routeError = error.message ?: "Failed to fetch route",
                         routeWarningCount = null,
                         routeWarningError = null,
+                        stormRouteAlertMessage = null,
                     )
                 }
             Log.d("Routing", "Route finished in ${System.currentTimeMillis() - start}ms")
@@ -467,39 +483,101 @@ class MapsViewModel @Inject constructor(
 
         return runCatching {
             val alertsGeoJson = fetchFreshAlertsForRouting()
-            val candidates = routingRepository.fetchRouteCandidates(origin, destination).getOrThrow()
-            require(candidates.isNotEmpty()) { "No route returned" }
+            val baseCandidates = routingRepository.fetchRouteCandidates(origin, destination).getOrThrow()
+            require(baseCandidates.isNotEmpty()) { "No route returned" }
 
             if (alertsGeoJson == null) {
                 return@runCatching RouteSelection(
-                    route = candidates.first(),
+                    route = baseCandidates.first(),
                     warningError = "Warnings unavailable",
                 )
             }
 
-            val scoredRoutes = withContext(Dispatchers.Default) {
-                candidates.map { route ->
-                    ScoredRoute(
-                        route = route,
-                        warningCount = RouteWarningCounter.countWarningsIntersectingRoute(
-                            alertsGeoJson = alertsGeoJson,
-                            routePolyline = route.polyline,
-                        ),
+            val baseSelection = withContext(Dispatchers.Default) {
+                StormRoutePolicy.selectRoute(
+                    candidates = baseCandidates,
+                    alertsGeoJson = alertsGeoJson,
+                    destination = destination,
+                )
+            }
+            val shouldProbeDetours = baseSelection.warningCount > 0 &&
+                    baseSelection.warningMessage != StormRoutePolicy.DESTINATION_IN_WARNING_MESSAGE
+            val candidates = if (shouldProbeDetours) {
+                (baseCandidates + fetchStormDetourCandidates(
+                    origin = origin,
+                    destination = destination,
+                    alertsGeoJson = alertsGeoJson,
+                    seedRoutes = baseCandidates,
+                )).distinctByRouteGeometry()
+            } else {
+                baseCandidates
+            }
+
+            val selection = if (candidates.size == baseCandidates.size) {
+                baseSelection
+            } else {
+                withContext(Dispatchers.Default) {
+                    StormRoutePolicy.selectRoute(
+                        candidates = candidates,
+                        alertsGeoJson = alertsGeoJson,
+                        destination = destination,
                     )
                 }
             }
 
-            val bestRoute = scoredRoutes.minWith(
-                compareBy<ScoredRoute> { it.warningCount }
-                    .thenBy { it.route.durationSeconds }
-                    .thenBy { it.route.distanceMeters }
-            )
-
             RouteSelection(
-                route = bestRoute.route,
-                warningCount = bestRoute.warningCount,
+                route = selection.route,
+                warningCount = selection.warningCount,
+                warningError = selection.warningMessage,
+                stormRouteAlertMessage = selection.warningMessage,
             )
         }
+    }
+
+    private suspend fun fetchStormDetourCandidates(
+        origin: Position,
+        destination: Position,
+        alertsGeoJson: String,
+        seedRoutes: List<RouteResult>,
+    ): List<RouteResult> {
+        val waypointSets = withContext(Dispatchers.Default) {
+            StormDetourPlanner.buildWaypointSets(
+                alertsGeoJson = alertsGeoJson,
+                seedRoutes = seedRoutes,
+                origin = origin,
+                destination = destination,
+            )
+        }
+        if (waypointSets.isEmpty()) return emptyList()
+
+        val detourCandidates = mutableListOf<RouteResult>()
+        for (chunk in waypointSets.chunked(DETOUR_ROUTE_CONCURRENCY)) {
+            val chunkCandidates = coroutineScope {
+                chunk.map { waypoints ->
+                    async {
+                        routingRepository.fetchRouteVia(
+                            origin = origin,
+                            destination = destination,
+                            waypoints = waypoints,
+                        ).getOrNull()
+                    }
+                }.awaitAll().filterNotNull()
+            }
+
+            detourCandidates += chunkCandidates
+            val foundStormFreeRoute = withContext(Dispatchers.Default) {
+                chunkCandidates.any { route ->
+                    RouteWarningCounter.analyzeWarnings(
+                        alertsGeoJson = alertsGeoJson,
+                        routePolyline = route.polyline,
+                        destination = destination,
+                    ).warningCount == 0
+                }
+            }
+            if (foundStormFreeRoute) break
+        }
+
+        return detourCandidates
     }
 
     private suspend fun fetchFreshAlertsForRouting(): String? {
@@ -519,19 +597,35 @@ class MapsViewModel @Inject constructor(
     private suspend fun rerouteIfStormAwareRouteHasWarnings(alertsGeoJson: String) {
         if (!shouldAvoidStorms() || currentRoutePolyline.size < 2) return
 
-        val warningCount = withContext(Dispatchers.Default) {
-            RouteWarningCounter.countWarningsIntersectingRoute(alertsGeoJson, currentRoutePolyline)
+        val destination = _uiState.value.destination
+        val analysis = withContext(Dispatchers.Default) {
+            RouteWarningCounter.analyzeWarnings(alertsGeoJson, currentRoutePolyline, destination)
         }
         currentCoroutineContext().ensureActive()
 
+        val retainedWarningMessage = _uiState.value.routeWarningError?.takeIf {
+            it == StormRoutePolicy.NO_STORM_FREE_ROUTE_MESSAGE ||
+                    it == StormRoutePolicy.DESTINATION_IN_WARNING_MESSAGE
+        }
+        val warningMessage = when {
+            analysis.warningCount == 0 -> null
+            analysis.destinationInsideWarning -> StormRoutePolicy.DESTINATION_IN_WARNING_MESSAGE
+            else -> retainedWarningMessage
+        }
+
         _uiState.update {
             it.copy(
-                routeWarningCount = warningCount,
-                routeWarningError = null,
+                routeWarningCount = analysis.warningCount,
+                routeWarningError = warningMessage,
             )
         }
 
-        if (warningCount > 0 && _uiState.value.destination != null && !_uiState.value.isLoadingRoute) {
+        if (
+            analysis.warningCount > 0 &&
+            !analysis.destinationInsideWarning &&
+            _uiState.value.destination != null &&
+            !_uiState.value.isLoadingRoute
+        ) {
             scheduleReroute()
         }
     }
@@ -568,14 +662,15 @@ class MapsViewModel @Inject constructor(
                 return@launch
             }
 
-            val warningCount = withContext(Dispatchers.Default) {
-                RouteWarningCounter.countWarningsIntersectingRoute(alertsGeoJson, routePolyline)
+            val destination = _uiState.value.destination
+            val analysis = withContext(Dispatchers.Default) {
+                RouteWarningCounter.analyzeWarnings(alertsGeoJson, routePolyline, destination)
             }
             currentCoroutineContext().ensureActive()
 
             _uiState.update {
                 it.copy(
-                    routeWarningCount = warningCount,
+                    routeWarningCount = analysis.warningCount,
                     routeWarningError = null,
                 )
             }
@@ -586,17 +681,14 @@ class MapsViewModel @Inject constructor(
         val route: RouteResult,
         val warningCount: Int? = null,
         val warningError: String? = null,
-    )
-
-    private data class ScoredRoute(
-        val route: RouteResult,
-        val warningCount: Int,
+        val stormRouteAlertMessage: String? = null,
     )
 
     companion object {
         private const val OFF_ROUTE_THRESHOLD_METERS = 40.0
         private const val STEP_REACHED_THRESHOLD_METERS = 25.0
         private const val REROUTE_DEBOUNCE_MS = 8_000L
+        private const val DETOUR_ROUTE_CONCURRENCY = 4
     }
 
     private fun advanceStepProgress(userPosition: Position) {
@@ -654,6 +746,13 @@ private fun minDistanceMetersToPolyline(point: Position, polyline: List<Position
         distancePointToSegmentMeters(point, segment[0], segment[1])
     }
 }
+
+private fun List<RouteResult>.distinctByRouteGeometry(): List<RouteResult> =
+    distinctBy { route ->
+        route.polyline.joinToString(separator = "|") { position ->
+            String.format(Locale.US, "%.5f,%.5f", position.longitude, position.latitude)
+        }
+    }
 
 private fun List<PhotonFeature>.withStraightLineDistances(origin: Position?): List<PhotonFeature> {
     if (origin == null) return this

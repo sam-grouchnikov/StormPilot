@@ -13,21 +13,65 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+data class RouteWarningAnalysis(
+    val warningCount: Int,
+    val destinationInsideWarning: Boolean,
+)
+
+data class RouteWarningBounds(
+    val minLongitude: Double,
+    val minLatitude: Double,
+    val maxLongitude: Double,
+    val maxLatitude: Double,
+)
+
 object RouteWarningCounter {
     private val json = Json { ignoreUnknownKeys = true }
 
     fun countWarningsIntersectingRoute(alertsGeoJson: String, routePolyline: List<Position>): Int {
-        if (routePolyline.size < 2) return 0
+        return analyzeWarnings(alertsGeoJson, routePolyline).warningCount
+    }
 
-        val features = json.parseToJsonElement(alertsGeoJson).jsonObject["features"]?.asArrayOrNull() ?: return 0
+    fun analyzeWarnings(
+        alertsGeoJson: String,
+        routePolyline: List<Position>,
+        destination: Position? = null,
+    ): RouteWarningAnalysis {
+        val features = json.parseToJsonElement(alertsGeoJson).jsonObject["features"]?.asArrayOrNull()
+            ?: return RouteWarningAnalysis(warningCount = 0, destinationInsideWarning = false)
         var count = 0
+        var destinationInsideWarning = false
         for (feature in features) {
             val geometry = feature.asObjectOrNull()?.get("geometry")?.asObjectOrNull() ?: continue
-            if (geometryIntersectsRoute(geometry, routePolyline)) {
+            val intersectsRoute = routePolyline.size >= 2 && geometryIntersectsRoute(geometry, routePolyline)
+            val containsDestination = destination?.let { geometryContainsPoint(geometry, it.toPoint()) } ?: false
+            if (containsDestination) {
+                destinationInsideWarning = true
+            }
+            if (intersectsRoute || containsDestination) {
                 count += 1
             }
         }
-        return count
+        return RouteWarningAnalysis(
+            warningCount = count,
+            destinationInsideWarning = destinationInsideWarning,
+        )
+    }
+
+    fun warningBoundsIntersectingRoute(
+        alertsGeoJson: String,
+        routePolyline: List<Position>,
+    ): List<RouteWarningBounds> {
+        if (routePolyline.size < 2) return emptyList()
+
+        val features = json.parseToJsonElement(alertsGeoJson).jsonObject["features"]?.asArrayOrNull()
+            ?: return emptyList()
+        val bounds = mutableListOf<RouteWarningBounds>()
+        for (feature in features) {
+            val geometry = feature.asObjectOrNull()?.get("geometry")?.asObjectOrNull() ?: continue
+            bounds += warningBoundsIntersectingRoute(geometry, routePolyline)
+        }
+        return bounds
     }
 
     private fun geometryIntersectsRoute(geometry: JsonObject, routePolyline: List<Position>): Boolean {
@@ -37,6 +81,49 @@ object RouteWarningCounter {
             "MultiPolygon" -> {
                 for (polygon in coordinates) {
                     if (polygonIntersectsRoute(polygon.asArrayOrNull() ?: continue, routePolyline)) {
+                        return true
+                    }
+                }
+                false
+            }
+            else -> false
+        }
+    }
+
+    private fun warningBoundsIntersectingRoute(
+        geometry: JsonObject,
+        routePolyline: List<Position>,
+    ): List<RouteWarningBounds> {
+        val coordinates = geometry["coordinates"]?.asArrayOrNull() ?: return emptyList()
+        return when (geometry["type"]?.jsonPrimitive?.contentOrNull) {
+            "Polygon" -> {
+                if (polygonIntersectsRoute(coordinates, routePolyline)) {
+                    listOfNotNull(coordinates.toBoundsOrNull())
+                } else {
+                    emptyList()
+                }
+            }
+            "MultiPolygon" -> {
+                val bounds = mutableListOf<RouteWarningBounds>()
+                for (polygon in coordinates) {
+                    val polygonCoordinates = polygon.asArrayOrNull() ?: continue
+                    if (polygonIntersectsRoute(polygonCoordinates, routePolyline)) {
+                        polygonCoordinates.toBoundsOrNull()?.let(bounds::add)
+                    }
+                }
+                bounds
+            }
+            else -> emptyList()
+        }
+    }
+
+    private fun geometryContainsPoint(geometry: JsonObject, point: Point): Boolean {
+        val coordinates = geometry["coordinates"]?.asArrayOrNull() ?: return false
+        return when (geometry["type"]?.jsonPrimitive?.contentOrNull) {
+            "Polygon" -> polygonContainsPoint(coordinates, point)
+            "MultiPolygon" -> {
+                for (polygon in coordinates) {
+                    if (polygonContainsPoint(polygon.asArrayOrNull() ?: continue, point)) {
                         return true
                     }
                 }
@@ -60,6 +147,23 @@ object RouteWarningCounter {
                 }
             }
         }
+    }
+
+    private fun polygonContainsPoint(polygonCoordinates: JsonArray, point: Point): Boolean {
+        val rings = polygonCoordinates.toRings()
+        if (rings.firstOrNull().isNullOrEmpty()) return false
+        return pointInPolygon(point, rings)
+    }
+
+    private fun JsonArray.toBoundsOrNull(): RouteWarningBounds? {
+        val points = toRings().flatten()
+        if (points.isEmpty()) return null
+        return RouteWarningBounds(
+            minLongitude = points.minOf { it.x },
+            minLatitude = points.minOf { it.y },
+            maxLongitude = points.maxOf { it.x },
+            maxLatitude = points.maxOf { it.y },
+        )
     }
 
     private fun JsonArray.toRings(): List<List<Point>> {

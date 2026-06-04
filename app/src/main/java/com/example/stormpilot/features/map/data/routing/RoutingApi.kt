@@ -10,6 +10,11 @@ import javax.inject.Inject
 interface RoutingApiClient {
     suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult>
     suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>>
+    suspend fun fetchRouteVia(
+        origin: Position,
+        destination: Position,
+        waypoints: List<Position>,
+    ): Result<RouteResult>
 }
 
 class ValhallaRoutingApiClient @Inject constructor() : RoutingApiClient {
@@ -19,6 +24,14 @@ class ValhallaRoutingApiClient @Inject constructor() : RoutingApiClient {
 
     override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
         return fetchRoute(origin, destination).map { listOf(it) }
+    }
+
+    override suspend fun fetchRouteVia(
+        origin: Position,
+        destination: Position,
+        waypoints: List<Position>,
+    ): Result<RouteResult> {
+        return Result.failure(UnsupportedOperationException("Valhalla endpoint not configured"))
     }
 }
 
@@ -30,21 +43,43 @@ class OsrmRoutingApiClient @Inject constructor() : RoutingApiClient {
     override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
         return withContext(Dispatchers.IO) {
             runCatching {
-                val coordinates = "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}"
-                val url = URL(
-                    "https://routing.openstreetmap.de/routed-car/route/v1/driving/$coordinates" +
-                            "?overview=full&geometries=geojson&steps=true&alternatives=true"
-                )
-                val connection = (url.openConnection() as HttpURLConnection).apply {
-                    requestMethod = "GET"
-                    connectTimeout = 20_000
-                    readTimeout = 20_000
-                    setRequestProperty("Accept", "application/json")
-                }
-                connection.inputStream.bufferedReader().use { reader ->
-                    RoutingParsing.parseOsrmRoutes(reader.readText())
-                }
+                fetchOsrmRoutes(listOf(origin, destination), alternatives = true)
             }
+        }
+    }
+
+    override suspend fun fetchRouteVia(
+        origin: Position,
+        destination: Position,
+        waypoints: List<Position>,
+    ): Result<RouteResult> {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                fetchOsrmRoutes(listOf(origin) + waypoints + listOf(destination), alternatives = false).first()
+            }
+        }
+    }
+
+    private fun fetchOsrmRoutes(coordinates: List<Position>, alternatives: Boolean): List<RouteResult> {
+        val encodedCoordinates = coordinates.joinToString(separator = ";") { position ->
+            "${position.longitude},${position.latitude}"
+        }
+        val url = URL(
+            "https://routing.openstreetmap.de/routed-car/route/v1/driving/$encodedCoordinates" +
+                    "?overview=full&geometries=geojson&steps=true&alternatives=$alternatives"
+        )
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = 20_000
+            readTimeout = 20_000
+            setRequestProperty("Accept", "application/json")
+        }
+        try {
+            return connection.inputStream.bufferedReader().use { reader ->
+                RoutingParsing.parseOsrmRoutes(reader.readText())
+            }
+        } finally {
+            connection.disconnect()
         }
     }
 }
@@ -67,6 +102,17 @@ class RoutingRepositoryImpl @Inject constructor(
         return valhallaClient.fetchRouteCandidates(origin, destination)
             .recoverCatching {
                 osrmClient.fetchRouteCandidates(origin, destination).getOrThrow()
+            }
+    }
+
+    override suspend fun fetchRouteVia(
+        origin: Position,
+        destination: Position,
+        waypoints: List<Position>,
+    ): Result<RouteResult> {
+        return valhallaClient.fetchRouteVia(origin, destination, waypoints)
+            .recoverCatching {
+                osrmClient.fetchRouteVia(origin, destination, waypoints).getOrThrow()
             }
     }
 }

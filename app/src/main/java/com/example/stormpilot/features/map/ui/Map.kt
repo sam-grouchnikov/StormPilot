@@ -42,6 +42,7 @@ import androidx.compose.material.icons.outlined.Navigation
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -877,6 +878,30 @@ fun MapsPage(
                 errorMessage = uiState.alertDetailError,
                 onDismiss = viewModel::dismissAlertDetail,
             )
+
+            uiState.stormRouteAlertMessage?.let { message ->
+                AlertDialog(
+                    onDismissRequest = viewModel::dismissStormRouteAlert,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Outlined.WarningAmber,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    title = {
+                        Text(text = "Storm warning on route")
+                    },
+                    text = {
+                        Text(text = message)
+                    },
+                    confirmButton = {
+                        TextButton(onClick = viewModel::dismissStormRouteAlert) {
+                            Text(text = "OK")
+                        }
+                    },
+                )
+            }
         }
     }
 }
