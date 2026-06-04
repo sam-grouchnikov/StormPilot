@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DriveEta
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Straight
 import androidx.compose.material.icons.filled.TurnLeft
@@ -22,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.map.data.routing.formatDistance
 import com.example.stormpilot.features.map.data.routing.formatDuration
+import com.example.stormpilot.features.navigation.ui.components.coloredShadow
 import com.example.stormpilot.ui.theme.ExtendedColors
 import java.util.Calendar
 
@@ -167,5 +170,40 @@ fun NavigationModeFooter(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun NavigationRecenterButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ExtendedColors()
+
+    Button(
+        onClick = onClick,
+        modifier = modifier.coloredShadow(
+            color = colors.purpleShadow,
+            blurRadius = 2.dp,
+        ),
+        shape = RoundedCornerShape(22.dp),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = colors.searchBarColor,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MyLocation,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "Re-center",
+            fontWeight = FontWeight.Medium,
+            fontSize = 15.sp,
+        )
     }
 }

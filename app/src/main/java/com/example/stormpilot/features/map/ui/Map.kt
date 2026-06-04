@@ -87,6 +87,7 @@ import com.example.stormpilot.features.map.presentation.bearingDegrees
 import com.example.stormpilot.features.map.presentation.navigationInstruction
 import com.example.stormpilot.features.map.ui.navigation.NavigationModeFooter
 import com.example.stormpilot.features.map.ui.navigation.NavigationModeHeader
+import com.example.stormpilot.features.map.ui.navigation.NavigationRecenterButton
 import com.example.stormpilot.features.map.ui.navigation.TripSummaryCard
 import com.example.stormpilot.features.map.ui.search.SearchScaffold
 import com.example.stormpilot.features.navigation.ui.components.coloredShadow
@@ -815,29 +816,32 @@ fun MapsPage(
                                     tint = MaterialTheme.colorScheme.onSurface,
                                 )
                             }
-
-                            FilledIconButton(
-                                onClick = {
-                                    navigationCameraTrackingEnabled = true
-                                    is2dNavView = false
-                                },
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = colors.searchBarColor,
-                                ),
-                                modifier = Modifier.coloredShadow(
-                                    color = colors.purpleShadow,
-                                    blurRadius = 2.dp
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.MyLocation,
-                                    contentDescription = "Recenter navigation",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
                         }
                     }
                 }
+            }
+
+            AnimatedVisibility(
+                visible = navMode && !active,
+                enter = fadeIn(tween(300)) + slideInHorizontally(
+                    initialOffsetX = { it / 2 },
+                    animationSpec = tween(300),
+                ),
+                exit = fadeOut(tween(200)) + slideOutHorizontally(
+                    targetOffsetX = { it / 2 },
+                    animationSpec = tween(200),
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .navigationBarsPadding()
+                    .padding(end = 12.dp, bottom = 116.dp),
+            ) {
+                NavigationRecenterButton(
+                    onClick = {
+                        navigationCameraTrackingEnabled = true
+                        is2dNavView = false
+                    },
+                )
             }
 
             if (!navMode) {
