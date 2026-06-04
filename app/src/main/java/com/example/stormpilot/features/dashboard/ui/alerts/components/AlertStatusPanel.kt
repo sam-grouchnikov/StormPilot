@@ -3,6 +3,7 @@ package com.example.stormpilot.features.dashboard.ui.alerts.components
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Flood
 import androidx.compose.material.icons.outlined.Tornado
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -27,11 +29,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.stormpilot.features.alerts.data.NwsAlert
 import com.example.stormpilot.features.alerts.presentation.AlertsUiState
 import com.example.stormpilot.ui.theme.ExtendedColors
 
 @Composable
-fun AlertStatusPanel(alertsState: AlertsUiState) {
+fun AlertStatusPanel(
+    alertsState: AlertsUiState,
+    onAlertClick: (NwsAlert) -> Unit,
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -44,6 +50,7 @@ fun AlertStatusPanel(alertsState: AlertsUiState) {
             AlertStatusRow(
                 icon = Icons.Outlined.Tornado,
                 label = "Tornado",
+                alert = alertsState.tornadoWarning ?: alertsState.tornadoWatch,
                 state = alertState(
                     warningActive = alertsState.tornadoWarning != null,
                     watchActive = alertsState.tornadoWatch != null,
@@ -51,10 +58,12 @@ fun AlertStatusPanel(alertsState: AlertsUiState) {
                     watchText = "Tornado Watch",
                     clearText = "No Tornado Alerts",
                 ),
+                onAlertClick = onAlertClick,
             )
             AlertStatusRow(
                 icon = Icons.Outlined.Bolt,
                 label = "Severe Thunderstorm",
+                alert = alertsState.severeThunderstormWarning ?: alertsState.severeThunderstormWatch,
                 state = alertState(
                     warningActive = alertsState.severeThunderstormWarning != null,
                     watchActive = alertsState.severeThunderstormWatch != null,
@@ -62,10 +71,12 @@ fun AlertStatusPanel(alertsState: AlertsUiState) {
                     watchText = "Severe T-Storm Watch",
                     clearText = "No Storm Alerts",
                 ),
+                onAlertClick = onAlertClick,
             )
             AlertStatusRow(
                 icon = Icons.Outlined.Flood,
                 label = "Flood",
+                alert = alertsState.flashFloodWarning ?: alertsState.flashFloodWatch,
                 state = alertState(
                     warningActive = alertsState.flashFloodWarning != null,
                     watchActive = alertsState.flashFloodWatch != null,
@@ -73,6 +84,7 @@ fun AlertStatusPanel(alertsState: AlertsUiState) {
                     watchText = "Flash Flood Watch",
                     clearText = "No Flood Alerts",
                 ),
+                onAlertClick = onAlertClick,
             )
         }
     }
@@ -82,7 +94,9 @@ fun AlertStatusPanel(alertsState: AlertsUiState) {
 private fun AlertStatusRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
+    alert: NwsAlert?,
     state: LocationAlertState,
+    onAlertClick: (NwsAlert) -> Unit,
 ) {
     val colors = ExtendedColors()
     val containerTarget = when (state.level) {
@@ -129,7 +143,10 @@ private fun AlertStatusRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp),
+            .padding(horizontal = 14.dp)
+            .clickable(enabled = alert != null) {
+                alert?.let(onAlertClick)
+            },
         shape = RoundedCornerShape(14.dp),
         color = containerColor,
     ) {
@@ -169,6 +186,14 @@ private fun AlertStatusRow(
                         fontSize = 18.sp,
                     )
                 }
+            }
+            if (alert != null) {
+                Icon(
+                    imageVector = Icons.Outlined.ChevronRight,
+                    contentDescription = "Open alert details",
+                    tint = contentColor,
+                    modifier = Modifier.size(22.dp),
+                )
             }
         }
     }

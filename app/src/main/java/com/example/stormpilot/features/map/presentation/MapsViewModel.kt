@@ -6,6 +6,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.core.AppSettings
+import com.example.stormpilot.features.alerts.data.AlertsRepository
+import com.example.stormpilot.features.alerts.data.NwsAlert
+import com.example.stormpilot.features.alerts.data.bestMatchForEvent
 import com.example.stormpilot.features.map.data.routing.RouteResult
 import com.example.stormpilot.features.map.data.routing.RouteStep
 import com.example.stormpilot.features.map.data.routing.RouteWarningCounter
@@ -57,6 +60,10 @@ data class MapsUiState(
     val alertsGeoJson: GeoJsonData? = null,
     val routeWarningCount: Int? = null,
     val routeWarningError: String? = null,
+    val isAlertDetailVisible: Boolean = false,
+    val selectedAlert: NwsAlert? = null,
+    val isAlertDetailLoading: Boolean = false,
+    val alertDetailError: String? = null,
 )
 
 /**
@@ -67,6 +74,7 @@ data class MapsUiState(
 class MapsViewModel @Inject constructor(
     private val routingRepository: RoutingRepository,
     private val photonApiClient: PhotonApiClient,
+    private val alertsRepository: AlertsRepository,
     @param:ApplicationContext private val context: Context,
 ) : ViewModel() {
 
@@ -88,6 +96,7 @@ class MapsViewModel @Inject constructor(
     private var currentRoutePolyline: List<Position> = emptyList()
     private var rerouteDebounceJob: Job? = null
     private var routeWarningsJob: Job? = null
+    private var alertDetailJob: Job? = null
     private var latestAlertsGeoJson: String? = null
     private var stormAvoidanceForCurrentTrip = false
 
@@ -282,6 +291,71 @@ class MapsViewModel @Inject constructor(
 
     fun retryRoute() {
         requestRoute()
+    }
+
+    fun showAlertDetail(alert: NwsAlert) {
+        alertDetailJob?.cancel()
+        _uiState.update {
+            it.copy(
+                isAlertDetailVisible = true,
+                selectedAlert = alert,
+                isAlertDetailLoading = false,
+                alertDetailError = null,
+            )
+        }
+    }
+
+    fun dismissAlertDetail() {
+        alertDetailJob?.cancel()
+        _uiState.update {
+            it.copy(
+                isAlertDetailVisible = false,
+                selectedAlert = null,
+                isAlertDetailLoading = false,
+                alertDetailError = null,
+            )
+        }
+    }
+
+    fun onAlertPolygonTapped(position: Position, eventType: String) {
+        alertDetailJob?.cancel()
+        alertDetailJob = viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isAlertDetailVisible = true,
+                    selectedAlert = null,
+                    isAlertDetailLoading = true,
+                    alertDetailError = null,
+                )
+            }
+
+            alertsRepository.fetchAlerts(position.latitude, position.longitude)
+                .onSuccess { alerts ->
+                    val matchingAlert = alerts.bestMatchForEvent(eventType)
+                    _uiState.update {
+                        it.copy(
+                            isAlertDetailVisible = true,
+                            selectedAlert = matchingAlert,
+                            isAlertDetailLoading = false,
+                            alertDetailError = if (matchingAlert == null) {
+                                "No active NWS detail text was found for this alert polygon."
+                            } else {
+                                null
+                            },
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isAlertDetailVisible = true,
+                            selectedAlert = null,
+                            isAlertDetailLoading = false,
+                            alertDetailError = error.message ?: "Unable to load alert details.",
+                        )
+                    }
+                }
+        }
     }
 
     fun requestDirections() {

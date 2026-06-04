@@ -51,7 +51,10 @@ import org.maplibre.compose.map.OrnamentOptions
 import org.maplibre.compose.sources.GeoJsonData
 import org.maplibre.compose.sources.rememberGeoJsonSource
 import org.maplibre.compose.style.BaseStyle
+import org.maplibre.compose.util.ClickResult
 import org.maplibre.spatialk.geojson.Position
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 fun LocationAlertsMapCard(
@@ -59,6 +62,7 @@ fun LocationAlertsMapCard(
     position: Position?,
     locationGeoJson: GeoJsonData,
     alertsGeoJson: GeoJsonData?,
+    onAlertPolygonClick: (Position, String) -> Unit,
 ) {
     var showAlerts by remember { mutableStateOf(true) }
     val extendedColors = ExtendedColors()
@@ -107,6 +111,7 @@ fun LocationAlertsMapCard(
                 position = position,
                 locationGeoJson = locationGeoJson,
                 alertsGeoJson = alertsGeoJson,
+                onAlertPolygonClick = onAlertPolygonClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
@@ -122,10 +127,12 @@ private fun LocationAlertsMap(
     position: Position?,
     locationGeoJson: GeoJsonData,
     alertsGeoJson: GeoJsonData?,
+    onAlertPolygonClick: (Position, String) -> Unit,
     modifier: Modifier = Modifier,
     showAlerts: Boolean,
 ) {
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var lastTapPosition by remember { mutableStateOf<Position?>(null) }
     val mapTarget = position ?: Position(latitude = 39.8283, longitude = -98.5795)
     val cameraState = rememberCameraState(
         firstPosition = CameraPosition(
@@ -164,6 +171,10 @@ private fun LocationAlertsMap(
     MaplibreMap(
         baseStyle = BaseStyle.Uri(mapStyle),
         cameraState = cameraState,
+        onMapClick = { point, _ ->
+            lastTapPosition = point
+            ClickResult.Pass
+        },
         modifier = modifier,
         options = MapOptions(
             gestureOptions = GestureOptions.AllDisabled,
@@ -190,6 +201,21 @@ private fun LocationAlertsMap(
                     condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0x2200BB00))),
                     fallback = const(Color.Transparent),
                 ),
+                onClick = { features ->
+                    val eventType = features.firstOrNull()
+                        ?.properties
+                        ?.get("prod_type")
+                        ?.jsonPrimitive
+                        ?.contentOrNull
+                    val tappedPosition = lastTapPosition
+
+                    if (eventType != null && tappedPosition != null) {
+                        onAlertPolygonClick(tappedPosition, eventType)
+                        ClickResult.Consume
+                    } else {
+                        ClickResult.Pass
+                    }
+                },
             )
 
             LineLayer(
@@ -202,6 +228,21 @@ private fun LocationAlertsMap(
                     fallback = const(Color.Transparent),
                 ),
                 width = const(2.dp),
+                onClick = { features ->
+                    val eventType = features.firstOrNull()
+                        ?.properties
+                        ?.get("prod_type")
+                        ?.jsonPrimitive
+                        ?.contentOrNull
+                    val tappedPosition = lastTapPosition
+
+                    if (eventType != null && tappedPosition != null) {
+                        onAlertPolygonClick(tappedPosition, eventType)
+                        ClickResult.Consume
+                    } else {
+                        ClickResult.Pass
+                    }
+                },
             )
         }
 

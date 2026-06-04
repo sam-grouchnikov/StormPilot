@@ -8,8 +8,11 @@ data class NwsAlert(
     val instruction: String?,
     val severity: String,
     val urgency: String,
+    val effective: String?,
     val onset: String?,
     val expires: String?,
+    val areaDescription: String?,
+    val affectedZones: List<String> = emptyList(),
     val senderName: String,
 )
 
@@ -31,4 +34,13 @@ fun NwsAlert.alertType(): AlertType = when {
     event.contains("Severe Thunderstorm Warning", ignoreCase = true) -> AlertType.SEVERE_THUNDERSTORM_WARNING
     event.contains("Severe Thunderstorm Watch", ignoreCase = true) -> AlertType.SEVERE_THUNDERSTORM_WATCH
     else -> AlertType.OTHER
+}
+
+fun List<NwsAlert>.bestMatchForEvent(eventType: String): NwsAlert? {
+    val normalizedEvent = eventType.trim()
+    if (normalizedEvent.isEmpty()) return null
+
+    return firstOrNull { it.event.equals(normalizedEvent, ignoreCase = true) }
+        ?: firstOrNull { it.event.contains(normalizedEvent, ignoreCase = true) }
+        ?: firstOrNull { normalizedEvent.contains(it.event, ignoreCase = true) }
 }

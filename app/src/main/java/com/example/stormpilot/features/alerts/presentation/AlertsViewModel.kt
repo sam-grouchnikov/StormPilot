@@ -46,6 +46,19 @@ data class AlertsUiState(
             || flashFloodWatch != null
             || severeThunderstormWarning != null
             || severeThunderstormWatch != null
+
+    val allAlerts: List<NwsAlert>
+        get() = buildList {
+            listOfNotNull(
+                tornadoWarning,
+                tornadoWatch,
+                flashFloodWarning,
+                flashFloodWatch,
+                severeThunderstormWarning,
+                severeThunderstormWatch,
+            ).forEach(::add)
+            addAll(otherAlerts)
+        }
 }
 
 /**

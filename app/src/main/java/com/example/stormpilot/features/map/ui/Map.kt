@@ -79,6 +79,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetailBottomSheet
 import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.features.map.presentation.MapsFooterState
 import com.example.stormpilot.features.map.presentation.MapsViewModel
@@ -128,6 +129,8 @@ import org.maplibre.compose.style.rememberStyleState
 import org.maplibre.spatialk.geojson.Position
 import java.util.Calendar
 import java.util.TimeZone
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.math.abs
 import kotlin.math.log
 import kotlin.math.max
@@ -159,6 +162,7 @@ fun MapsPage(
     var radarFrameCount by remember { mutableStateOf(7) }
     var radarFrameIndex by remember { mutableStateOf(6) }
     var radarReplayPlaying by remember { mutableStateOf(false) }
+    var lastMapTapPosition by remember { mutableStateOf<Position?>(null) }
 
     val colors = ExtendedColors()
 
@@ -395,6 +399,10 @@ fun MapsPage(
             MaplibreMap(
                 baseStyle = BaseStyle.Uri(mapStyle),
                 cameraState = cameraState,
+                onMapClick = { point, _ ->
+                    lastMapTapPosition = point
+                    ClickResult.Pass
+                },
                 onMapLongClick = { point, _ ->
                     showTripSummary = true
                     viewModel.onDestinationSelected(point)
@@ -538,6 +546,21 @@ fun MapsPage(
                             )),
                             fallback = const(Color.Transparent),
                         ),
+                        onClick = { features ->
+                            val eventType = features.firstOrNull()
+                                ?.properties
+                                ?.get("prod_type")
+                                ?.jsonPrimitive
+                                ?.contentOrNull
+                            val tappedPosition = lastMapTapPosition
+
+                            if (eventType != null && tappedPosition != null) {
+                                viewModel.onAlertPolygonTapped(tappedPosition, eventType)
+                                ClickResult.Consume
+                            } else {
+                                ClickResult.Pass
+                            }
+                        },
                     )
                     LineLayer(
                         id = "alerts-outline",
@@ -558,6 +581,21 @@ fun MapsPage(
                             fallback = const(Color.Transparent),
                         ),
                         width = const(2.dp),
+                        onClick = { features ->
+                            val eventType = features.firstOrNull()
+                                ?.properties
+                                ?.get("prod_type")
+                                ?.jsonPrimitive
+                                ?.contentOrNull
+                            val tappedPosition = lastMapTapPosition
+
+                            if (eventType != null && tappedPosition != null) {
+                                viewModel.onAlertPolygonTapped(tappedPosition, eventType)
+                                ClickResult.Consume
+                            } else {
+                                ClickResult.Pass
+                            }
+                        },
                     )
                 }
             }
@@ -827,6 +865,14 @@ fun MapsPage(
                     containerColor = searchContainerColor,
                 )
             }
+
+            AlertDetailBottomSheet(
+                isVisible = uiState.isAlertDetailVisible,
+                alert = uiState.selectedAlert,
+                isLoading = uiState.isAlertDetailLoading,
+                errorMessage = uiState.alertDetailError,
+                onDismiss = viewModel::dismissAlertDetail,
+            )
         }
     }
 }

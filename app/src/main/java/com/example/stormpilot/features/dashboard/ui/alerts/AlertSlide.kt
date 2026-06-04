@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,7 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stormpilot.features.alerts.data.bestMatchForEvent
 import com.example.stormpilot.features.alerts.presentation.AlertsViewModel
+import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetailBottomSheet
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertStatusPanel
 import com.example.stormpilot.features.dashboard.ui.alerts.components.LocationAlertsMapCard
 import com.example.stormpilot.features.dashboard.ui.alerts.components.StormSpecsPanel
@@ -61,22 +64,43 @@ fun AlertSlide(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 15.dp)
-            .verticalScroll(rememberScrollState())
-            .padding(bottom = 50.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        LocationAlertsMapCard(
-            cityName = cityName,
-            position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
-            locationGeoJson = locationGeoJson,
-            alertsGeoJson = mapsState.alertsGeoJson,
-        )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 15.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = 50.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            LocationAlertsMapCard(
+                cityName = cityName,
+                position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
+                locationGeoJson = locationGeoJson,
+                alertsGeoJson = mapsState.alertsGeoJson,
+                onAlertPolygonClick = { point, eventType ->
+                    val localMatch = alertsState.allAlerts.bestMatchForEvent(eventType)
+                    if (localMatch != null) {
+                        mapsViewModel.showAlertDetail(localMatch)
+                    } else {
+                        mapsViewModel.onAlertPolygonTapped(point, eventType)
+                    }
+                },
+            )
 
-        AlertStatusPanel(alertsState = alertsState)
-        StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
+            AlertStatusPanel(
+                alertsState = alertsState,
+                onAlertClick = mapsViewModel::showAlertDetail,
+            )
+            StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
+        }
+
+        AlertDetailBottomSheet(
+            isVisible = mapsState.isAlertDetailVisible,
+            alert = mapsState.selectedAlert,
+            isLoading = mapsState.isAlertDetailLoading,
+            errorMessage = mapsState.alertDetailError,
+            onDismiss = mapsViewModel::dismissAlertDetail,
+        )
     }
 }

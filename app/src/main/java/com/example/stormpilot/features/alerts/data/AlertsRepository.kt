@@ -31,6 +31,7 @@ class AlertsRepository @Inject constructor(){
                 val alerts = mutableListOf<NwsAlert>()
                 for (i in 0 until features.length()) {
                     val props = features.getJSONObject(i).getJSONObject("properties")
+                    val affectedZones = props.optJSONArray("affectedZones")
                     alerts.add(
                         NwsAlert(
                             id = props.optString("id"),
@@ -40,8 +41,19 @@ class AlertsRepository @Inject constructor(){
                             instruction = props.optString("instruction").takeIf { it.isNotBlank() },
                             severity = props.optString("severity"),
                             urgency = props.optString("urgency"),
+                            effective = props.optString("effective").takeIf { it.isNotBlank() },
                             onset = props.optString("onset").takeIf { it.isNotBlank() },
                             expires = props.optString("expires").takeIf { it.isNotBlank() },
+                            areaDescription = props.optString("areaDesc").takeIf { it.isNotBlank() },
+                            affectedZones = buildList {
+                                if (affectedZones != null) {
+                                    for (zoneIndex in 0 until affectedZones.length()) {
+                                        affectedZones.optString(zoneIndex)
+                                            .takeIf { it.isNotBlank() }
+                                            ?.let(::add)
+                                    }
+                                }
+                            },
                             senderName = props.optString("senderName"),
                         )
                     )
