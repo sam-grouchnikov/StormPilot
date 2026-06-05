@@ -1,7 +1,11 @@
 package com.example.stormpilot.features.navigation.ui.components
 
-import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Transition
+import androidx.compose.animation.core.animateInt
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,16 +46,23 @@ fun FloatingNavBar(
     val selectedIndex = tabs.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
     val itemOffsets = remember { mutableStateOf(IntArray(tabs.size)) }
     val itemWidths = remember { mutableStateOf(IntArray(tabs.size)) }
-    val animatedPillX by animateIntAsState(
-        targetValue = itemOffsets.value.getOrElse(selectedIndex) { 0 },
-        animationSpec = tween(durationMillis = 150),
+
+    val selectionTransition = updateTransition(
+        targetState = selectedIndex,
+        label = "navSelection",
+    )
+    val animatedPillX by selectionTransition.animateInt(
+        transitionSpec = { tween(durationMillis = 110, easing = FastOutSlowInEasing) },
         label = "pillX",
-    )
-    val animatedPillWidth by animateIntAsState(
-        targetValue = itemWidths.value.getOrElse(selectedIndex) { 0 },
-        animationSpec = tween(durationMillis = 150),
+    ) { index ->
+        itemOffsets.value.getOrElse(index) { 0 }
+    }
+    val animatedPillWidth by selectionTransition.animateInt(
+        transitionSpec = { tween(durationMillis = 110, easing = FastOutSlowInEasing) },
         label = "pillWidth",
-    )
+    ) { index ->
+        itemWidths.value.getOrElse(index) { 0 }
+    }
 
     val colors = ExtendedColors()
 
@@ -79,10 +90,11 @@ fun FloatingNavBar(
                         .background(colors.purplePrimaryContainer),
                 )
 
-                tabs.forEach { tab ->
+                tabs.forEachIndexed { index, tab ->
                     FloatingNavItem(
                         tab = tab,
-                        selected = currentRoute == tab.route,
+                        index = index,
+                        selectionTransition = selectionTransition,
                         onClick = { onTabSelected(tab) },
                     )
                 }
@@ -122,13 +134,20 @@ fun FloatingNavBar(
 @Composable
 private fun FloatingNavItem(
     tab: TabDest,
-    selected: Boolean,
+    index: Int,
+    selectionTransition: Transition<Int>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val selectedColor = MaterialTheme.colorScheme.tertiary
     val unselectedColor = MaterialTheme.colorScheme.onSurface
+    val contentColor by selectionTransition.animateColor(
+        transitionSpec = { tween(durationMillis = 110, easing = FastOutSlowInEasing) },
+        label = "${tab.route}ContentColor",
+    ) { selectedIndex ->
+        if (selectedIndex == index) selectedColor else unselectedColor.copy(alpha = 0.55f)
+    }
 
     Box(
         modifier = modifier
@@ -148,14 +167,14 @@ private fun FloatingNavItem(
             Icon(
                 imageVector = tab.icon,
                 contentDescription = null,
-                tint = if (selected) selectedColor else unselectedColor.copy(alpha = 0.55f),
+                tint = contentColor,
                 modifier = Modifier
                     .padding(end = 4.dp)
                     .size(19.dp),
             )
             Text(
                 text = tab.title,
-                color = if (selected) selectedColor else unselectedColor.copy(alpha = 0.55f),
+                color = contentColor,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
