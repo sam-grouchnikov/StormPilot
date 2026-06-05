@@ -7,3 +7,9 @@ plugins {
     id("com.google.gms.google-services") version "4.4.4" apply false
 
 }
+
+tasks.register("allTests") {
+    group = "verification"
+    description = "Runs every StormPilot JVM unit test."
+    dependsOn(":app:testDebugUnitTest")
+}

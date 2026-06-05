@@ -6,10 +6,10 @@ set -e
 cd "$(dirname "$0")"
 
 echo "=========================================================="
-echo "🚀 Running all StormPilot Unit Tests via AllTestsSuite..."
+echo "🚀 Running all StormPilot Unit Tests..."
 echo "=========================================================="
 
-./gradlew :app:testDebugUnitTest --tests "com.example.stormpilot.AllTestsSuite"
+./gradlew allTests
 
 echo ""
 echo "=========================================================="
