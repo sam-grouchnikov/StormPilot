@@ -391,7 +391,7 @@ private fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(vertical = 5.dp)) {

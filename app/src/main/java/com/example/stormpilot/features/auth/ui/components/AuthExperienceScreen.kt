@@ -26,7 +26,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import com.example.stormpilot.ui.theme.StormPilotTheme
-import kotlinx.coroutines.delay
 
 /**
  * Shared auth shell that keeps sign-in and sign-up visually aligned while the
@@ -57,16 +55,11 @@ fun AuthExperienceScreen(
     onPrimaryAction: () -> Unit,
     onSwitchMode: () -> Unit,
 ) {
-    val contentVisible = remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        delay(90)
-        contentVisible.value = true
-    }
-
     StormPilotTheme(
+        darkTheme = true,
         dynamicColor = false,
         useSurfaceContainerNavigationBar = true,
+        syncAppDarkMode = false,
     ) {
         val scheme = MaterialTheme.colorScheme
         var email by remember { mutableStateOf("") }
@@ -91,14 +84,13 @@ fun AuthExperienceScreen(
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .padding(horizontal = 24.dp, vertical = 20.dp),
             ) {
-                AnimatedStormBackdrop()
+                StormBackdrop()
 
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.Center,
                 ) {
                     Surface(
-                        modifier = Modifier.signInEntrance(contentVisible.value, 3),
                         shape = RoundedCornerShape(36.dp),
                         color = scheme.surfaceContainerHigh.copy(alpha = 0.94f),
                         tonalElevation = 6.dp,
