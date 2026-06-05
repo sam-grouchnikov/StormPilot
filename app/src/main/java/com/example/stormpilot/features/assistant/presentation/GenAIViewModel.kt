@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.features.assistant.data.GenAIWeatherTools
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatMessage
+import com.example.stormpilot.features.location.data.LocationRepository
 import com.google.firebase.Firebase
 import com.google.firebase.ai.Chat
 import com.google.firebase.ai.ai
@@ -26,6 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 class GenAIViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val locationRepository: LocationRepository,
 ) : ViewModel() {
 
     val chatMessages = mutableStateListOf<ChatMessage>()
@@ -44,11 +46,12 @@ class GenAIViewModel @Inject constructor(
             .generativeModel(
                 modelName = "gemini-3.1-flash-lite",
                 generationConfig = modelConfig,
-                tools = listOf(GenAIWeatherTools(context).tool()),
+                tools = listOf(GenAIWeatherTools(context, locationRepository).tool()),
                 systemInstruction = content {
                     text(
                         "You are a concise storm chasing assistant. Keep all responses under 3 sentences unless the user explicitly asks for detail. " +
-                            "Use the available weather tools when the user asks about current weather, forecasts, alerts, or outlooks for a location. " +
+                            "Use the current-location tool when the user says here, near me, my location, or asks for local weather without naming a place. " +
+                            "Use the available weather tools when the user asks about current weather, hourly timing, forecasts, alerts, convective risk, storm ingredients, or outlooks for a location. " +
                             "Ask for a location if the user asks for location-specific weather and does not provide one."
                     )
                 }
