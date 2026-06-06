@@ -36,8 +36,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stormpilot.features.alerts.data.NwsAlert
-import com.example.stormpilot.features.alerts.presentation.AlertsUiState
+import com.example.stormpilot.features.shared.data.alerts.NwsAlert
+import com.example.stormpilot.features.shared.viewmodels.AlertsUiState
 import com.example.stormpilot.ui.theme.ExtendedColors
 
 @Composable

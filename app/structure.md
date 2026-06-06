@@ -11,23 +11,14 @@ com/example/stormpilot/
 ├── di/
 │   └── RoutingModule.kt
 ├── features/
-│   ├── alerts/
-│   │   ├── data/
-│   │   │   ├── AlertsRepository.kt
-│   │   │   └── NwsAlert.kt
-│   │   └── presentation/
-│   │       └── AlertsViewModel.kt
-│   ├── assistant/
-│   │   ├── data/
-│   │   │   └── GenAIWeatherTools.kt
-│   │   └── presentation/
-│   │       └── GenAIViewModel.kt
 │   ├── auth/
 │   │   └── ui/
 │   │       ├── SignIn.kt
 │   │       ├── SignUp.kt
 │   │       ├── WelcomePage.kt
 │   │       └── components/
+│   ├── common/
+│   │   └── ui/
 │   ├── dashboard/
 │   │   └── ui/
 │   │       ├── Dashboard.kt
@@ -35,14 +26,7 @@ com/example/stormpilot/
 │   │       ├── aichat/
 │   │       ├── alerts/
 │   │       └── weather/
-│   ├── location/
-│   │   └── data/
-│   │       └── LocationRepository.kt
 │   ├── map/
-│   │   ├── data/
-│   │   │   ├── routing/
-│   │   │   └── search/
-│   │   ├── presentation/
 │   │   └── ui/
 │   │       ├── navigation/
 │   │       ├── radar/
@@ -54,12 +38,15 @@ com/example/stormpilot/
 │   ├── settings/
 │   │   └── ui/
 │   │       └── Settings.kt
-│   └── weather/
-│       ├── data/
-│       │   ├── WeatherModels.kt
-│       │   └── WeatherRepository.kt
-│       └── presentation/
-│           └── WeatherViewModel.kt
+│   ├── shared/
+│   │   ├── data/
+│   │   │   ├── alerts/
+│   │   │   ├── assistant/
+│   │   │   ├── location/
+│   │   │   ├── routing/
+│   │   │   ├── search/
+│   │   │   └── weather/
+│   │   └── viewmodels/
 └── ui/theme/
 ```
 
@@ -68,6 +55,7 @@ com/example/stormpilot/
 - App entry points: `MainActivity.kt` and `StormPilotApp.kt`.
 - App-wide settings and dark-mode helpers: `core/AppSettings.kt`.
 - Hilt bindings: `di/RoutingModule.kt`.
+- Shared UI widgets: `features/common/ui`.
 - Login, signup, and welcome screens: `features/auth/ui`.
 - Bottom-tab app shell: `features/navigation/NavSkeleton.kt`.
 - Settings screen: `features/settings/ui/Settings.kt`.
@@ -75,15 +63,15 @@ com/example/stormpilot/
 - Dashboard alert map and alert summary UI: `features/dashboard/ui/alerts`.
 - Dashboard forecast UI: `features/dashboard/ui/weather`.
 - Dashboard AI chat UI: `features/dashboard/ui/aichat`.
-- AI chat state and weather tools: `features/assistant/data` and `features/assistant/presentation`.
-- Shared device location tracking: `features/location/data`.
-- NWS alert models and fetching: `features/alerts/data`.
-- Alert grouping and city-name state: `features/alerts/presentation`.
-- Weather API models and fetching: `features/weather/data`.
-- Weather screen state: `features/weather/presentation`.
+- Centralized ViewModels and UI state: `features/shared/viewmodels`.
+- Centralized data fetching, models, and service helpers: `features/shared/data`.
+- AI chat weather tools: `features/shared/data/assistant`.
+- Shared device location tracking: `features/shared/data/location`.
+- NWS alert models and fetching: `features/shared/data/alerts`.
+- Weather API models and fetching: `features/shared/data/weather`.
 - Map screen UI: `features/map/ui`, with navigation widgets in `features/map/ui/navigation` and search chrome in `features/map/ui/search`.
-- Map state, search, routing progress, and alert overlays: `features/map/presentation`.
-- Routing API clients, parsing, models, and formatters: `features/map/data/routing`.
-- Search geocoding and drive-metric enrichment: `features/map/data/search`.
+- Map state, search, routing progress, and alert overlays: `features/shared/viewmodels`.
+- Routing API clients, parsing, models, and formatters: `features/shared/data/routing`.
+- Search geocoding and drive-metric enrichment: `features/shared/data/search`.
 - App shell navigation: `features/navigation/ui`.
 - Color, typography, and Material theme code: `ui/theme`.

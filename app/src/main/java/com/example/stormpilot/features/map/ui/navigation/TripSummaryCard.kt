@@ -42,9 +42,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stormpilot.features.map.data.routing.formatDistance
-import com.example.stormpilot.features.map.data.routing.formatDuration
-import com.example.stormpilot.features.map.presentation.MapsUiState
+import com.example.stormpilot.features.shared.data.routing.formatDistance
+import com.example.stormpilot.features.shared.data.routing.formatDuration
+import com.example.stormpilot.features.shared.viewmodels.MapsUiState
 import com.example.stormpilot.ui.theme.ExtendedColors
 import kotlinx.coroutines.delay
 

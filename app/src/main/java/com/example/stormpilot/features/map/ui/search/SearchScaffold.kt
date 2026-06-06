@@ -65,9 +65,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.stormpilot.features.common.ui.ProfileAvatar
-import com.example.stormpilot.features.map.data.routing.formatDistance
-import com.example.stormpilot.features.map.data.routing.formatDuration
-import com.example.stormpilot.features.map.data.search.PhotonFeature
+import com.example.stormpilot.features.shared.data.routing.formatDistance
+import com.example.stormpilot.features.shared.data.routing.formatDuration
+import com.example.stormpilot.features.shared.data.search.PhotonFeature
 
 private const val SearchTransitionDurationMillis = 420
 

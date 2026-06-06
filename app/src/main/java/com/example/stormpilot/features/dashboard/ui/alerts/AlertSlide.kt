@@ -23,14 +23,14 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.stormpilot.features.alerts.data.bestMatchForEvent
-import com.example.stormpilot.features.alerts.presentation.AlertsViewModel
+import com.example.stormpilot.features.shared.data.alerts.bestMatchForEvent
+import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetailBottomSheet
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertStatusPanel
 import com.example.stormpilot.features.dashboard.ui.alerts.components.LocationAlertsMapCard
 import com.example.stormpilot.features.dashboard.ui.alerts.components.StormSpecsPanel
-import com.example.stormpilot.features.map.presentation.MapsViewModel
-import com.example.stormpilot.features.weather.presentation.WeatherViewModel
+import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
+import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
 import org.maplibre.spatialk.geojson.Position
 
 @Composable

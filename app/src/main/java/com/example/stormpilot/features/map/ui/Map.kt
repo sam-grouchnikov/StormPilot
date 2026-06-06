@@ -82,10 +82,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetailBottomSheet
 import com.example.stormpilot.core.AppSettings
-import com.example.stormpilot.features.map.presentation.MapsFooterState
-import com.example.stormpilot.features.map.presentation.MapsViewModel
-import com.example.stormpilot.features.map.presentation.bearingDegrees
-import com.example.stormpilot.features.map.presentation.navigationInstruction
+import com.example.stormpilot.features.shared.viewmodels.MapsFooterState
+import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
+import com.example.stormpilot.features.shared.viewmodels.bearingDegrees
+import com.example.stormpilot.features.shared.viewmodels.navigationInstruction
 import com.example.stormpilot.features.map.ui.navigation.NavigationModeFooter
 import com.example.stormpilot.features.map.ui.navigation.NavigationModeHeader
 import com.example.stormpilot.features.map.ui.navigation.NavigationRecenterButton

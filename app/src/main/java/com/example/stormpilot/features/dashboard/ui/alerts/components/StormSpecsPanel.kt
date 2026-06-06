@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stormpilot.features.weather.data.StormSpec
+import com.example.stormpilot.features.shared.data.weather.StormSpec
 import com.example.stormpilot.ui.theme.ExtendedColors
 
 @Composable
