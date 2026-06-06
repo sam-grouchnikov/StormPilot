@@ -1,117 +1,90 @@
 package com.example.stormpilot.features.shared.data.search
 
+import com.example.stormpilot.features.shared.data.api.StormPilotApi
 import com.example.stormpilot.testing.StormPilotUnitTest
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.mockk
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Test
 import org.maplibre.spatialk.geojson.Position
 
 class PhotonApiClientTest : StormPilotUnitTest() {
-    private val client = PhotonApiClient()
+    private val api = mockk<StormPilotApi>()
+    private val client = PhotonApiClient(api)
 
     @Test
-    fun parsePhotonResponse_mapsValidFeaturesAndSkipsMalformedOnes() {
-        val results = client.parsePhotonResponseForTest(
-            """
-            {
-              "features": [
-                {
-                  "type": "Feature",
-                  "properties": {
-                    "name": "National Weather Center",
-                    "city": "Norman",
-                    "state": "Oklahoma",
-                    "country": "United States"
-                  },
-                  "geometry": { "type": "Point", "coordinates": [-97.438, 35.181] }
-                },
-                {
-                  "type": "Feature",
-                  "properties": { "city": "Missing Name" },
-                  "geometry": { "type": "Point", "coordinates": [-1, 1] }
-                },
-                {
-                  "type": "Feature",
-                  "properties": { "name": "Bad Geometry" },
-                  "geometry": { "type": "Point", "coordinates": [-1] }
-                }
-              ]
-            }
-            """.trimIndent(),
+    fun search_forwardsLocationBiasBboxAndDrivingMetricsFlag() = runTest {
+        val origin = Position(longitude = -97.0, latitude = 35.0)
+        val bbox = PhotonBoundingBox(
+            minLon = -98.0,
+            minLat = 34.0,
+            maxLon = -96.0,
+            maxLat = 36.0,
         )
+        val expected = listOf(feature("Moore"))
+        coEvery {
+            api.search(
+                query = "Moore",
+                latitude = 35.0,
+                longitude = -97.0,
+                bbox = bbox,
+                includeDrivingMetrics = true,
+            )
+        } returns expected
 
-        assertEquals(1, results.size)
-        assertEquals(
-            PhotonFeature(
-                name = "National Weather Center",
-                city = "Norman",
-                state = "Oklahoma",
-                country = "United States",
-                geometry = Position(longitude = -97.438, latitude = 35.181),
-            ),
-            results.single(),
-        )
+        val results = client.search("Moore", origin, bbox)
+
+        assertSame(expected, results)
+        coVerify(exactly = 1) {
+            api.search(
+                query = "Moore",
+                latitude = 35.0,
+                longitude = -97.0,
+                bbox = bbox,
+                includeDrivingMetrics = true,
+            )
+        }
     }
 
     @Test
-    fun parsePhotonResponse_returnsEmptyWhenFeaturesAreMissing() {
-        assertEquals(emptyList<PhotonFeature>(), client.parsePhotonResponseForTest("""{"type":"FeatureCollection"}"""))
+    fun search_withoutLocationBiasDisablesDrivingMetrics() = runTest {
+        val expected = listOf(feature("Norman"))
+        coEvery {
+            api.search(
+                query = "Norman",
+                latitude = null,
+                longitude = null,
+                bbox = null,
+                includeDrivingMetrics = false,
+            )
+        } returns expected
+
+        val results = client.search("Norman")
+
+        assertSame(expected, results)
     }
 
     @Test
-    fun applyRouteMetrics_copiesDriveDistanceAndDurationByIndex() {
-        val results = listOf(
-            feature("One"),
-            feature("Two"),
-            feature("Three"),
-        )
+    fun enrichWithDrivingMetrics_isNoOpBecauseBackendSearchAlreadyIncludesMetrics() = runTest {
+        val results = listOf(feature("One"))
 
-        val enriched = client.applyRouteMetricsForTest(
+        val enriched = client.enrichWithDrivingMetrics(
+            origin = Position(longitude = -97.0, latitude = 35.0),
             results = results,
-            payload = """
-                {
-                  "distances": [[1000.5, 2000.25]],
-                  "durations": [[90.0, 180.5, "not-a-number"]]
-                }
-            """.trimIndent(),
         )
 
-        assertEquals(1000.5, enriched[0].driveDistanceMeters!!, 0.0)
-        assertEquals(90.0, enriched[0].driveDurationSeconds!!, 0.0)
-        assertEquals(2000.25, enriched[1].driveDistanceMeters!!, 0.0)
-        assertEquals(180.5, enriched[1].driveDurationSeconds!!, 0.0)
-        assertNull(enriched[2].driveDistanceMeters)
-        assertNull(enriched[2].driveDurationSeconds)
+        assertEquals(results, enriched)
     }
 
-    private fun feature(name: String): PhotonFeature {
-        return PhotonFeature(
+    private fun feature(name: String): PhotonFeature =
+        PhotonFeature(
             name = name,
             city = null,
             state = null,
             country = null,
             geometry = Position(0.0, 0.0),
         )
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun PhotonApiClient.parsePhotonResponseForTest(payload: String): List<PhotonFeature> {
-        val method = PhotonApiClient::class.java.getDeclaredMethod("parsePhotonResponse", String::class.java)
-        method.isAccessible = true
-        return method.invoke(this, payload) as List<PhotonFeature>
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun PhotonApiClient.applyRouteMetricsForTest(
-        results: List<PhotonFeature>,
-        payload: String,
-    ): List<PhotonFeature> {
-        val method = PhotonApiClient::class.java.getDeclaredMethod(
-            "applyRouteMetrics",
-            List::class.java,
-            String::class.java,
-        )
-        method.isAccessible = true
-        return method.invoke(this, results, payload) as List<PhotonFeature>
-    }
 }

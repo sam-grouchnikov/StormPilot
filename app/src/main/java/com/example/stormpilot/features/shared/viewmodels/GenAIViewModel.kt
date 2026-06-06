@@ -1,12 +1,12 @@
 package com.example.stormpilot.features.shared.viewmodels
 
-import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.features.shared.data.assistant.GenAIWeatherTools
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatMessage
+import com.example.stormpilot.features.shared.data.api.StormPilotApi
 import com.example.stormpilot.features.shared.data.location.LocationRepository
 import com.google.firebase.Firebase
 import com.google.firebase.ai.Chat
@@ -15,7 +15,6 @@ import com.google.firebase.ai.type.GenerativeBackend
 import com.google.firebase.ai.type.content
 import com.google.firebase.ai.type.generationConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -26,8 +25,8 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class GenAIViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     private val locationRepository: LocationRepository,
+    private val stormPilotApi: StormPilotApi,
 ) : ViewModel() {
 
     val chatMessages = mutableStateListOf<ChatMessage>()
@@ -46,7 +45,7 @@ class GenAIViewModel @Inject constructor(
             .generativeModel(
                 modelName = "gemini-3.1-flash-lite",
                 generationConfig = modelConfig,
-                tools = listOf(GenAIWeatherTools(context, locationRepository).tool()),
+                tools = listOf(GenAIWeatherTools(locationRepository, stormPilotApi).tool()),
                 systemInstruction = content {
                     text(
                         "You are a concise storm chasing assistant. Keep all responses under 3 sentences unless the user explicitly asks for detail. " +

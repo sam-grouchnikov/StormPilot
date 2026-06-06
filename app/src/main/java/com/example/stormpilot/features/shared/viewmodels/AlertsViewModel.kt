@@ -1,18 +1,15 @@
 package com.example.stormpilot.features.shared.viewmodels
 
-import android.content.Context
-import android.location.Geocoder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.features.shared.data.alerts.AlertType
 import com.example.stormpilot.features.shared.data.alerts.AlertsRepository
 import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import com.example.stormpilot.features.shared.data.alerts.alertType
+import com.example.stormpilot.features.shared.data.location.LocationLookupRepository
 import com.example.stormpilot.features.shared.data.location.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,9 +21,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.maplibre.compose.sources.GeoJsonData
-import java.util.Locale
 import kotlin.math.abs
 
 data class AlertsUiState(
@@ -66,9 +61,9 @@ data class AlertsUiState(
  */
 @HiltViewModel
 class AlertsViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     val locationRepository: LocationRepository,
     private val alertsRepository: AlertsRepository,
+    private val locationLookupRepository: LocationLookupRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlertsUiState())
@@ -88,21 +83,11 @@ class AlertsViewModel @Inject constructor(
         observeLocationForCityName()
     }
 
-    private suspend fun reverseGeocode(latitude: Double, longitude: Double): String? {
-        return withContext(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(context, Locale.getDefault())
-                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                val address = addresses?.firstOrNull()
-
-                if (address != null) {
-                    "${address.locality}, ${address.adminArea}"
-                } else null
-            } catch (e: Exception) {
-                null
-            }
-        }
-    }
+    private suspend fun reverseGeocode(latitude: Double, longitude: Double): String? =
+        locationLookupRepository.reverseLocation(latitude, longitude)
+            .getOrNull()
+            ?.name
+            ?.takeIf { it.isNotBlank() }
 
     private fun observeLocationForCityName() {
         viewModelScope.launch {
@@ -113,9 +98,7 @@ class AlertsViewModel @Inject constructor(
                             abs(old.longitude - new.longitude) < 0.01
                 }
                 .collectLatest { loc ->
-                    val name = withContext(Dispatchers.IO) {
-                        reverseGeocode(loc.latitude, loc.longitude)
-                    }
+                    val name = reverseGeocode(loc.latitude, loc.longitude)
                     _cityName.value = name ?: "Unknown Area"
                 }
         }

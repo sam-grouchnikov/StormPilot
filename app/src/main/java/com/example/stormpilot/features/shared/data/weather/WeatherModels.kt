@@ -8,7 +8,7 @@ data class WeatherSnapshot(
 )
 
 data class CurrentWeather(
-    val temperature: Int,
+    val temperature: Int?,
     val conditions: String,
     val dewPoint: Int?,
     val humidity: Int?,
@@ -18,7 +18,7 @@ data class CurrentWeather(
 
 data class HourlyForecast(
     val time: String,
-    val temperature: Int,
+    val temperature: Int?,
     val conditions: String,
     val precipitationChance: Int?,
 )
@@ -26,8 +26,8 @@ data class HourlyForecast(
 data class DailyWeatherOutlook(
     val day: String,
     val conditions: String,
-    val high: Int,
-    val low: Int,
+    val high: Int?,
+    val low: Int?,
     val spcOutlook: String,
 )
 

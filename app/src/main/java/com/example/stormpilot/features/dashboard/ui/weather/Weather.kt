@@ -349,7 +349,7 @@ private fun HourlyForecastCard(forecast: HourlyForecast) {
                 modifier = Modifier.size(29.dp),
             )
             Text(
-                text = "${forecast.temperature}°",
+                text = forecast.temperature?.let { "$it°" } ?: "--°",
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Black,
                 fontSize = 25.sp,
@@ -449,7 +449,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
             )
         }
         Text(
-            text = "${outlook.high}°/${outlook.low}°",
+            text = "${outlook.high?.toString() ?: "--"}°/${outlook.low?.toString() ?: "--"}°",
             color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.Black,
             fontSize = 17.sp,

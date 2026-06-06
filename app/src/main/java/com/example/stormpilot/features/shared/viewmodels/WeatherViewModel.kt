@@ -1,9 +1,8 @@
 package com.example.stormpilot.features.shared.viewmodels
 
-import android.content.Context
-import android.location.Geocoder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stormpilot.features.shared.data.location.LocationLookupRepository
 import com.example.stormpilot.features.shared.data.location.LocationRepository
 import com.example.stormpilot.features.shared.data.weather.CurrentWeather
 import com.example.stormpilot.features.shared.data.weather.DailyWeatherOutlook
@@ -11,11 +10,8 @@ import com.example.stormpilot.features.shared.data.weather.HourlyForecast
 import com.example.stormpilot.features.shared.data.weather.StormSpec
 import com.example.stormpilot.features.shared.data.weather.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.abs
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +23,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.math.round
 
 data class WeatherUiState(
@@ -44,9 +39,9 @@ data class WeatherUiState(
  */
 @HiltViewModel
 class WeatherViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
     val locationRepository: LocationRepository,
     private val weatherRepository: WeatherRepository,
+    private val locationLookupRepository: LocationLookupRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(WeatherUiState(isLoading = true))
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
@@ -134,19 +129,10 @@ class WeatherViewModel @Inject constructor(
     }
 
     private suspend fun reverseGeocode(latitude: Double, longitude: Double): String? =
-        withContext(Dispatchers.IO) {
-            try {
-                val address = Geocoder(context, Locale.getDefault())
-                    .getFromLocation(latitude, longitude, 1)
-                    ?.firstOrNull()
-                listOfNotNull(address?.locality, address?.adminArea)
-                    .distinct()
-                    .joinToString(", ")
-                    .ifBlank { null }
-            } catch (e: Exception) {
-                null
-            }
-        }
+        locationLookupRepository.reverseLocation(latitude, longitude)
+            .getOrNull()
+            ?.name
+            ?.takeIf { it.isNotBlank() }
 
     override fun onCleared() {
         super.onCleared()

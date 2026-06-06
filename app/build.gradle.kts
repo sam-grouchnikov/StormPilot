@@ -6,6 +6,9 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val stormPilotApiBaseUrl = providers.gradleProperty("stormpilotApiBaseUrl")
+    .orElse("http://10.0.2.2:8080/api/v1")
+
 android {
     namespace = "com.example.stormpilot"
     compileSdk {
@@ -23,6 +26,11 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        buildConfigField(
+            "String",
+            "STORMPILOT_API_BASE_URL",
+            "\"${stormPilotApiBaseUrl.get()}\"",
+        )
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -41,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

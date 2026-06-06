@@ -1,118 +1,83 @@
 package com.example.stormpilot.features.shared.data.routing
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.maplibre.spatialk.geojson.Position
-import java.net.HttpURLConnection
-import java.net.URL
+import com.example.stormpilot.features.shared.data.api.RouteSelectionResponse
+import com.example.stormpilot.features.shared.data.api.RouteViaRequest
+import com.example.stormpilot.features.shared.data.api.RouteWarningAnalysis
+import com.example.stormpilot.features.shared.data.api.RouteWarningAnalyzeRequest
+import com.example.stormpilot.features.shared.data.api.StormPilotApi
+import com.example.stormpilot.features.shared.data.api.toApiPosition
 import javax.inject.Inject
-
-interface RoutingApiClient {
-    suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult>
-    suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>>
-    suspend fun fetchRouteVia(
-        origin: Position,
-        destination: Position,
-        waypoints: List<Position>,
-    ): Result<RouteResult>
-}
-
-class ValhallaRoutingApiClient @Inject constructor() : RoutingApiClient {
-    override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
-        return Result.failure(UnsupportedOperationException("Valhalla endpoint not configured"))
-    }
-
-    override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
-        return fetchRoute(origin, destination).map { listOf(it) }
-    }
-
-    override suspend fun fetchRouteVia(
-        origin: Position,
-        destination: Position,
-        waypoints: List<Position>,
-    ): Result<RouteResult> {
-        return Result.failure(UnsupportedOperationException("Valhalla endpoint not configured"))
-    }
-}
-
-class OsrmRoutingApiClient @Inject constructor() : RoutingApiClient {
-    override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
-        return fetchRouteCandidates(origin, destination).map { it.first() }
-    }
-
-    override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
-        return withContext(Dispatchers.IO) {
-            runCatching {
-                fetchOsrmRoutes(listOf(origin, destination), alternatives = true)
-            }
-        }
-    }
-
-    override suspend fun fetchRouteVia(
-        origin: Position,
-        destination: Position,
-        waypoints: List<Position>,
-    ): Result<RouteResult> {
-        return withContext(Dispatchers.IO) {
-            runCatching {
-                fetchOsrmRoutes(listOf(origin) + waypoints + listOf(destination), alternatives = false).first()
-            }
-        }
-    }
-
-    private fun fetchOsrmRoutes(coordinates: List<Position>, alternatives: Boolean): List<RouteResult> {
-        val encodedCoordinates = coordinates.joinToString(separator = ";") { position ->
-            "${position.longitude},${position.latitude}"
-        }
-        val url = URL(
-            "https://routing.openstreetmap.de/routed-car/route/v1/driving/$encodedCoordinates" +
-                    "?overview=full&geometries=geojson&steps=true&alternatives=$alternatives"
-        )
-        val connection = (url.openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = 20_000
-            readTimeout = 20_000
-            setRequestProperty("Accept", "application/json")
-        }
-        try {
-            return connection.inputStream.bufferedReader().use { reader ->
-                RoutingParsing.parseOsrmRoutes(reader.readText())
-            }
-        } finally {
-            connection.disconnect()
-        }
-    }
-}
+import org.maplibre.spatialk.geojson.Position
 
 /**
- * Coordinates route lookup through the preferred provider and falls back to OSRM when needed.
+ * Coordinates route lookup through the StormPilot Spring Boot API.
  */
 class RoutingRepositoryImpl @Inject constructor(
-    private val valhallaClient: ValhallaRoutingApiClient,
-    private val osrmClient: OsrmRoutingApiClient,
+    private val api: StormPilotApi,
 ) : RoutingRepository {
-    override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> {
-        return valhallaClient.fetchRoute(origin, destination)
-            .recoverCatching {
-                osrmClient.fetchRoute(origin, destination).getOrThrow()
-            }
-    }
+    override suspend fun fetchRoute(origin: Position, destination: Position): Result<RouteResult> =
+        fetchRouteSelection(
+            origin = origin,
+            destination = destination,
+            avoidStorms = false,
+            includeWarnings = true,
+        ).map { selection -> selection.route }
 
-    override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> {
-        return valhallaClient.fetchRouteCandidates(origin, destination)
-            .recoverCatching {
-                osrmClient.fetchRouteCandidates(origin, destination).getOrThrow()
-            }
-    }
+    override suspend fun fetchRouteSelection(
+        origin: Position,
+        destination: Position,
+        avoidStorms: Boolean,
+        includeWarnings: Boolean,
+    ): Result<RouteSelectionResponse> =
+        runCatching {
+            api.route(
+                originLatitude = origin.latitude,
+                originLongitude = origin.longitude,
+                destinationLatitude = destination.latitude,
+                destinationLongitude = destination.longitude,
+                avoidStorms = avoidStorms,
+                includeWarnings = includeWarnings,
+            )
+        }
+
+    override suspend fun fetchRouteCandidates(origin: Position, destination: Position): Result<List<RouteResult>> =
+        runCatching {
+            api.routeCandidates(
+                originLatitude = origin.latitude,
+                originLongitude = origin.longitude,
+                destinationLatitude = destination.latitude,
+                destinationLongitude = destination.longitude,
+            )
+        }
 
     override suspend fun fetchRouteVia(
         origin: Position,
         destination: Position,
         waypoints: List<Position>,
-    ): Result<RouteResult> {
-        return valhallaClient.fetchRouteVia(origin, destination, waypoints)
-            .recoverCatching {
-                osrmClient.fetchRouteVia(origin, destination, waypoints).getOrThrow()
-            }
-    }
+    ): Result<RouteResult> =
+        runCatching {
+            api.routeVia(
+                RouteViaRequest(
+                    origin = origin.toApiPosition(),
+                    destination = destination.toApiPosition(),
+                    waypoints = waypoints.map { it.toApiPosition() },
+                    includeWarnings = true,
+                ),
+            ).route
+        }
+
+    override suspend fun analyzeRouteWarnings(
+        routePolyline: List<Position>,
+        destination: Position?,
+        alertsGeoJson: String?,
+    ): Result<RouteWarningAnalysis> =
+        runCatching {
+            api.analyzeRouteWarnings(
+                RouteWarningAnalyzeRequest(
+                    routePolyline = routePolyline.map { it.toApiPosition() },
+                    destination = destination?.toApiPosition(),
+                    alertsGeoJson = alertsGeoJson,
+                ),
+            )
+        }
 }
