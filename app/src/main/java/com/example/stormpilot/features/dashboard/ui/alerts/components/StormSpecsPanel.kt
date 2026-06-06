@@ -41,7 +41,7 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
     ) {
         Box {
@@ -185,7 +185,7 @@ private fun StormSpecCard(spec: StormSpec) {
     Surface(
         modifier = Modifier.width(136.dp),
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, riskColor.copy(alpha = 0.18f)),
     ) {
         Column(
