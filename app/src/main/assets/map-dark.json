@@ -137,7 +137,7 @@
       "filter": ["==","$type","Polygon"],
       "source": "protomaps",
       "source-layer": "water",
-      "paint": { "fill-color": "#131B2A" }
+      "paint": { "fill-color": "#111826" }
     },
     {
       "id": "water_stream",

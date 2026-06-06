@@ -162,9 +162,12 @@ fun StormPilotTheme(
     isLoading: Boolean = false,
     opaqueNavigationBar: Boolean = true,
     useSurfaceContainerNavigationBar: Boolean = false,
+    syncAppDarkMode: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    AppSettings.isDarkMode = darkTheme
+    if (syncAppDarkMode) {
+        AppSettings.isDarkMode = darkTheme
+    }
     val colorScheme = stormPilotColorScheme(darkTheme)
 
     val view = LocalView.current

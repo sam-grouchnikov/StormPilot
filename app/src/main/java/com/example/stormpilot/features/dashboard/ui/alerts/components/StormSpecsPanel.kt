@@ -41,7 +41,7 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f),
+        color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.96f),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
     ) {
         Box {
