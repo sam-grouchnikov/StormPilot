@@ -24,7 +24,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.dp
-import com.example.stormpilot.features.assistant.presentation.GenAIViewModel
+import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 
 @Composable
 fun AIChat(title: String, genAIViewModel: GenAIViewModel) {
