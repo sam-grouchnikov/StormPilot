@@ -45,6 +45,9 @@ data class MapsUiState(
     val remainingDurationSeconds: Double? = null,
     val steps: List<RouteStep> = emptyList(),
     val currentStepIndex: Int = 0,
+    val userBearingDegrees: Double? = null,
+    val navigationBearingDegrees: Double? = null,
+    val isOffRoute: Boolean = false,
     val isLoadingRoute: Boolean = false,
     val routeError: String? = null,
     val address: String? = null,
@@ -86,14 +89,40 @@ class MapsViewModel @Inject constructor(
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
     private var currentRoutePolyline: List<Position> = emptyList()
+    private var routeRequestJob: Job? = null
     private var rerouteDebounceJob: Job? = null
     private var routeWarningsJob: Job? = null
     private var alertDetailJob: Job? = null
     private var latestAlertsGeoJson: String? = null
     private var stormAvoidanceForCurrentTrip = false
 
-    fun onUserLocationUpdated(position: Position) {
-        val updatedState = _uiState.value.copy(origin = position)
+    fun onUserLocationUpdated(position: Position, bearingDegrees: Double? = null) {
+        val currentState = _uiState.value
+        val normalizedUserBearing = bearingDegrees?.normalizeBearingDegrees()
+        val hasActiveRoute = currentState.destination != null && currentRoutePolyline.isNotEmpty()
+        val minRouteDistance = if (hasActiveRoute) {
+            minDistanceMetersToPolyline(position, currentRoutePolyline)
+        } else {
+            null
+        }
+        val isOffRoute = minRouteDistance?.let { it > OFF_ROUTE_THRESHOLD_METERS } ?: false
+        val navigationBearing = if (hasActiveRoute) {
+            navigationCameraBearingDegrees(
+                userPosition = position,
+                routePolyline = currentRoutePolyline,
+                isOffRoute = isOffRoute,
+                userBearingDegrees = normalizedUserBearing ?: currentState.userBearingDegrees,
+                previousBearingDegrees = currentState.navigationBearingDegrees,
+            )
+        } else {
+            normalizedUserBearing ?: currentState.userBearingDegrees ?: currentState.navigationBearingDegrees
+        }
+        val updatedState = currentState.copy(
+            origin = position,
+            userBearingDegrees = normalizedUserBearing ?: currentState.userBearingDegrees,
+            navigationBearingDegrees = navigationBearing,
+            isOffRoute = isOffRoute,
+        )
         _uiState.value = updatedState
 
         if (
@@ -108,8 +137,7 @@ class MapsViewModel @Inject constructor(
 
         if (updatedState.destination != null && currentRoutePolyline.isNotEmpty()) {
             advanceStepProgress(position)
-            val minDistance = minDistanceMetersToPolyline(position, currentRoutePolyline)
-            if (minDistance > OFF_ROUTE_THRESHOLD_METERS) {
+            if (isOffRoute) {
                 scheduleReroute()
             }
         }
@@ -174,6 +202,8 @@ class MapsViewModel @Inject constructor(
             remainingDurationSeconds = null,
             steps = emptyList(),
             currentStepIndex = 0,
+            navigationBearingDegrees = _uiState.value.userBearingDegrees,
+            isOffRoute = false,
             routeError = null,
             isLoadingRoute = false,
             address = featureAddress,
@@ -183,6 +213,7 @@ class MapsViewModel @Inject constructor(
         )
         currentRoutePolyline = emptyList()
         stormAvoidanceForCurrentTrip = false
+        rerouteDebounceJob?.cancel()
         routeWarningsJob?.cancel()
         requestRoute()
     }
@@ -229,6 +260,8 @@ class MapsViewModel @Inject constructor(
             remainingDurationSeconds = null,
             steps = emptyList(),
             currentStepIndex = 0,
+            navigationBearingDegrees = _uiState.value.userBearingDegrees,
+            isOffRoute = false,
             routeError = null,
             isLoadingRoute = false,
             address = "Locating...",
@@ -238,6 +271,7 @@ class MapsViewModel @Inject constructor(
         )
         currentRoutePolyline = emptyList()
         stormAvoidanceForCurrentTrip = false
+        rerouteDebounceJob?.cancel()
         routeWarningsJob?.cancel()
 
         viewModelScope.launch {
@@ -333,6 +367,8 @@ class MapsViewModel @Inject constructor(
     fun clearRoute() {
         currentRoutePolyline = emptyList()
         stormAvoidanceForCurrentTrip = false
+        routeRequestJob?.cancel()
+        rerouteDebounceJob?.cancel()
         routeWarningsJob?.cancel()
         _uiState.value = _uiState.value.copy(
             destination = null,
@@ -345,6 +381,8 @@ class MapsViewModel @Inject constructor(
             remainingDurationSeconds = null,
             steps = emptyList(),
             currentStepIndex = 0,
+            navigationBearingDegrees = null,
+            isOffRoute = false,
             routeError = null,
             isLoadingRoute = false,
             address = null,
@@ -367,7 +405,8 @@ class MapsViewModel @Inject constructor(
         val origin = state.origin ?: return
         val destination = state.destination ?: return
 
-        viewModelScope.launch {
+        routeRequestJob?.cancel()
+        routeRequestJob = viewModelScope.launch {
             Log.d("Routing", "Starting route request")
             val start = System.currentTimeMillis()
             routeWarningsJob?.cancel()
@@ -387,12 +426,21 @@ class MapsViewModel @Inject constructor(
                 .onSuccess { selection ->
                     val route = selection.route
                     currentRoutePolyline = route.polyline
+                    val latestState = _uiState.value
+                    val latestOrigin = latestState.origin ?: origin
+                    val navigationBearing = navigationCameraBearingDegrees(
+                        userPosition = latestOrigin,
+                        routePolyline = route.polyline,
+                        isOffRoute = false,
+                        userBearingDegrees = latestState.userBearingDegrees,
+                        previousBearingDegrees = latestState.navigationBearingDegrees,
+                    )
                     val geoJson = GeoJsonData.JsonString(
                         selection.routeGeoJson.ifBlank {
                             RoutingParsing.toGeoJsonLineString(route.polyline)
                         },
                     )
-                    _uiState.value = _uiState.value.copy(
+                    _uiState.value = latestState.copy(
                         routeGeoJson = geoJson,
                         routeStart = route.polyline.firstOrNull(),
                         routeEnd = route.polyline.lastOrNull(),
@@ -402,6 +450,8 @@ class MapsViewModel @Inject constructor(
                         remainingDurationSeconds = route.durationSeconds,
                         steps = route.steps,
                         currentStepIndex = 0,
+                        navigationBearingDegrees = navigationBearing,
+                        isOffRoute = false,
                         isLoadingRoute = false,
                         routeError = null,
                         routeWarningCount = selection.warningCount,
@@ -537,7 +587,7 @@ class MapsViewModel @Inject constructor(
     companion object {
         private const val OFF_ROUTE_THRESHOLD_METERS = 40.0
         private const val STEP_REACHED_THRESHOLD_METERS = 25.0
-        private const val REROUTE_DEBOUNCE_MS = 8_000L
+        private const val REROUTE_DEBOUNCE_MS = 1_500L
         private const val DESTINATION_IN_WARNING_MESSAGE =
             "Destination is inside a storm warning polygon. This route enters the warning area to reach it."
         private const val NO_STORM_FREE_ROUTE_MESSAGE =

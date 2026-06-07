@@ -49,4 +49,54 @@ fun bearingDegrees(from: Position, to: Position): Double {
     return (bearing + 360.0) % 360.0
 }
 
+fun routeBearingDegrees(position: Position, routePolyline: List<Position>): Double? {
+    return routePolyline
+        .zipWithNext()
+        .filter { (start, end) -> approximateDistanceMeters(start, end) > 0.5 }
+        .minByOrNull { (start, end) -> approximateDistanceToSegmentMeters(position, start, end) }
+        ?.let { (start, end) -> bearingDegrees(start, end) }
+}
+
+fun navigationCameraBearingDegrees(
+    userPosition: Position,
+    routePolyline: List<Position>,
+    isOffRoute: Boolean,
+    userBearingDegrees: Double?,
+    previousBearingDegrees: Double? = null,
+): Double? {
+    val normalizedUserBearing = userBearingDegrees?.normalizeBearingDegrees()
+    val normalizedPreviousBearing = previousBearingDegrees?.normalizeBearingDegrees()
+    return if (isOffRoute) {
+        normalizedUserBearing ?: normalizedPreviousBearing
+    } else {
+        routeBearingDegrees(userPosition, routePolyline)
+            ?: normalizedUserBearing
+            ?: normalizedPreviousBearing
+    }
+}
+
+fun Double.normalizeBearingDegrees(): Double = ((this % 360.0) + 360.0) % 360.0
+
+private fun approximateDistanceToSegmentMeters(point: Position, start: Position, end: Position): Double {
+    val lat0 = Math.toRadians(point.latitude)
+
+    val px = (Math.toRadians(point.longitude - start.longitude)) * cos(lat0)
+    val py = Math.toRadians(point.latitude - start.latitude)
+    val sx = 0.0
+    val sy = 0.0
+    val ex = (Math.toRadians(end.longitude - start.longitude)) * cos(lat0)
+    val ey = Math.toRadians(end.latitude - start.latitude)
+
+    val dx = ex - sx
+    val dy = ey - sy
+    val lengthSq = dx * dx + dy * dy
+
+    val t = if (lengthSq == 0.0) 0.0 else ((px - sx) * dx + (py - sy) * dy) / lengthSq
+    val clampedT = t.coerceIn(0.0, 1.0)
+
+    val closestLongitude = start.longitude + Math.toDegrees((sx + clampedT * dx) / cos(lat0))
+    val closestLatitude = start.latitude + Math.toDegrees(sy + clampedT * dy)
+    return approximateDistanceMeters(point, Position(closestLongitude, closestLatitude))
+}
+
 private const val ARRIVAL_DISTANCE_THRESHOLD_METERS = 30.0

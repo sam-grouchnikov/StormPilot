@@ -84,7 +84,6 @@ import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetai
 import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.features.shared.viewmodels.MapsFooterState
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
-import com.example.stormpilot.features.shared.viewmodels.bearingDegrees
 import com.example.stormpilot.features.shared.viewmodels.navigationInstruction
 import com.example.stormpilot.features.map.ui.navigation.NavigationModeFooter
 import com.example.stormpilot.features.map.ui.navigation.NavigationModeHeader
@@ -99,8 +98,10 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.maplibre.android.style.expressions.Expression.literal
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
@@ -157,6 +158,7 @@ fun MapsPage(
     var navMode by remember { mutableStateOf(false) }
     var navigationCameraTrackingEnabled by remember { mutableStateOf(false) }
     var isProgrammaticCameraUpdate by remember { mutableStateOf(false) }
+    var programmaticCameraUpdateGeneration by remember { mutableLongStateOf(0L) }
     var is2dNavView by remember { mutableStateOf(false) }
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var alertsRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -204,15 +206,18 @@ fun MapsPage(
             onDispose { }
         } else {
             val locationRequest =
-                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2_000L)
-                    .setMinUpdateIntervalMillis(1_000L)
+                LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1_000L)
+                    .setMinUpdateIntervalMillis(500L)
                     .build()
 
             val callback =
                 object : LocationCallback() {
                     override fun onLocationResult(result: LocationResult) {
                         result.lastLocation?.let { location ->
-                            viewModel.onUserLocationUpdated(Position(location.longitude, location.latitude))
+                            viewModel.onUserLocationUpdated(
+                                position = Position(location.longitude, location.latitude),
+                                bearingDegrees = location.bearing.takeIf { location.hasBearing() }?.toDouble(),
+                            )
                         }
                     }
                 }
@@ -259,12 +264,18 @@ fun MapsPage(
         }
     }
 
-    LaunchedEffect(navMode, navigationCameraTrackingEnabled, uiState.origin, uiState.currentStepIndex, uiState.destination, is2dNavView) {
+    LaunchedEffect(
+        navMode,
+        navigationCameraTrackingEnabled,
+        uiState.origin,
+        uiState.navigationBearingDegrees,
+        is2dNavView,
+    ) {
         if (navMode && navigationCameraTrackingEnabled && uiState.origin != null) {
             val origin = uiState.origin!!
-            val currentStep = uiState.steps.getOrNull(uiState.currentStepIndex)
-            val routeTarget = currentStep?.maneuverLocation ?: uiState.destination ?: origin
-            val bearing = bearingDegrees(from = origin, to = routeTarget)
+            val bearing = uiState.navigationBearingDegrees ?: cameraState.position.bearing
+            val updateGeneration = programmaticCameraUpdateGeneration + 1L
+            programmaticCameraUpdateGeneration = updateGeneration
 
             try {
                 isProgrammaticCameraUpdate = true
@@ -275,11 +286,15 @@ fun MapsPage(
                         tilt = if (is2dNavView) 0.0 else 50.0,
                         bearing = bearing,
                     ),
-                    duration = 1.seconds,
+                    duration = 650.milliseconds,
                 )
             } finally {
-                delay(50)
-                isProgrammaticCameraUpdate = false
+                withContext(NonCancellable) {
+                    delay(50)
+                    if (programmaticCameraUpdateGeneration == updateGeneration) {
+                        isProgrammaticCameraUpdate = false
+                    }
+                }
             }
         }
     }

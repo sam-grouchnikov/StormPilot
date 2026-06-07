@@ -30,6 +30,78 @@ class MapNavigationStateTest : StormPilotUnitTest() {
     }
 
     @Test
+    fun routeBearingDegrees_returnsNearestForwardSegmentBearing() {
+        val route = listOf(
+            position(0.0, 0.0),
+            position(0.01, 0.0),
+            position(0.01, 0.01),
+        )
+
+        assertEquals(90.0, routeBearingDegrees(position(0.004, 0.0001), route)!!, 0.0001)
+        assertEquals(0.0, routeBearingDegrees(position(0.0101, 0.006), route)!!, 0.0001)
+    }
+
+    @Test
+    fun navigationCameraBearingDegrees_prefersRouteBearingWhileOnRoute() {
+        val route = listOf(
+            position(0.0, 0.0),
+            position(0.01, 0.0),
+            position(0.01, 0.01),
+        )
+
+        assertEquals(
+            90.0,
+            navigationCameraBearingDegrees(
+                userPosition = position(0.002, 0.0),
+                routePolyline = route,
+                isOffRoute = false,
+                userBearingDegrees = 12.0,
+            )!!,
+            0.0001,
+        )
+    }
+
+    @Test
+    fun navigationCameraBearingDegrees_usesUserBearingWhenOffRoute() {
+        val route = listOf(
+            position(0.0, 0.0),
+            position(0.01, 0.0),
+        )
+
+        assertEquals(
+            225.0,
+            navigationCameraBearingDegrees(
+                userPosition = position(0.0, 0.01),
+                routePolyline = route,
+                isOffRoute = true,
+                userBearingDegrees = 225.0,
+                previousBearingDegrees = 90.0,
+            )!!,
+            0.0001,
+        )
+    }
+
+    @Test
+    fun navigationCameraBearingDegrees_keepsPreviousBearingOffRouteWhenUserBearingMissing() {
+        val route = listOf(
+            position(0.0, 0.0),
+            position(0.01, 0.0),
+        )
+
+        assertEquals(
+            90.0,
+            navigationCameraBearingDegrees(
+                userPosition = position(0.0, 0.01),
+                routePolyline = route,
+                isOffRoute = true,
+                userBearingDegrees = null,
+                previousBearingDegrees = 90.0,
+            )!!,
+            0.0001,
+        )
+    }
+
+    @Test
     fun navigationInstruction_returnsFallbackWhenNoStepIsAvailable() {
         assertEquals("Continue on route", navigationInstruction(MapsUiState()))
         assertEquals(
