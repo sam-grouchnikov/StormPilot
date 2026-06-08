@@ -1,4 +1,5 @@
 package com.example.stormpilot.features.shared.viewmodels
+import com.example.stormpilot.features.shared.data.routing.RouteStep
 import org.maplibre.spatialk.geojson.Position
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -57,6 +58,49 @@ fun routeBearingDegrees(position: Position, routePolyline: List<Position>): Doub
         ?.let { (start, end) -> bearingDegrees(start, end) }
 }
 
+fun routeProgressMeters(position: Position, routePolyline: List<Position>): Double? {
+    if (routePolyline.size < 2) return null
+
+    var distanceBeforeSegment = 0.0
+    var closestProgressMeters: Double? = null
+    var closestDistanceMeters = Double.MAX_VALUE
+
+    routePolyline.zipWithNext().forEach { (start, end) ->
+        val segmentLengthMeters = approximateDistanceMeters(start, end)
+        if (segmentLengthMeters > 0.5) {
+            val projection = projectOntoSegment(position, start, end)
+            val distanceMeters = approximateDistanceMeters(position, projection.position)
+            if (distanceMeters < closestDistanceMeters) {
+                closestDistanceMeters = distanceMeters
+                closestProgressMeters = distanceBeforeSegment + (segmentLengthMeters * projection.fraction)
+            }
+        }
+        distanceBeforeSegment += segmentLengthMeters
+    }
+
+    return closestProgressMeters
+}
+
+fun routeStepIndexForProgress(steps: List<RouteStep>, progressMeters: Double): Int? {
+    if (steps.isEmpty()) return null
+
+    var completedDistanceMeters = 0.0
+    steps.forEachIndexed { index, step ->
+        val stepEndMeters = completedDistanceMeters + step.distanceMeters
+        if (progressMeters < stepEndMeters) {
+            return index
+        }
+        completedDistanceMeters = stepEndMeters
+    }
+
+    return steps.lastIndex
+}
+
+fun initialRouteStepIndex(steps: List<RouteStep>, skipDepartStep: Boolean): Int {
+    if (!skipDepartStep || steps.size <= 1) return 0
+    return if (steps.first().maneuver?.type == "depart") 1 else 0
+}
+
 fun navigationCameraBearingDegrees(
     userPosition: Position,
     routePolyline: List<Position>,
@@ -78,8 +122,11 @@ fun navigationCameraBearingDegrees(
 fun Double.normalizeBearingDegrees(): Double = ((this % 360.0) + 360.0) % 360.0
 
 private fun approximateDistanceToSegmentMeters(point: Position, start: Position, end: Position): Double {
-    val lat0 = Math.toRadians(point.latitude)
+    return approximateDistanceMeters(point, projectOntoSegment(point, start, end).position)
+}
 
+private fun projectOntoSegment(point: Position, start: Position, end: Position): SegmentProjection {
+    val lat0 = Math.toRadians(point.latitude)
     val px = (Math.toRadians(point.longitude - start.longitude)) * cos(lat0)
     val py = Math.toRadians(point.latitude - start.latitude)
     val sx = 0.0
@@ -96,7 +143,15 @@ private fun approximateDistanceToSegmentMeters(point: Position, start: Position,
 
     val closestLongitude = start.longitude + Math.toDegrees((sx + clampedT * dx) / cos(lat0))
     val closestLatitude = start.latitude + Math.toDegrees(sy + clampedT * dy)
-    return approximateDistanceMeters(point, Position(closestLongitude, closestLatitude))
+    return SegmentProjection(
+        position = Position(closestLongitude, closestLatitude),
+        fraction = clampedT,
+    )
 }
+
+private data class SegmentProjection(
+    val position: Position,
+    val fraction: Double,
+)
 
 private const val ARRIVAL_DISTANCE_THRESHOLD_METERS = 30.0

@@ -135,8 +135,11 @@ class MapsViewModel @Inject constructor(
             return
         }
 
-        if (updatedState.destination != null && currentRoutePolyline.isNotEmpty()) {
+        if (updatedState.destination != null && currentRoutePolyline.isNotEmpty() && !isOffRoute) {
             advanceStepProgress(position)
+        }
+
+        if (updatedState.destination != null && currentRoutePolyline.isNotEmpty()) {
             if (isOffRoute) {
                 scheduleReroute()
             }
@@ -404,6 +407,7 @@ class MapsViewModel @Inject constructor(
         val state = _uiState.value
         val origin = state.origin ?: return
         val destination = state.destination ?: return
+        val skipDepartStep = state.isOffRoute
 
         routeRequestJob?.cancel()
         routeRequestJob = viewModelScope.launch {
@@ -428,6 +432,12 @@ class MapsViewModel @Inject constructor(
                     currentRoutePolyline = route.polyline
                     val latestState = _uiState.value
                     val latestOrigin = latestState.origin ?: origin
+                    val currentStepIndex = initialRouteStepIndex(
+                        steps = route.steps,
+                        skipDepartStep = skipDepartStep,
+                    )
+                    val completedDistanceMeters = route.steps.take(currentStepIndex).sumOf { it.distanceMeters }
+                    val completedDurationSeconds = route.steps.take(currentStepIndex).sumOf { it.durationSeconds }
                     val navigationBearing = navigationCameraBearingDegrees(
                         userPosition = latestOrigin,
                         routePolyline = route.polyline,
@@ -446,10 +456,10 @@ class MapsViewModel @Inject constructor(
                         routeEnd = route.polyline.lastOrNull(),
                         distanceMeters = route.distanceMeters,
                         durationSeconds = route.durationSeconds,
-                        remainingDistanceMeters = route.distanceMeters,
-                        remainingDurationSeconds = route.durationSeconds,
+                        remainingDistanceMeters = (route.distanceMeters - completedDistanceMeters).coerceAtLeast(0.0),
+                        remainingDurationSeconds = (route.durationSeconds - completedDurationSeconds).coerceAtLeast(0.0),
                         steps = route.steps,
-                        currentStepIndex = 0,
+                        currentStepIndex = currentStepIndex,
                         navigationBearingDegrees = navigationBearing,
                         isOffRoute = false,
                         isLoadingRoute = false,
@@ -599,14 +609,18 @@ class MapsViewModel @Inject constructor(
         val steps = currentState.steps
         if (steps.isEmpty()) return
 
-        var nextStepIndex = currentState.currentStepIndex.coerceAtMost(steps.lastIndex)
-        val maneuverPosition = steps[nextStepIndex].maneuverLocation
-        if (maneuverPosition != null) {
-            val distanceToManeuver = haversineMeters(userPosition, maneuverPosition)
-            if (distanceToManeuver <= STEP_REACHED_THRESHOLD_METERS && nextStepIndex < steps.lastIndex) {
-                nextStepIndex += 1
-            }
-        }
+        val currentStepIndex = currentState.currentStepIndex.coerceAtMost(steps.lastIndex)
+        val progressStepIndex = routeProgressMeters(userPosition, currentRoutePolyline)
+            ?.let { progressMeters -> routeStepIndexForProgress(steps, progressMeters) }
+        val maneuverStepIndex = nextStepIndexFromManeuverProximity(
+            steps = steps,
+            currentStepIndex = currentStepIndex,
+            userPosition = userPosition,
+        )
+        val nextStepIndex = listOfNotNull(progressStepIndex, maneuverStepIndex, currentStepIndex)
+            .maxOrNull()
+            ?.coerceAtMost(steps.lastIndex)
+            ?: currentStepIndex
 
         val completedDistance = steps.take(nextStepIndex).sumOf { it.distanceMeters }
         val completedDuration = steps.take(nextStepIndex).sumOf { it.durationSeconds }
@@ -618,6 +632,20 @@ class MapsViewModel @Inject constructor(
             remainingDistanceMeters = (totalDistance - completedDistance).coerceAtLeast(0.0),
             remainingDurationSeconds = (totalDuration - completedDuration).coerceAtLeast(0.0),
         )
+    }
+
+    private fun nextStepIndexFromManeuverProximity(
+        steps: List<RouteStep>,
+        currentStepIndex: Int,
+        userPosition: Position,
+    ): Int? {
+        val maneuverPosition = steps[currentStepIndex].maneuverLocation ?: return null
+        val distanceToManeuver = haversineMeters(userPosition, maneuverPosition)
+        return if (distanceToManeuver <= STEP_REACHED_THRESHOLD_METERS && currentStepIndex < steps.lastIndex) {
+            currentStepIndex + 1
+        } else {
+            null
+        }
     }
 
     private suspend fun fetchAddress(position: Position): String {

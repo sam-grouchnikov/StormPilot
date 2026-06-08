@@ -1,5 +1,6 @@
 package com.example.stormpilot.features.shared.viewmodels
 
+import com.example.stormpilot.features.shared.data.routing.Maneuver
 import com.example.stormpilot.features.shared.data.routing.RouteStep
 import com.example.stormpilot.testing.StormPilotUnitTest
 import org.junit.Assert.assertEquals
@@ -102,6 +103,51 @@ class MapNavigationStateTest : StormPilotUnitTest() {
     }
 
     @Test
+    fun routeProgressMeters_returnsDistanceAlongNearestRouteSegment() {
+        val route = listOf(
+            position(0.0, 0.0),
+            position(0.01, 0.0),
+            position(0.01, 0.01),
+        )
+
+        assertEquals(556.6, routeProgressMeters(position(0.005, 0.0001), route)!!, 1.0)
+        assertEquals(1_669.8, routeProgressMeters(position(0.0101, 0.005), route)!!, 1.0)
+    }
+
+    @Test
+    fun routeStepIndexForProgress_updatesWhenNewStepDistanceIsEntered() {
+        val steps = listOf(
+            step("Head east", distanceMeters = 100.0),
+            step("Continue onto Main", distanceMeters = 80.0),
+            step("Turn right onto Pine", distanceMeters = 120.0),
+        )
+
+        assertEquals(0, routeStepIndexForProgress(steps, 99.9))
+        assertEquals(1, routeStepIndexForProgress(steps, 100.0))
+        assertEquals(2, routeStepIndexForProgress(steps, 180.0))
+    }
+
+    @Test
+    fun initialRouteStepIndex_skipsDepartStepForReroutes() {
+        val steps = listOf(
+            step("Head onto Main", maneuverType = "depart"),
+            step("Turn right onto Pine", maneuverType = "turn"),
+        )
+
+        assertEquals(1, initialRouteStepIndex(steps, skipDepartStep = true))
+    }
+
+    @Test
+    fun initialRouteStepIndex_keepsDepartStepForNormalRouteStarts() {
+        val steps = listOf(
+            step("Head onto Main", maneuverType = "depart"),
+            step("Turn right onto Pine", maneuverType = "turn"),
+        )
+
+        assertEquals(0, initialRouteStepIndex(steps, skipDepartStep = false))
+    }
+
+    @Test
     fun navigationInstruction_returnsFallbackWhenNoStepIsAvailable() {
         assertEquals("Continue on route", navigationInstruction(MapsUiState()))
         assertEquals(
@@ -149,13 +195,26 @@ class MapNavigationStateTest : StormPilotUnitTest() {
         assertEquals("Arrive", navigationInstruction(state))
     }
 
-    private fun step(instruction: String): RouteStep {
+    private fun step(
+        instruction: String,
+        distanceMeters: Double = 100.0,
+        maneuverType: String? = null,
+    ): RouteStep {
         return RouteStep(
             instruction = instruction,
-            distanceMeters = 100.0,
+            distanceMeters = distanceMeters,
             durationSeconds = 60.0,
             maneuverLocation = null,
-            maneuver = null,
+            maneuver = maneuverType?.let { type ->
+                Maneuver(
+                    type = type,
+                    modifier = null,
+                    exit = null,
+                    bearingBefore = 0,
+                    bearingAfter = 0,
+                    location = position(0.0, 0.0),
+                )
+            },
         )
     }
 
