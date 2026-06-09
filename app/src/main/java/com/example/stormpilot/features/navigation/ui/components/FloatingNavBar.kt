@@ -12,11 +12,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +39,7 @@ fun FloatingNavBar(
     currentRoute: String?,
     onTabSelected: (TabDest) -> Unit,
     modifier: Modifier = Modifier,
+    showLabels: Boolean = true,
 ) {
     val selectedIndex = tabs.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
     val itemOffsets = remember { mutableStateOf(IntArray(tabs.size)) }
@@ -67,10 +65,7 @@ fun FloatingNavBar(
     val colors = ExtendedColors()
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars),
+        modifier = modifier,
         contentAlignment = Alignment.Center,
     ) {
         Layout(
@@ -96,6 +91,7 @@ fun FloatingNavBar(
                         index = index,
                         selectionTransition = selectionTransition,
                         onClick = { onTabSelected(tab) },
+                        showLabel = showLabels,
                     )
                 }
             },
@@ -138,6 +134,7 @@ private fun FloatingNavItem(
     selectionTransition: Transition<Int>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    showLabel: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val selectedColor = MaterialTheme.colorScheme.tertiary
@@ -169,16 +166,18 @@ private fun FloatingNavItem(
                 contentDescription = null,
                 tint = contentColor,
                 modifier = Modifier
-                    .padding(end = 4.dp)
+                    .padding(end = if (showLabel) 4.dp else 0.dp)
                     .size(19.dp),
             )
-            Text(
-                text = tab.title,
-                color = contentColor,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-            )
+            if (true) {
+                Text(
+                    text = tab.title,
+                    color = contentColor,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                )
+            }
         }
     }
 }

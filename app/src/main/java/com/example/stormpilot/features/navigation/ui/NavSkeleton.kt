@@ -11,12 +11,18 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -27,10 +33,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -39,7 +48,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.stormpilot.features.dashboard.ui.RadarPage
 import com.example.stormpilot.features.map.ui.MapsPage
 import com.example.stormpilot.features.navigation.ui.components.FloatingNavBar
+import com.example.stormpilot.features.navigation.ui.components.StormAiRequestSheet
+import com.example.stormpilot.features.navigation.ui.components.StormAiSheetMode
+import com.example.stormpilot.features.navigation.ui.components.StormAiVoiceButton
 import com.example.stormpilot.features.settings.ui.SettingsPage
+import com.example.stormpilot.core.submitStormAiRequest
 import com.example.stormpilot.ui.theme.StormPilotTheme
 
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
@@ -56,6 +69,7 @@ sealed class TabDest(val route: String, val title: String, val icon: ImageVector
 fun NavSkeleton() {
     val isMapDestinationSelected = remember { mutableStateOf(false) }
     val showSettings = remember { mutableStateOf(false) }
+    var activeStormAiSheet by remember { mutableStateOf<StormAiSheetMode?>(null) }
 
     StormPilotTheme(dynamicColor = false) {
         val navController = rememberNavController()
@@ -88,9 +102,10 @@ fun NavSkeleton() {
                                 animationSpec = tween(200),
                             ),
                     ) {
-                        FloatingNavBar(
+                        StormPilotBottomBar(
                             tabs = tabs,
                             currentRoute = currentRoute,
+                            onOpenVoiceRequest = { activeStormAiSheet = StormAiSheetMode.Voice },
                             onTabSelected = { tab ->
                                 navController.navigate(tab.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
@@ -151,6 +166,7 @@ fun NavSkeleton() {
                                     isMapDestinationSelected.value = isSelected
                                 },
                                 onOpenSettings = { showSettings.value = true },
+                                onOpenStormAiChat = { activeStormAiSheet = StormAiSheetMode.Chat },
                             )
                         }
                         composable(TabDest.Radar.route) {
@@ -174,6 +190,48 @@ fun NavSkeleton() {
             ) {
                 SettingsPage(onDismiss = { showSettings.value = false })
             }
+
+            activeStormAiSheet?.let { sheetMode ->
+                StormAiRequestSheet(
+                    mode = sheetMode,
+                    onDismiss = { activeStormAiSheet = null },
+                    onSubmit = { request ->
+                        submitStormAiRequest(request)
+                        activeStormAiSheet = null
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StormPilotBottomBar(
+    tabs: List<TabDest>,
+    currentRoute: String?,
+    onOpenVoiceRequest: () -> Unit,
+    onTabSelected: (TabDest) -> Unit,
+) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 12.dp, end = 12.dp, bottom = 16.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars),
+    ) {
+        val showNavLabels = maxWidth >= 420.dp
+
+        Row(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FloatingNavBar(
+                tabs = tabs,
+                currentRoute = currentRoute,
+                onTabSelected = onTabSelected,
+                showLabels = showNavLabels,
+            )
+            StormAiVoiceButton(onOpenVoiceRequest = onOpenVoiceRequest)
         }
     }
 }

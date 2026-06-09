@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -38,6 +40,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Straight
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -84,6 +87,7 @@ fun SearchScaffold(
     onSearchSubmit: () -> Unit,
     onResultClick: (PhotonFeature) -> Unit,
     onOpenSettings: () -> Unit = {},
+    onOpenStormAiChat: () -> Unit = {},
     containerColor: Color,
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -257,7 +261,7 @@ fun SearchScaffold(
                 }
 
                 AnimatedVisibility(
-                    visible = active && searchResults.isNotEmpty(),
+                    visible = active,
                     modifier = Modifier.weight(1f),
                     enter = fadeIn(animationSpec = tween(180, delayMillis = 140, easing = FastOutSlowInEasing)) +
                         slideInVertically(
@@ -274,6 +278,16 @@ fun SearchScaffold(
                         contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp, bottom = 18.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
+                        item(key = "storm_ai_chat") {
+                            StormAiSearchCard(
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    onActiveChange(false)
+                                    onOpenStormAiChat()
+                                },
+                            )
+                        }
+
                         items(searchResults) { result ->
                             ListItem(
                                 headlineContent = {
@@ -320,6 +334,55 @@ fun SearchScaffold(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun StormAiSearchCard(
+    onClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.62f),
+        border = BorderStroke(
+            1.dp,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 13.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(9.dp)
+                        .size(20.dp),
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = "Use StormPilot AI",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

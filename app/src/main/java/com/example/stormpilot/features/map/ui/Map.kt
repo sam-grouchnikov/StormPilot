@@ -147,6 +147,7 @@ fun MapsPage(
     viewModel: MapsViewModel = hiltViewModel(),
     onDestinationSelectedStateChanged: (Boolean) -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenStormAiChat: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -882,6 +883,7 @@ fun MapsPage(
                         active = false
                     },
                     onOpenSettings = onOpenSettings,
+                    onOpenStormAiChat = onOpenStormAiChat,
                     containerColor = searchContainerColor,
                 )
             }
