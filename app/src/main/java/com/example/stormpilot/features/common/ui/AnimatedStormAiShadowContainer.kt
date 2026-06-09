@@ -22,16 +22,18 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.min
 
 internal val StormAiShadowColorInts = intArrayOf(
-    android.graphics.Color.parseColor("#4A90E2"), // blue
-    android.graphics.Color.parseColor("#7B4FD6"), // purple
-    android.graphics.Color.parseColor("#E040C8"), // magenta
-    android.graphics.Color.parseColor("#4A90E2"), // blue
+    android.graphics.Color.parseColor("#00FF88"), // mint green
+    android.graphics.Color.parseColor("#00CCAA"), // teal
+    android.graphics.Color.parseColor("#0088FF"), // sky blue
+    android.graphics.Color.parseColor("#88FF00"), // lime
+    android.graphics.Color.parseColor("#00FF88"), // mint green (loop back)
 )
 
 internal val StormAiShadowColors = listOf(
-    Color(0xFF4A90E2), // blue
-    Color(0xFF7B4FD6), // purple
-    Color(0xFFE040C8), // magenta
+    Color(0xFF00FF88), // mint green
+    Color(0xFF00CCAA), // teal
+    Color(0xFF0088FF), // sky blue
+    Color(0xFF88FF00), // lime
 )
 
 @Composable

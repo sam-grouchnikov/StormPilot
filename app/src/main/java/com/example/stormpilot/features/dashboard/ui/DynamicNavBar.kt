@@ -118,7 +118,7 @@ fun ModernBubbleNavBarScreen(
 
                         val bubbleBackgroundColor by animateColorAsState(
                             targetValue = when {
-                                isSelected -> MaterialTheme.colorScheme.primary
+                                isSelected -> MaterialTheme.colorScheme.inversePrimary
                                 isOpenPageGreyedOut -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                                 else -> Color.Transparent
                             },
@@ -131,7 +131,7 @@ fun ModernBubbleNavBarScreen(
 
                         val contentColor by animateColorAsState(
                             targetValue = when {
-                                isSelected -> MaterialTheme.colorScheme.onPrimary
+                                isSelected -> MaterialTheme.colorScheme.onSurface
                                 isOpenPageGreyedOut -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
                                 else -> MaterialTheme.colorScheme.onSurfaceVariant
                             },

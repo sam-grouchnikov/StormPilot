@@ -137,13 +137,13 @@ private fun FloatingNavItem(
     showLabel: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val selectedColor = MaterialTheme.colorScheme.tertiary
-    val unselectedColor = MaterialTheme.colorScheme.onSurface
+    val selectedColor = MaterialTheme.colorScheme.onSurface
+    val unselectedColor = MaterialTheme.colorScheme.onSurfaceVariant
     val contentColor by selectionTransition.animateColor(
         transitionSpec = { tween(durationMillis = 110, easing = FastOutSlowInEasing) },
         label = "${tab.route}ContentColor",
     ) { selectedIndex ->
-        if (selectedIndex == index) selectedColor else unselectedColor.copy(alpha = 0.55f)
+        if (selectedIndex == index) selectedColor else unselectedColor
     }
 
     Box(

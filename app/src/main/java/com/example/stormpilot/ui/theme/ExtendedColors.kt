@@ -47,7 +47,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFFD8BDE4) else Color(0xFF6C5677)
 
     public val purplePrimaryContainer: Color
-        get() = if (isDark) Color(0xFF533F5F) else Color(0xFFDCBCEA)
+        get() = if (isDark) Color(0xFF5A396E) else Color(0xFFEAC8F8)
 
     public val purpleSurfaceContainer: Color
         get() = if (isDark) Color(0xFF151115) else Color(0xFFF8F8F8)

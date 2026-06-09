@@ -128,7 +128,7 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                                     .height(58.dp),
                                 shape = RoundedCornerShape(24.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = scheme.primaryContainer,
+                                    containerColor = scheme.secondaryContainer,
                                     contentColor = scheme.onSurface
                                 )
                             ) {
