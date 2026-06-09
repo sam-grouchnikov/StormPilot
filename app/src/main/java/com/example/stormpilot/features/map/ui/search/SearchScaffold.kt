@@ -276,7 +276,7 @@ fun SearchScaffold(
                             .fillMaxSize()
                             .navigationBarsPadding(),
                         contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp, bottom = 18.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(13.dp),
                     ) {
                         item(key = "storm_ai_chat") {
                             StormAiSearchCard(
@@ -288,10 +288,11 @@ fun SearchScaffold(
                             )
                         }
 
+
                         item(key = "place_shortcuts") {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
                             ) {
                                 GasSearchCard(
                                     modifier = Modifier.weight(1f),

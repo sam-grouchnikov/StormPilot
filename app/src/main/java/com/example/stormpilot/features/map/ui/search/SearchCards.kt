@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -155,7 +156,7 @@ private fun PlaceSearchCard(
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
+            .wrapContentWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(containerColor)
             .border(
@@ -165,12 +166,12 @@ private fun PlaceSearchCard(
             )
             .clickable(onClick = onClick),
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(7.dp),
+                .padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Surface(
                 shape = CircleShape,
@@ -182,9 +183,11 @@ private fun PlaceSearchCard(
                     tint = contentColor,
                     modifier = Modifier
                         .padding(8.dp)
-                        .size(19.dp),
+                        .size(17.dp),
                 )
             }
+
+            Spacer(modifier = Modifier.width(10.dp))
 
             Text(
                 text = label,
