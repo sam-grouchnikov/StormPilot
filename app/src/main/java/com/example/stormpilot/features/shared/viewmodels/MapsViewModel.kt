@@ -82,6 +82,9 @@ class MapsViewModel @Inject constructor(
     private val _searchResults = MutableStateFlow<List<PhotonFeature>>(emptyList())
     val searchResults: StateFlow<List<PhotonFeature>> = _searchResults.asStateFlow()
 
+    private val _mapSearchResults = MutableStateFlow<List<PhotonFeature>>(emptyList())
+    val mapSearchResults: StateFlow<List<PhotonFeature>> = _mapSearchResults.asStateFlow()
+
     private val _selectedLocation = MutableStateFlow<PhotonFeature?>(null)
     val selectedLocation: StateFlow<PhotonFeature?> = _selectedLocation.asStateFlow()
 
@@ -94,6 +97,7 @@ class MapsViewModel @Inject constructor(
     private var routeWarningsJob: Job? = null
     private var alertDetailJob: Job? = null
     private var latestAlertsGeoJson: String? = null
+    private var latestSearchResultsQuery: String? = null
     private var stormAvoidanceForCurrentTrip = false
 
     fun onUserLocationUpdated(position: Position, bearingDegrees: Double? = null) {
@@ -164,10 +168,14 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onSearchQueryChanged(query: String) {
+        if (query != _searchQuery.value) {
+            _mapSearchResults.value = emptyList()
+        }
         _searchQuery.value = query
         if (query.isEmpty()) {
             _searchResults.value = emptyList()
             _isSearching.value = false
+            latestSearchResultsQuery = null
         } else if (query.length > 2) {
             _isSearching.value = true
         }
@@ -178,19 +186,22 @@ class MapsViewModel @Inject constructor(
         if (query.length <= 2) return
 
         viewModelScope.launch {
-            if (_searchResults.value.isEmpty() || _isSearching.value) {
+            if (latestSearchResultsQuery != query || _searchResults.value.isEmpty() || _isSearching.value) {
                 runSearch(query)
             }
 
-            val selectedResult = _searchResults.value.getOrNull(9)
-                ?: _searchResults.value.lastOrNull()
-                ?: return@launch
-            onLocationSelected(selectedResult)
+            val results = _searchResults.value
+            when {
+                results.isEmpty() -> _mapSearchResults.value = emptyList()
+                results.size == 1 -> onLocationSelected(results.first())
+                else -> showSearchResultsOnMap(results.take(MAX_MAP_SEARCH_RESULTS))
+            }
         }
     }
 
     fun onLocationSelected(feature: PhotonFeature) {
         _selectedLocation.value = feature
+        _mapSearchResults.value = emptyList()
         _searchQuery.value = feature.name
         _searchResults.value = emptyList()
 
@@ -221,11 +232,46 @@ class MapsViewModel @Inject constructor(
         requestRoute()
     }
 
+    fun clearMapSearchResults() {
+        _mapSearchResults.value = emptyList()
+    }
+
+    private fun showSearchResultsOnMap(results: List<PhotonFeature>) {
+        currentRoutePolyline = emptyList()
+        stormAvoidanceForCurrentTrip = false
+        routeRequestJob?.cancel()
+        rerouteDebounceJob?.cancel()
+        routeWarningsJob?.cancel()
+        _selectedLocation.value = null
+        _mapSearchResults.value = results
+        _uiState.value = _uiState.value.copy(
+            destination = null,
+            routeGeoJson = null,
+            routeStart = null,
+            routeEnd = null,
+            distanceMeters = null,
+            durationSeconds = null,
+            remainingDistanceMeters = null,
+            remainingDurationSeconds = null,
+            steps = emptyList(),
+            currentStepIndex = 0,
+            navigationBearingDegrees = _uiState.value.userBearingDegrees,
+            isOffRoute = false,
+            routeError = null,
+            isLoadingRoute = false,
+            address = null,
+            routeWarningCount = null,
+            routeWarningError = null,
+            stormRouteAlertMessage = null,
+        )
+    }
+
     private suspend fun runSearch(query: String) {
         val trimmedQuery = query.trim()
         if (trimmedQuery.length <= 2) {
             _searchResults.value = emptyList()
             _isSearching.value = false
+            latestSearchResultsQuery = null
             return
         }
 
@@ -236,6 +282,7 @@ class MapsViewModel @Inject constructor(
             .sortedByClosest()
         currentCoroutineContext().ensureActive()
         _searchResults.value = results
+        latestSearchResultsQuery = trimmedQuery
 
         _isSearching.value = false
     }
@@ -254,6 +301,8 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onDestinationSelected(position: Position) {
+        _mapSearchResults.value = emptyList()
+        _selectedLocation.value = null
         _uiState.value = _uiState.value.copy(
             destination = position,
             routeGeoJson = null,
@@ -368,6 +417,8 @@ class MapsViewModel @Inject constructor(
     }
 
     fun clearRoute() {
+        _mapSearchResults.value = emptyList()
+        _selectedLocation.value = null
         currentRoutePolyline = emptyList()
         stormAvoidanceForCurrentTrip = false
         routeRequestJob?.cancel()
@@ -598,6 +649,7 @@ class MapsViewModel @Inject constructor(
         private const val OFF_ROUTE_THRESHOLD_METERS = 40.0
         private const val STEP_REACHED_THRESHOLD_METERS = 25.0
         private const val REROUTE_DEBOUNCE_MS = 1_500L
+        private const val MAX_MAP_SEARCH_RESULTS = 5
         private const val DESTINATION_IN_WARNING_MESSAGE =
             "Destination is inside a storm warning polygon. This route enters the warning area to reach it."
         private const val NO_STORM_FREE_ROUTE_MESSAGE =

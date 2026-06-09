@@ -338,6 +338,23 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
                 state = feature.optNullableString("state")?.takeIf { it.isNotBlank() },
                 country = feature.optNullableString("country")?.takeIf { it.isNotBlank() },
                 geometry = parsePosition(feature.getJSONObject("geometry")),
+                address = feature.optFirstNullableString(
+                    "address",
+                    "formattedAddress",
+                    "formatted_address",
+                )?.takeIf { it.isNotBlank() },
+                street = feature.optFirstNullableString("street", "road")?.takeIf { it.isNotBlank() },
+                houseNumber = feature.optFirstNullableString(
+                    "houseNumber",
+                    "house_number",
+                    "housenumber",
+                )?.takeIf { it.isNotBlank() },
+                postcode = feature.optFirstNullableString("postcode", "postalCode", "postal_code")
+                    ?.takeIf { it.isNotBlank() },
+                category = feature.optFirstNullableString("category", "osmKey", "osm_key")
+                    ?.takeIf { it.isNotBlank() },
+                type = feature.optFirstNullableString("type", "osmValue", "osm_value")
+                    ?.takeIf { it.isNotBlank() },
                 straightLineDistanceMeters = feature.optNullableDouble("straightLineDistanceMeters"),
                 driveDistanceMeters = feature.optNullableDouble("driveDistanceMeters"),
                 driveDurationSeconds = feature.optNullableDouble("driveDurationSeconds"),
@@ -436,6 +453,9 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
 
     private fun JSONObject.optNullableString(name: String): String? =
         opt(name)?.takeUnless { it == JSONObject.NULL }?.toString()
+
+    private fun JSONObject.optFirstNullableString(vararg names: String): String? =
+        names.firstNotNullOfOrNull { name -> optNullableString(name) }
 
     private fun JSONObject.optNullableInt(name: String): Int? =
         opt(name)?.takeUnless { it == JSONObject.NULL }?.let { value ->

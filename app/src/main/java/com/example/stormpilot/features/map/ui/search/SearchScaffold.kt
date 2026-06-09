@@ -288,6 +288,35 @@ fun SearchScaffold(
                             )
                         }
 
+                        item(key = "place_shortcuts") {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                GasSearchCard(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        onQueryChange("gas")
+                                        onSearchSubmit()
+                                    },
+                                )
+                                HotelSearchCard(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        onQueryChange("hotel")
+                                        onSearchSubmit()
+                                    },
+                                )
+                                GrocerySearchCard(
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        onQueryChange("grocery")
+                                        onSearchSubmit()
+                                    },
+                                )
+                            }
+                        }
+
                         items(searchResults) { result ->
                             ListItem(
                                 headlineContent = {
@@ -298,7 +327,7 @@ fun SearchScaffold(
                                     )
                                 },
                                 supportingContent = {
-                                    val address = listOfNotNull(result.city, result.state).joinToString(", ")
+                                    val address = result.displayAddress()
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         if (address.isNotEmpty()) {
                                             Text(

@@ -90,6 +90,8 @@ import com.example.stormpilot.features.map.ui.navigation.NavigationModeHeader
 import com.example.stormpilot.features.map.ui.navigation.NavigationRecenterButton
 import com.example.stormpilot.features.map.ui.navigation.TripSummaryCard
 import com.example.stormpilot.features.map.ui.search.SearchScaffold
+import com.example.stormpilot.features.map.ui.search.SearchResultsBottomSheet
+import com.example.stormpilot.features.shared.data.search.PhotonFeature
 import com.example.stormpilot.features.navigation.ui.components.coloredShadow
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.ui.theme.ExtendedColors
@@ -153,6 +155,7 @@ fun MapsPage(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val mapSearchResults by viewModel.mapSearchResults.collectAsStateWithLifecycle()
     val selectedLocation by viewModel.selectedLocation.collectAsStateWithLifecycle()
     val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -362,6 +365,38 @@ fun MapsPage(
         navMode -> MapsFooterState.Navigation
         showTripSummary -> MapsFooterState.Summary
         else -> MapsFooterState.Hidden
+    }
+
+    LaunchedEffect(mapSearchResults) {
+        val highlightedResults = mapSearchResults.take(5)
+        if (highlightedResults.isNotEmpty()) {
+            showTripSummary = false
+            navMode = false
+            navigationCameraTrackingEnabled = false
+
+            val minLatitude = highlightedResults.minOf { it.geometry.latitude }
+            val maxLatitude = highlightedResults.maxOf { it.geometry.latitude }
+            val minLongitude = highlightedResults.minOf { it.geometry.longitude }
+            val maxLongitude = highlightedResults.maxOf { it.geometry.longitude }
+            val center = Position(
+                longitude = (minLongitude + maxLongitude) / 2.0,
+                latitude = (minLatitude + maxLatitude) / 2.0,
+            )
+            val span = (max(maxLatitude - minLatitude, maxLongitude - minLongitude) * 5.0)
+                .coerceAtLeast(0.001)
+            val zoom = (9.5 - log(span, 2.0)).coerceIn(2.5, 15.0)
+
+            cameraState.animateTo(
+                finalPosition = cameraState.position.copy(target = center, zoom = zoom),
+                duration = 1.seconds,
+            )
+        }
+    }
+
+    LaunchedEffect(uiState.destination, mapSearchResults) {
+        if (!navMode && uiState.destination != null && mapSearchResults.isEmpty()) {
+            showTripSummary = true
+        }
     }
 
     LaunchedEffect(showRadarOverlay) {
@@ -616,6 +651,27 @@ fun MapsPage(
                         },
                     )
                 }
+
+                val searchResultsFeatureCollection = remember(mapSearchResults) {
+                    GeoJsonData.JsonString(searchResultsGeoJson(mapSearchResults))
+                }
+                val searchResultsSource = rememberGeoJsonSource(data = searchResultsFeatureCollection)
+                CircleLayer(
+                    id = "search-result-marker-halo",
+                    source = searchResultsSource,
+                    color = const(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+                    radius = const(18.dp),
+                    strokeColor = const(MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)),
+                    strokeWidth = const(1.dp),
+                )
+                CircleLayer(
+                    id = "search-result-marker",
+                    source = searchResultsSource,
+                    color = const(MaterialTheme.colorScheme.primary),
+                    radius = const(8.dp),
+                    strokeColor = const(colors.searchBarColor),
+                    strokeWidth = const(3.dp),
+                )
             }
 
             SearchStatusBarBackground(
@@ -874,7 +930,7 @@ fun MapsPage(
                     onActiveChange = { active = it },
                     onSearchSubmit = {
                         viewModel.onSearchSubmitted()
-                        showTripSummary = true
+                        showTripSummary = false
                         active = false
                     },
                     onResultClick = { selected ->
@@ -887,6 +943,16 @@ fun MapsPage(
                     containerColor = searchContainerColor,
                 )
             }
+
+            SearchResultsBottomSheet(
+                results = if (!active && !navMode && !showTripSummary) mapSearchResults else emptyList(),
+                onDismiss = viewModel::clearMapSearchResults,
+                onDirectionsClick = { selected ->
+                    viewModel.onLocationSelected(selected)
+                    showTripSummary = true
+                    active = false
+                },
+            )
 
             AlertDetailBottomSheet(
                 isVisible = uiState.isAlertDetailVisible,
@@ -921,6 +987,22 @@ fun MapsPage(
             }
         }
     }
+}
+
+private fun searchResultsGeoJson(results: List<PhotonFeature>): String {
+    val features = results.take(5).joinToString(",") { result ->
+        """
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [${result.geometry.longitude}, ${result.geometry.latitude}]
+          },
+          "properties": {}
+        }
+        """.trimIndent()
+    }
+    return """{"type":"FeatureCollection","features":[$features]}"""
 }
 
 private val RADAR_TILE_FADE_DURATION = 1.milliseconds
