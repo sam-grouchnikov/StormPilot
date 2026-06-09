@@ -35,6 +35,7 @@ import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatPopup
 import com.example.stormpilot.R
 import com.example.stormpilot.features.common.ui.AccountMenuAnchor
+import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -64,6 +65,11 @@ fun RadarPage(
                     .statusBarsPadding()
                     .padding(top = 8.dp),
                 onOpenSettings = onOpenSettings,
+            )
+
+            AnimatedStormAiChatBackdrop(
+                visible = showChat,
+                modifier = Modifier.fillMaxSize(),
             )
 
             if (showChat) {

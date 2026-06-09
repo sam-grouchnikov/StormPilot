@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
 import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 
@@ -24,6 +25,11 @@ fun AIChat(title: String, genAIViewModel: GenAIViewModel) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
+        AnimatedStormAiChatBackdrop(
+            visible = true,
+            modifier = Modifier.fillMaxSize(),
+        )
+
         // The Popup Container
         AnimatedStormAiShadowContainer(
             modifier = Modifier

@@ -56,10 +56,10 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF1D1A20) else Color(0xFFD7D1DC)
 
     public val searchBarColor: Color
-        get() = if (isDark) Color(0xFF282A2F) else Color(0xFFFFFFFF)
+        get() = if (isDark) Color(0xFF131618) else Color(0xFFFFFFFF)
 
     public val iconButtonColor: Color
-        get() = if (isDark) Color(0xFF32353A) else Color(0xFFFFFFFF)
+        get() = if (isDark) Color(0xFF131618) else Color(0xFFFFFFFF)
 
 
     public val stormContainer: Color

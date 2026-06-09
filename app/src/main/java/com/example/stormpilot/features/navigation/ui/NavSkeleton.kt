@@ -45,6 +45,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
 import com.example.stormpilot.features.dashboard.ui.RadarPage
 import com.example.stormpilot.features.map.ui.MapsPage
 import com.example.stormpilot.features.navigation.ui.components.FloatingNavBar
@@ -190,6 +191,11 @@ fun NavSkeleton() {
             ) {
                 SettingsPage(onDismiss = { showSettings.value = false })
             }
+
+            AnimatedStormAiChatBackdrop(
+                visible = activeStormAiSheet != null,
+                modifier = Modifier.fillMaxSize(),
+            )
 
             activeStormAiSheet?.let { sheetMode ->
                 StormAiRequestSheet(

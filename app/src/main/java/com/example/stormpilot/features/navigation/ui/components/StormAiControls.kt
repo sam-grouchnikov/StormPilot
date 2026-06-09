@@ -273,6 +273,7 @@ fun StormAiRequestSheet(
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
+        scrimColor = Color.Transparent,
     ) {
         AnimatedStormAiShadowContainer(
             modifier = Modifier
@@ -290,7 +291,7 @@ fun StormAiRequestSheet(
                     .fillMaxWidth()
                     .padding(1.5.dp),
                 shape = RoundedCornerShape(22.5.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                color = MaterialTheme.colorScheme.surfaceContainerLowest,
                 tonalElevation = 12.dp,
                 shadowElevation = 18.dp,
             ) {
@@ -308,7 +309,7 @@ fun StormAiRequestSheet(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(18.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        color = MaterialTheme.colorScheme.surfaceContainer,
                         border = BorderStroke(
                             1.dp,
                             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),

@@ -14,17 +14,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.min
 
-private val StormAiShadowColors = intArrayOf(
+internal val StormAiShadowColorInts = intArrayOf(
     android.graphics.Color.parseColor("#4A90E2"), // blue
     android.graphics.Color.parseColor("#7B4FD6"), // purple
     android.graphics.Color.parseColor("#E040C8"), // magenta
     android.graphics.Color.parseColor("#4A90E2"), // blue
+)
+
+internal val StormAiShadowColors = listOf(
+    Color(0xFF4A90E2), // blue
+    Color(0xFF7B4FD6), // purple
+    Color(0xFFE040C8), // magenta
 )
 
 @Composable
@@ -60,7 +67,7 @@ fun AnimatedStormAiShadowContainer(
                         val shader = android.graphics.SweepGradient(
                             size.width / 2f,
                             size.height / 2f,
-                            StormAiShadowColors,
+                            StormAiShadowColorInts,
                             null,
                         )
                         val matrix = android.graphics.Matrix()
