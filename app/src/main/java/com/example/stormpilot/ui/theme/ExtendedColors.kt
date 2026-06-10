@@ -102,7 +102,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF173821) else Color(0xFFE7F7EA)
 
     public val groceryOutline: Color
-        get() = if (isDark) Color(0xFF6DBE7C) else Color(0xFF3C8B4C)
+        get() = if (isDark) Color(0xFF3B8348) else Color(0xFF3C8B4C)
 
     public val groceryContent: Color
         get() = if (isDark) Color(0xFF9BDBA7) else Color(0xFF205C2C)
@@ -111,7 +111,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF172C48) else Color(0xFFE5F0FF)
 
     public val hotelOutline: Color
-        get() = if (isDark) Color(0xFF78AFFF) else Color(0xFF4377D6)
+        get() = if (isDark) Color(0xFF4172BD) else Color(0xFF4377D6)
 
     public val hotelContent: Color
         get() = if (isDark) Color(0xFFA9CAFF) else Color(0xFF1F4F9F)

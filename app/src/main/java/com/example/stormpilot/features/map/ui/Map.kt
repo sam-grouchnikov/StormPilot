@@ -155,6 +155,7 @@ fun MapsPage(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val recentSearches by viewModel.recentSearches.collectAsStateWithLifecycle()
     val mapSearchResults by viewModel.mapSearchResults.collectAsStateWithLifecycle()
     val selectedLocation by viewModel.selectedLocation.collectAsStateWithLifecycle()
     val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
@@ -925,6 +926,7 @@ fun MapsPage(
                     query = searchQuery,
                     active = active,
                     searchResults = searchResults,
+                    recentSearches = recentSearches,
                     isSearching = isSearching,
                     onQueryChange = viewModel::onSearchQueryChanged,
                     onActiveChange = { active = it },

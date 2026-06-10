@@ -82,6 +82,9 @@ class MapsViewModel @Inject constructor(
     private val _searchResults = MutableStateFlow<List<PhotonFeature>>(emptyList())
     val searchResults: StateFlow<List<PhotonFeature>> = _searchResults.asStateFlow()
 
+    private val _recentSearches = MutableStateFlow<List<PhotonFeature>>(emptyList())
+    val recentSearches: StateFlow<List<PhotonFeature>> = _recentSearches.asStateFlow()
+
     private val _mapSearchResults = MutableStateFlow<List<PhotonFeature>>(emptyList())
     val mapSearchResults: StateFlow<List<PhotonFeature>> = _mapSearchResults.asStateFlow()
 
@@ -200,6 +203,7 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onLocationSelected(feature: PhotonFeature) {
+        rememberSearch(feature)
         _selectedLocation.value = feature
         _mapSearchResults.value = emptyList()
         _searchQuery.value = feature.name
@@ -230,6 +234,16 @@ class MapsViewModel @Inject constructor(
         rerouteDebounceJob?.cancel()
         routeWarningsJob?.cancel()
         requestRoute()
+    }
+
+    private fun rememberSearch(feature: PhotonFeature) {
+        _recentSearches.value = listOf(feature)
+            .plus(
+                _recentSearches.value.filterNot { recent ->
+                    recent.name == feature.name && recent.geometry == feature.geometry
+                },
+            )
+            .take(MAX_RECENT_SEARCHES)
     }
 
     fun clearMapSearchResults() {
@@ -650,6 +664,7 @@ class MapsViewModel @Inject constructor(
         private const val STEP_REACHED_THRESHOLD_METERS = 25.0
         private const val REROUTE_DEBOUNCE_MS = 1_500L
         private const val MAX_MAP_SEARCH_RESULTS = 5
+        private const val MAX_RECENT_SEARCHES = 3
         private const val DESTINATION_IN_WARNING_MESSAGE =
             "Destination is inside a storm warning polygon. This route enters the warning area to reach it."
         private const val NO_STORM_FREE_ROUTE_MESSAGE =

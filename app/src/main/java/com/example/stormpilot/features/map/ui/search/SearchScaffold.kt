@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -81,6 +82,7 @@ fun SearchScaffold(
     query: String,
     active: Boolean,
     searchResults: List<PhotonFeature>,
+    recentSearches: List<PhotonFeature>,
     isSearching: Boolean,
     onQueryChange: (String) -> Unit,
     onActiveChange: (Boolean) -> Unit,
@@ -93,6 +95,10 @@ fun SearchScaffold(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val density = LocalDensity.current
+    val searchListState = rememberLazyListState()
+    val recentResults = if (query.isBlank()) recentSearches.take(2) else emptyList()
+    val topSearchResults = if (query.isNotBlank()) searchResults.take(3) else emptyList()
+    val remainingSearchResults = if (query.isNotBlank()) searchResults.drop(3) else emptyList()
     val statusBarTopPadding = with(density) { WindowInsets.statusBars.getTop(this).toDp() }
     val surfaceTopPadding by animateDpAsState(
         targetValue = if (active) 0.dp else statusBarTopPadding + 6.dp,
@@ -120,6 +126,12 @@ fun SearchScaffold(
             focusRequester.requestFocus()
         } else {
             focusManager.clearFocus()
+        }
+    }
+
+    LaunchedEffect(query, topSearchResults) {
+        if (query.isNotBlank() && topSearchResults.isNotEmpty()) {
+            searchListState.scrollToItem(0)
         }
     }
 
@@ -272,12 +284,33 @@ fun SearchScaffold(
                         shrinkVertically(animationSpec = tween(150, easing = FastOutSlowInEasing)),
                 ) {
                     LazyColumn(
+                        state = searchListState,
                         modifier = Modifier
                             .fillMaxSize()
                             .navigationBarsPadding(),
                         contentPadding = PaddingValues(top = 10.dp, start = 8.dp, end = 8.dp, bottom = 18.dp),
                         verticalArrangement = Arrangement.spacedBy(13.dp),
                     ) {
+                        items(recentResults) { result ->
+                            SearchResultListItem(
+                                result = result,
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    onResultClick(result)
+                                },
+                            )
+                        }
+
+                        items(topSearchResults) { result ->
+                            SearchResultListItem(
+                                result = result,
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    onResultClick(result)
+                                },
+                            )
+                        }
+
                         item(key = "storm_ai_chat") {
                             StormAiSearchCard(
                                 onClick = {
@@ -318,47 +351,13 @@ fun SearchScaffold(
                             }
                         }
 
-                        items(searchResults) { result ->
-                            ListItem(
-                                headlineContent = {
-                                    Text(
-                                        text = result.name,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                    )
+                        items(remainingSearchResults) { result ->
+                            SearchResultListItem(
+                                result = result,
+                                onClick = {
+                                    focusManager.clearFocus()
+                                    onResultClick(result)
                                 },
-                                supportingContent = {
-                                    val address = result.displayAddress()
-                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        if (address.isNotEmpty()) {
-                                            Text(
-                                                text = address,
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis,
-                                            )
-                                        }
-                                        SearchResultMetrics(result)
-                                    }
-                                },
-                                leadingContent = {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                    )
-                                },
-                                colors = ListItemDefaults.colors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable {
-                                        focusManager.clearFocus()
-                                        onResultClick(result)
-                                    },
                             )
                         }
                     }
@@ -366,6 +365,51 @@ fun SearchScaffold(
             }
         }
     }
+}
+
+@Composable
+private fun SearchResultListItem(
+    result: PhotonFeature,
+    onClick: () -> Unit,
+) {
+    ListItem(
+        headlineContent = {
+            Text(
+                text = result.name,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        },
+        supportingContent = {
+            val address = result.displayAddress()
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (address.isNotEmpty()) {
+                    Text(
+                        text = address,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                SearchResultMetrics(result)
+            }
+        },
+        leadingContent = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick),
+    )
 }
 
 @Composable
