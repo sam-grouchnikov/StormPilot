@@ -1,6 +1,7 @@
 package com.example.stormpilot
 
 import com.example.stormpilot.features.shared.data.alerts.NwsAlertTest
+import com.example.stormpilot.core.StormAiActionsTest
 import com.example.stormpilot.features.shared.viewmodels.AlertsUiStateTest
 import com.example.stormpilot.features.shared.data.location.LocationDataTest
 import com.example.stormpilot.features.shared.data.routing.RouteWarningCounterTest
@@ -19,6 +20,7 @@ import org.junit.runners.Suite
 @RunWith(Suite::class)
 @Suite.SuiteClasses(
     NwsAlertTest::class,
+    StormAiActionsTest::class,
     AlertsUiStateTest::class,
     LocationDataTest::class,
     RouteWarningCounterTest::class,

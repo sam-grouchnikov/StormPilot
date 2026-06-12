@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.core.AppSettings
+import com.example.stormpilot.core.StormAiAction
 import com.example.stormpilot.features.shared.data.alerts.AlertsRepository
 import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import com.example.stormpilot.features.shared.data.alerts.bestMatchForEvent
@@ -59,6 +60,8 @@ data class MapsUiState(
     val isAlertDetailLoading: Boolean = false,
     val alertDetailError: String? = null,
     val stormRouteAlertMessage: String? = null,
+    val showAlertsOverlay: Boolean = false,
+    val assistantFocusPosition: Position? = null,
 )
 
 /**
@@ -277,6 +280,7 @@ class MapsViewModel @Inject constructor(
             routeWarningCount = null,
             routeWarningError = null,
             stormRouteAlertMessage = null,
+            assistantFocusPosition = null,
         )
     }
 
@@ -348,8 +352,110 @@ class MapsViewModel @Inject constructor(
         requestRoute()
     }
 
+    fun executeAssistantAction(action: StormAiAction) {
+        when (action) {
+            is StormAiAction.AnswerOnly,
+            is StormAiAction.AskClarification,
+            is StormAiAction.RequestConfirmation,
+            -> Unit
+
+            is StormAiAction.SetDestination -> {
+                setAssistantDestination(
+                    label = action.label,
+                    latitude = action.latitude,
+                    longitude = action.longitude,
+                    address = action.address,
+                )
+            }
+
+            is StormAiAction.ShowAlertsOverlay -> {
+                val focusPosition = action.focusLocation?.let {
+                    Position(longitude = it.longitude, latitude = it.latitude)
+                }
+                _uiState.update {
+                    it.copy(
+                        showAlertsOverlay = true,
+                        assistantFocusPosition = focusPosition,
+                    )
+                }
+            }
+
+            is StormAiAction.ShowAlertDetail -> {
+                val position = Position(longitude = action.longitude, latitude = action.latitude)
+                _uiState.update {
+                    it.copy(
+                        showAlertsOverlay = true,
+                        assistantFocusPosition = position,
+                    )
+                }
+                onAlertPolygonTapped(position, action.event)
+            }
+
+            is StormAiAction.PreviewRoute -> {
+                setAssistantDestination(
+                    label = action.destination.label,
+                    latitude = action.destination.latitude,
+                    longitude = action.destination.longitude,
+                    address = action.destination.label,
+                    routeGeoJson = action.routeGeoJson,
+                    distanceMeters = action.distanceMeters,
+                    durationSeconds = action.durationSeconds,
+                    warningCount = action.warningCount,
+                    warningError = action.warningError,
+                )
+            }
+        }
+    }
+
     fun retryRoute() {
         requestRoute()
+    }
+
+    private fun setAssistantDestination(
+        label: String,
+        latitude: Double,
+        longitude: Double,
+        address: String?,
+        routeGeoJson: String? = null,
+        distanceMeters: Double? = null,
+        durationSeconds: Double? = null,
+        warningCount: Int? = null,
+        warningError: String? = null,
+    ) {
+        val position = Position(longitude = longitude, latitude = latitude)
+        _mapSearchResults.value = emptyList()
+        _selectedLocation.value = null
+        _searchQuery.value = label
+        _searchResults.value = emptyList()
+
+        currentRoutePolyline = emptyList()
+        stormAvoidanceForCurrentTrip = false
+        rerouteDebounceJob?.cancel()
+        routeWarningsJob?.cancel()
+
+        _uiState.value = _uiState.value.copy(
+            destination = position,
+            routeGeoJson = routeGeoJson?.let(GeoJsonData::JsonString),
+            distanceMeters = distanceMeters,
+            durationSeconds = durationSeconds,
+            remainingDistanceMeters = distanceMeters,
+            remainingDurationSeconds = durationSeconds,
+            steps = emptyList(),
+            currentStepIndex = 0,
+            navigationBearingDegrees = _uiState.value.userBearingDegrees,
+            isOffRoute = false,
+            routeError = null,
+            isLoadingRoute = false,
+            address = address ?: label,
+            routeWarningCount = warningCount,
+            routeWarningError = warningError,
+            stormRouteAlertMessage = null,
+            assistantFocusPosition = position,
+        )
+
+        if (routeGeoJson == null) {
+            requestRoute()
+        }
     }
 
     fun showAlertDetail(alert: NwsAlert) {

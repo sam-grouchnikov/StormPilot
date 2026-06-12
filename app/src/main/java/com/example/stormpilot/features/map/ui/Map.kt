@@ -4,6 +4,10 @@ import android.Manifest
 import android.R
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.graphics.drawable.ColorDrawable
+import android.os.Build
+import android.view.View
+import android.view.ViewGroup
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -69,10 +73,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -81,7 +87,6 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetailBottomSheet
-import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.features.shared.viewmodels.MapsFooterState
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.features.shared.viewmodels.navigationInstruction
@@ -95,6 +100,7 @@ import com.example.stormpilot.features.shared.data.search.PhotonFeature
 import com.example.stormpilot.features.navigation.ui.components.coloredShadow
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.core.isAppInDarkMode
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -131,6 +137,7 @@ import org.maplibre.compose.expressions.dsl.eq
 import org.maplibre.compose.expressions.value.RasterResampling
 import org.maplibre.compose.layers.SymbolLayer
 import org.maplibre.compose.style.rememberStyleState
+import org.maplibre.android.maps.MapView as AndroidMapView
 import org.maplibre.spatialk.geojson.Position
 import java.util.Calendar
 import java.util.TimeZone
@@ -152,6 +159,7 @@ fun MapsPage(
     onOpenStormAiChat: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    val rootView = LocalView.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
@@ -172,6 +180,8 @@ fun MapsPage(
     var radarFrameIndex by remember { mutableStateOf(6) }
     var radarReplayPlaying by remember { mutableStateOf(false) }
     var lastMapTapPosition by remember { mutableStateOf<Position?>(null) }
+    var focusedSearchResult by remember { mutableStateOf<PhotonFeature?>(null) }
+    val isDarkMode = isAppInDarkMode()
 
     val colors = ExtendedColors()
 
@@ -203,6 +213,13 @@ fun MapsPage(
     LaunchedEffect(Unit) {
         if (!hasLocationPermission) {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    LaunchedEffect(rootView, mapSearchResults, focusedSearchResult) {
+        repeat(8) {
+            if (disableMapLibreFocusOverlay(rootView)) return@LaunchedEffect
+            delay(50)
         }
     }
 
@@ -338,6 +355,17 @@ fun MapsPage(
         }
     }
 
+    LaunchedEffect(focusedSearchResult, mapSearchResults) {
+        val focusedResult = focusedSearchResult
+            ?.takeIf { focused -> mapSearchResults.take(5).any { it == focused } }
+        focusedResult?.let { feature ->
+            cameraState.animateTo(
+                finalPosition = cameraState.position.copy(target = feature.geometry, zoom = 15.0),
+                duration = 700.milliseconds,
+            )
+        }
+    }
+
     var active by remember { mutableStateOf(false) }
     var showTripSummary by remember { mutableStateOf(false) }
     var showRadarOverlay by remember { mutableStateOf(false) }
@@ -368,29 +396,28 @@ fun MapsPage(
         else -> MapsFooterState.Hidden
     }
 
+    LaunchedEffect(uiState.showAlertsOverlay) {
+        if (uiState.showAlertsOverlay) {
+            showSevereAlertsOverlay = true
+        }
+    }
+
+    LaunchedEffect(uiState.assistantFocusPosition) {
+        uiState.assistantFocusPosition?.let { position ->
+            cameraState.animateTo(
+                finalPosition = cameraState.position.copy(target = position, zoom = 11.0),
+                duration = 1.seconds,
+            )
+        }
+    }
+
     LaunchedEffect(mapSearchResults) {
         val highlightedResults = mapSearchResults.take(5)
+        focusedSearchResult = highlightedResults.firstOrNull()
         if (highlightedResults.isNotEmpty()) {
             showTripSummary = false
             navMode = false
             navigationCameraTrackingEnabled = false
-
-            val minLatitude = highlightedResults.minOf { it.geometry.latitude }
-            val maxLatitude = highlightedResults.maxOf { it.geometry.latitude }
-            val minLongitude = highlightedResults.minOf { it.geometry.longitude }
-            val maxLongitude = highlightedResults.maxOf { it.geometry.longitude }
-            val center = Position(
-                longitude = (minLongitude + maxLongitude) / 2.0,
-                latitude = (minLatitude + maxLatitude) / 2.0,
-            )
-            val span = (max(maxLatitude - minLatitude, maxLongitude - minLongitude) * 5.0)
-                .coerceAtLeast(0.001)
-            val zoom = (9.5 - log(span, 2.0)).coerceIn(2.5, 15.0)
-
-            cameraState.animateTo(
-                finalPosition = cameraState.position.copy(target = center, zoom = zoom),
-                duration = 1.seconds,
-            )
         }
     }
 
@@ -439,10 +466,11 @@ fun MapsPage(
     }
 
     StormPilotTheme(
+        darkTheme = isDarkMode,
         opaqueNavigationBar = false,
     ) {
-        val searchContainerColor = colors.searchBarColor
-        val mapStyle = if (AppSettings.isDarkMode) {
+        val searchContainerColor = searchSurfaceColor(isDarkMode)
+        val mapStyle = if (isDarkMode) {
             "asset://map-dark.json"
         } else {
             "asset://map-light.json"
@@ -462,7 +490,9 @@ fun MapsPage(
                     viewModel.onDestinationSelected(point)
                     ClickResult.Consume
                 },
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .focusProperties { canFocus = false },
                 options = MapOptions(
                     ornamentOptions = OrnamentOptions(
                         padding = PaddingValues(0.dp),
@@ -653,24 +683,39 @@ fun MapsPage(
                     )
                 }
 
-                val searchResultsFeatureCollection = remember(mapSearchResults) {
-                    GeoJsonData.JsonString(searchResultsGeoJson(mapSearchResults))
+                val visibleSearchResults = mapSearchResults.take(5)
+                val focusedSearchResultForMarkers = focusedSearchResult
+                    ?.takeIf { focused -> visibleSearchResults.any { it == focused } }
+                val unfocusedSearchResults = visibleSearchResults.filterNot {
+                    it == focusedSearchResultForMarkers
+                }
+                val searchResultsFeatureCollection = remember(unfocusedSearchResults) {
+                    GeoJsonData.JsonString(searchResultsGeoJson(unfocusedSearchResults))
                 }
                 val searchResultsSource = rememberGeoJsonSource(data = searchResultsFeatureCollection)
                 CircleLayer(
-                    id = "search-result-marker-halo",
-                    source = searchResultsSource,
-                    color = const(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
-                    radius = const(18.dp),
-                    strokeColor = const(MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)),
-                    strokeWidth = const(1.dp),
-                )
-                CircleLayer(
                     id = "search-result-marker",
                     source = searchResultsSource,
-                    color = const(MaterialTheme.colorScheme.primary),
-                    radius = const(8.dp),
-                    strokeColor = const(colors.searchBarColor),
+                    color = const(MaterialTheme.colorScheme.error.copy(alpha = 0.80f)),
+                    radius = const(6.dp),
+                    strokeColor = const(MaterialTheme.colorScheme.onError.copy(alpha = 0.85f)),
+                    strokeWidth = const(2.dp),
+                )
+
+                val focusedSearchResultFeatureCollection = remember(focusedSearchResultForMarkers) {
+                    GeoJsonData.JsonString(
+                        searchResultsGeoJson(listOfNotNull(focusedSearchResultForMarkers)),
+                    )
+                }
+                val focusedSearchResultSource = rememberGeoJsonSource(
+                    data = focusedSearchResultFeatureCollection,
+                )
+                CircleLayer(
+                    id = "focused-search-result-marker",
+                    source = focusedSearchResultSource,
+                    color = const(MaterialTheme.colorScheme.error),
+                    radius = const(9.dp),
+                    strokeColor = const(MaterialTheme.colorScheme.onError),
                     strokeWidth = const(3.dp),
                 )
             }
@@ -948,7 +993,13 @@ fun MapsPage(
 
             SearchResultsBottomSheet(
                 results = if (!active && !navMode && !showTripSummary) mapSearchResults else emptyList(),
-                onDismiss = viewModel::clearMapSearchResults,
+                isDarkMode = isDarkMode,
+                containerColor = searchContainerColor,
+                onDismiss = {
+                    focusedSearchResult = null
+                    viewModel.clearMapSearchResults()
+                },
+                onResultFocused = { focusedSearchResult = it },
                 onDirectionsClick = { selected ->
                     viewModel.onLocationSelected(selected)
                     showTripSummary = true
@@ -1006,6 +1057,40 @@ private fun searchResultsGeoJson(results: List<PhotonFeature>): String {
     }
     return """{"type":"FeatureCollection","features":[$features]}"""
 }
+
+private fun disableMapLibreFocusOverlay(root: View): Boolean {
+    var foundMapView = false
+    root.forEachViewInTree { view ->
+        if (view is AndroidMapView) {
+            foundMapView = true
+            view.forEachViewInTree { mapViewChild ->
+                mapViewChild.clearFocus()
+                mapViewChild.isFocusable = false
+                mapViewChild.isFocusableInTouchMode = false
+                if (mapViewChild is ViewGroup) {
+                    mapViewChild.descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mapViewChild.defaultFocusHighlightEnabled = false
+                }
+            }
+            view.foreground = ColorDrawable(android.graphics.Color.TRANSPARENT)
+        }
+    }
+    return foundMapView
+}
+
+private fun View.forEachViewInTree(action: (View) -> Unit) {
+    action(this)
+    if (this is ViewGroup) {
+        for (index in 0 until childCount) {
+            getChildAt(index).forEachViewInTree(action)
+        }
+    }
+}
+
+private fun searchSurfaceColor(isDarkMode: Boolean): Color =
+    if (isDarkMode) Color(0xFF131618) else Color(0xFFFFFFFF)
 
 private val RADAR_TILE_FADE_DURATION = 1.milliseconds
 private const val RADAR_REPLAY_FRAME_DELAY_MS = 650L

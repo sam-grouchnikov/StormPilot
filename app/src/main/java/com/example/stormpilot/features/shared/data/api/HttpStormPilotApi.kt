@@ -143,6 +143,15 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
     override suspend fun analyzeRouteWarnings(request: RouteWarningAnalyzeRequest): RouteWarningAnalysis =
         parseRouteWarningAnalysis(postJSONObject("routes/warnings/analyze", request.toJson()))
 
+    override suspend fun submitAssistantRequest(message: String, location: String): String =
+        getRootBody(
+            "ai/chat",
+            params(
+                param("location", location),
+                param("message", message),
+            ),
+        )
+
     override suspend fun assistantResolveLocation(location: String): JsonObject =
         getJsonObject("assistant/weather/resolve-location", params(param("location", location)))
 
@@ -207,7 +216,23 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
             connection.readResponseBody()
         }
 
+    private suspend fun getRootBody(path: String, params: List<Pair<String, Any?>> = emptyList()): String =
+        withContext(Dispatchers.IO) {
+            val connection = (buildRootUrl(path, params).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = CONNECT_TIMEOUT_MS
+                readTimeout = NO_TIMEOUT_MS
+                setRequestProperty("Accept", "application/json, text/plain")
+                setRequestProperty("User-Agent", USER_AGENT)
+            }
+
+            connection.readResponseBody()
+        }
+
     private suspend fun postJSONObject(path: String, payload: JSONObject): JSONObject =
+        JSONObject(postBody(path, payload))
+
+    private suspend fun postBody(path: String, payload: JSONObject): String =
         withContext(Dispatchers.IO) {
             val connection = (buildUrl(path).openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
@@ -222,7 +247,7 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
             connection.outputStream.bufferedWriter().use { writer ->
                 writer.write(payload.toString())
             }
-            JSONObject(connection.readResponseBody())
+            connection.readResponseBody()
         }
 
     private fun HttpURLConnection.readResponseBody(): String {
@@ -258,6 +283,22 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
         val normalizedPath = path.trimStart('/')
         val suffix = if (query.isBlank()) "" else "?$query"
         return URL("$baseUrl/$normalizedPath$suffix")
+    }
+
+    private fun buildRootUrl(path: String, params: List<Pair<String, Any?>> = emptyList()): URL {
+        val base = URL(baseUrl)
+        val host = when (base.host) {
+            "localhost", "127.0.0.1", "::1" -> "10.0.2.2"
+            else -> base.host
+        }
+        val port = if (base.port == -1) "" else ":${base.port}"
+        val query = params.mapNotNull { (name, value) ->
+            value ?: return@mapNotNull null
+            "${name.urlEncode()}=${value.toString().urlEncode()}"
+        }.joinToString("&")
+        val normalizedPath = path.trimStart('/')
+        val suffix = if (query.isBlank()) "" else "?$query"
+        return URL("${base.protocol}://$host$port/$normalizedPath$suffix")
     }
 
     private fun parseResolvedLocation(json: JSONObject): ResolvedLocation =
@@ -485,6 +526,7 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
         URLEncoder.encode(this, "UTF-8")
 
     private companion object {
+        const val NO_TIMEOUT_MS = 0
         const val CONNECT_TIMEOUT_MS = 10_000
         const val READ_TIMEOUT_MS = 20_000
         const val USER_AGENT = "StormPilot/1.0"

@@ -119,5 +119,4 @@ public class ExtendedColors {
     public val stormAIOutline: Color
         get() = if (isDark) Color(0xFF4D318F) else Color(0xFF623ABF)
 
-
 }

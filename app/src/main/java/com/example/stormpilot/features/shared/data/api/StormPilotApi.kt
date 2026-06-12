@@ -48,6 +48,8 @@ interface StormPilotApi {
 
     suspend fun analyzeRouteWarnings(request: RouteWarningAnalyzeRequest): RouteWarningAnalysis
 
+    suspend fun submitAssistantRequest(message: String, location: String): String
+
     suspend fun assistantResolveLocation(location: String): JsonObject
 
     suspend fun assistantCurrentWeather(location: String): JsonObject

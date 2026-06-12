@@ -38,13 +38,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.stormpilot.core.StormAiAction
+import com.example.stormpilot.core.StormAiViewModel
 import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
 import com.example.stormpilot.features.dashboard.ui.RadarPage
 import com.example.stormpilot.features.map.ui.MapsPage
@@ -53,8 +60,11 @@ import com.example.stormpilot.features.navigation.ui.components.StormAiRequestSh
 import com.example.stormpilot.features.navigation.ui.components.StormAiSheetMode
 import com.example.stormpilot.features.navigation.ui.components.StormAiVoiceButton
 import com.example.stormpilot.features.settings.ui.SettingsPage
-import com.example.stormpilot.core.submitStormAiRequest
+import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.ui.theme.StormPilotTheme
+import androidx.compose.runtime.rememberCoroutineScope
+import java.util.Locale
+import kotlinx.coroutines.launch
 
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
     data object Radar : TabDest("dashboard", "Dashboard", Icons.Outlined.Radar)
@@ -71,6 +81,17 @@ fun NavSkeleton() {
     val isMapDestinationSelected = remember { mutableStateOf(false) }
     val showSettings = remember { mutableStateOf(false) }
     var activeStormAiSheet by remember { mutableStateOf<StormAiSheetMode?>(null) }
+    var isStormAiSubmitting by remember { mutableStateOf(false) }
+    var assistantMessage by remember { mutableStateOf<String?>(null) }
+    var confirmationMessage by remember { mutableStateOf<String?>(null) }
+    var confirmationRiskSummary by remember { mutableStateOf<String?>(null) }
+    var confirmationConfirmLabel by remember { mutableStateOf("Confirm") }
+    var confirmationCancelLabel by remember { mutableStateOf("Cancel") }
+    var pendingConfirmationActions by remember { mutableStateOf<List<StormAiAction>>(emptyList()) }
+    val mapsViewModel: MapsViewModel = hiltViewModel()
+    val stormAiViewModel: StormAiViewModel = hiltViewModel()
+    val mapsUiState by mapsViewModel.uiState.collectAsStateWithLifecycle()
+    val coroutineScope = rememberCoroutineScope()
 
     StormPilotTheme(dynamicColor = false) {
         val navController = rememberNavController()
@@ -80,6 +101,54 @@ fun NavSkeleton() {
 
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = backStackEntry?.destination?.route
+
+        fun showConfirmation(
+            message: String,
+            actions: List<StormAiAction>,
+            confirmLabel: String? = null,
+            cancelLabel: String? = null,
+            riskSummary: String? = null,
+        ) {
+            confirmationMessage = message
+            pendingConfirmationActions = actions
+            confirmationConfirmLabel = confirmLabel ?: "Confirm"
+            confirmationCancelLabel = cancelLabel ?: "Cancel"
+            confirmationRiskSummary = riskSummary
+        }
+
+        fun dispatchStormAiActions(actions: List<StormAiAction>) {
+            actions.forEach { action ->
+                when (action) {
+                    is StormAiAction.AnswerOnly -> assistantMessage = action.reply
+                    is StormAiAction.AskClarification -> assistantMessage = action.question
+                    is StormAiAction.RequestConfirmation -> showConfirmation(
+                        message = action.message,
+                        actions = action.pendingActions,
+                        confirmLabel = action.confirmLabel,
+                        cancelLabel = action.cancelLabel,
+                        riskSummary = action.riskSummary,
+                    )
+
+                    else -> {
+                        if (action.requiresConfirmation) {
+                            showConfirmation(
+                                message = "Apply this StormAI action?",
+                                actions = listOf(action),
+                            )
+                        } else {
+                            navController.navigate(TabDest.Nav.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                            }
+                            mapsViewModel.executeAssistantAction(action)
+                        }
+                    }
+                }
+            }
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
@@ -163,6 +232,7 @@ fun NavSkeleton() {
                     ) {
                         composable(TabDest.Nav.route) {
                             MapsPage(
+                                viewModel = mapsViewModel,
                                 onDestinationSelectedStateChanged = { isSelected ->
                                     isMapDestinationSelected.value = isSelected
                                 },
@@ -200,16 +270,106 @@ fun NavSkeleton() {
             activeStormAiSheet?.let { sheetMode ->
                 StormAiRequestSheet(
                     mode = sheetMode,
-                    onDismiss = { activeStormAiSheet = null },
+                    isSubmitting = isStormAiSubmitting,
+                    onDismiss = {
+                        if (!isStormAiSubmitting) {
+                            activeStormAiSheet = null
+                        }
+                    },
                     onSubmit = { request ->
-                        submitStormAiRequest(request)
-                        activeStormAiSheet = null
+                        val currentLocation = mapsUiState.origin
+                        if (currentLocation == null) {
+                            assistantMessage = "Waiting for your current location before sending this StormAI request."
+                            return@StormAiRequestSheet
+                        }
+
+                        isStormAiSubmitting = true
+                        coroutineScope.launch {
+                            stormAiViewModel.submitRequest(
+                                input = request,
+                                location = currentLocation.toAssistantLocationParam(),
+                            )
+                                .onSuccess { response ->
+                                    assistantMessage = response.reply
+                                    dispatchStormAiActions(response.actions)
+                                }
+                                .onFailure { error ->
+                                    assistantMessage = error.message ?: "StormAI request failed."
+                                }
+                            isStormAiSubmitting = false
+                            activeStormAiSheet = null
+                        }
+                    },
+                )
+            }
+
+            assistantMessage?.let { message ->
+                AlertDialog(
+                    onDismissRequest = { assistantMessage = null },
+                    title = { Text(text = "StormAI") },
+                    text = { Text(text = message) },
+                    confirmButton = {
+                        TextButton(onClick = { assistantMessage = null }) {
+                            Text(text = "OK")
+                        }
+                    },
+                )
+            }
+
+            confirmationMessage?.let { message ->
+                AlertDialog(
+                    onDismissRequest = {
+                        confirmationMessage = null
+                        pendingConfirmationActions = emptyList()
+                    },
+                    title = { Text(text = "Confirm StormAI action") },
+                    text = {
+                        Text(
+                            text = listOfNotNull(message, confirmationRiskSummary)
+                                .joinToString("\n\n"),
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val actions = pendingConfirmationActions
+                                confirmationMessage = null
+                                pendingConfirmationActions = emptyList()
+                                dispatchStormAiActions(actions.map { clearConfirmationRequirement(it) })
+                            },
+                        ) {
+                            Text(text = confirmationConfirmLabel)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = {
+                                confirmationMessage = null
+                                pendingConfirmationActions = emptyList()
+                            },
+                        ) {
+                            Text(text = confirmationCancelLabel)
+                        }
                     },
                 )
             }
         }
     }
 }
+
+private fun clearConfirmationRequirement(action: StormAiAction): StormAiAction =
+    when (action) {
+        is StormAiAction.AnswerOnly -> action.copy(requiresConfirmation = false)
+        is StormAiAction.AskClarification -> action.copy(requiresConfirmation = false)
+        is StormAiAction.SetDestination -> action.copy(requiresConfirmation = false)
+        is StormAiAction.ShowAlertsOverlay -> action.copy(requiresConfirmation = false)
+        is StormAiAction.ShowAlertDetail -> action.copy(requiresConfirmation = false)
+        is StormAiAction.PreviewRoute -> action.copy(requiresConfirmation = false)
+        is StormAiAction.RequestConfirmation -> action.copy(requiresConfirmation = false)
+    }
+
+private fun org.maplibre.spatialk.geojson.Position.toAssistantLocationParam(): String =
+    String.format(Locale.US, "%.6f,%.6f", latitude, longitude)
 
 @Composable
 private fun StormPilotBottomBar(

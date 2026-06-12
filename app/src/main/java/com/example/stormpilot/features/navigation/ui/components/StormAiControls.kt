@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MicOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -141,6 +142,7 @@ fun StormAiVoiceButton(
 @Composable
 fun StormAiRequestSheet(
     mode: StormAiSheetMode,
+    isSubmitting: Boolean = false,
     onDismiss: () -> Unit,
     onSubmit: (String) -> Unit,
 ) {
@@ -174,7 +176,7 @@ fun StormAiRequestSheet(
 
     fun submitRequest() {
         val request = requestText.trim()
-        if (request.isBlank()) return
+        if (request.isBlank() || isSubmitting) return
 
         speechRecognizer?.stopListening()
         focusManager.clearFocus()
@@ -269,7 +271,11 @@ fun StormAiRequestSheet(
     )
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            if (!isSubmitting) {
+                onDismiss()
+            }
+        },
         containerColor = Color.Transparent,
         contentColor = MaterialTheme.colorScheme.onSurface,
         tonalElevation = 0.dp,
@@ -302,7 +308,8 @@ fun StormAiRequestSheet(
                 ) {
                     StormAiSheetHeader(
                         mode = mode,
-                        status = voiceStatus,
+                        status = if (isSubmitting) "Thinking" else voiceStatus,
+                        isSubmitting = isSubmitting,
                         onDismiss = onDismiss,
                     )
 
@@ -324,6 +331,7 @@ fun StormAiRequestSheet(
                             OutlinedTextField(
                                 value = requestText,
                                 onValueChange = { requestText = it },
+                                enabled = !isSubmitting,
                                 placeholder = {
                                     Text(
                                         text = if (mode == StormAiSheetMode.Chat) {
@@ -361,6 +369,7 @@ fun StormAiRequestSheet(
                                             startListening()
                                         }
                                     },
+                                    enabled = !isSubmitting,
                                     modifier = Modifier.padding(bottom = 4.dp),
                                     colors = IconButtonDefaults.filledIconButtonColors(
                                         containerColor = if (isListening) {
@@ -386,7 +395,7 @@ fun StormAiRequestSheet(
 
                             FilledIconButton(
                                 onClick = { submitRequest() },
-                                enabled = requestText.isNotBlank(),
+                                enabled = requestText.isNotBlank() && !isSubmitting,
                                 modifier = Modifier
                                     .padding(bottom = 4.dp)
                                     .scale(sendButtonScale),
@@ -397,10 +406,18 @@ fun StormAiRequestSheet(
                                     disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                                 ),
                             ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.Send,
-                                    contentDescription = "Send StormAI request",
-                                )
+                                if (isSubmitting) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Rounded.Send,
+                                        contentDescription = "Send StormAI request",
+                                    )
+                                }
                             }
                         }
                     }
@@ -414,6 +431,7 @@ fun StormAiRequestSheet(
 private fun StormAiSheetHeader(
     mode: StormAiSheetMode,
     status: String,
+    isSubmitting: Boolean,
     onDismiss: () -> Unit,
 ) {
     Row(
@@ -458,7 +476,10 @@ private fun StormAiSheetHeader(
             }
         }
 
-        IconButton(onClick = onDismiss) {
+        IconButton(
+            onClick = onDismiss,
+            enabled = !isSubmitting,
+        ) {
             Icon(
                 imageVector = Icons.Rounded.Close,
                 contentDescription = "Close StormAI request",
