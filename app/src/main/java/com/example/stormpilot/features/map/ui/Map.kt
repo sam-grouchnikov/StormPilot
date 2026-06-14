@@ -588,7 +588,7 @@ fun MapsPage(
                         tiles = listOf(radarTileUrl),
                         options = TileSetOptions(
                             minZoom = 1,
-                            maxZoom = 12,
+                            maxZoom = 14,
                         ),
                         tileSize = 256,
                     )
