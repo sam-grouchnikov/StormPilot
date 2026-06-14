@@ -81,21 +81,11 @@ fun LocationAlertsMapCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent,
+        color = colorScheme.primaryContainer.copy(alpha = 0.42f),
         border = BorderStroke(1.dp, colorScheme.outlineVariant.copy(alpha = 0.50f)),
         tonalElevation = 2.dp,
     ) {
-        Box(
-            modifier = Modifier.background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        colorScheme.surfaceContainer.copy(alpha = 0.98f),
-                        colorScheme.secondaryContainer.copy(alpha = 0.26f),
-                        colorScheme.surfaceContainer.copy(alpha = 0.96f),
-                    ),
-                ),
-            ),
-        ) {
+
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
@@ -134,7 +124,7 @@ fun LocationAlertsMapCard(
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
                             fontSize = 28.sp,
                             lineHeight = 31.sp,
-                            modifier = Modifier.padding(top = 10.dp),
+                            modifier = Modifier.padding(top = 10.dp, start = 5.dp),
                         )
                     }
                     Surface(
@@ -168,7 +158,7 @@ fun LocationAlertsMapCard(
                         color = colorScheme.onSurfaceVariant,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+                        modifier = Modifier.padding(start = 9.dp, top = 2.dp),
                     )
                 }
 
@@ -191,7 +181,7 @@ fun LocationAlertsMapCard(
                     showAlerts = showAlerts,
                 )
             }
-        }
+
     }
 }
 

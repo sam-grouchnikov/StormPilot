@@ -12,8 +12,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -169,6 +171,7 @@ private fun FloatingNavItem(
                     .padding(end = if (showLabel) 4.dp else 0.dp)
                     .size(19.dp),
             )
+            Spacer(modifier = Modifier.width(5.dp))
             if (true) {
                 Text(
                     text = tab.title,
