@@ -6,8 +6,13 @@ plugins {
     id("com.google.gms.google-services")
 }
 
-val stormPilotApiBaseUrl = providers.gradleProperty("stormpilotApiBaseUrl")
+val legacyStormPilotApiBaseUrl = providers.gradleProperty("stormpilotApiBaseUrl")
+val stormPilotEmulatorApiBaseUrl = providers.gradleProperty("stormpilotEmulatorApiBaseUrl")
+    .orElse(legacyStormPilotApiBaseUrl)
     .orElse("http://10.0.2.2:8080/api/v1")
+val stormPilotPhysicalDeviceApiBaseUrl = providers.gradleProperty("stormpilotPhysicalDeviceApiBaseUrl")
+    .orElse(legacyStormPilotApiBaseUrl)
+    .orElse("http://127.0.0.1:8080/api/v1")
 
 android {
     namespace = "com.example.stormpilot"
@@ -26,12 +31,27 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField(
-            "String",
-            "STORMPILOT_API_BASE_URL",
-            "\"${stormPilotApiBaseUrl.get()}\"",
-        )
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    flavorDimensions += "backendTarget"
+    productFlavors {
+        create("emulator") {
+            dimension = "backendTarget"
+            buildConfigField(
+                "String",
+                "STORMPILOT_API_BASE_URL",
+                "\"${stormPilotEmulatorApiBaseUrl.get()}\"",
+            )
+        }
+        create("physicalDevice") {
+            dimension = "backendTarget"
+            buildConfigField(
+                "String",
+                "STORMPILOT_API_BASE_URL",
+                "\"${stormPilotPhysicalDeviceApiBaseUrl.get()}\"",
+            )
+        }
     }
 
     buildTypes {
@@ -41,6 +61,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

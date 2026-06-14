@@ -287,10 +287,6 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
 
     private fun buildRootUrl(path: String, params: List<Pair<String, Any?>> = emptyList()): URL {
         val base = URL(baseUrl)
-        val host = when (base.host) {
-            "localhost", "127.0.0.1", "::1" -> "10.0.2.2"
-            else -> base.host
-        }
         val port = if (base.port == -1) "" else ":${base.port}"
         val query = params.mapNotNull { (name, value) ->
             value ?: return@mapNotNull null
@@ -298,7 +294,7 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
         }.joinToString("&")
         val normalizedPath = path.trimStart('/')
         val suffix = if (query.isBlank()) "" else "?$query"
-        return URL("${base.protocol}://$host$port/$normalizedPath$suffix")
+        return URL("${base.protocol}://${base.host}$port/$normalizedPath$suffix")
     }
 
     private fun parseResolvedLocation(json: JSONObject): ResolvedLocation =
