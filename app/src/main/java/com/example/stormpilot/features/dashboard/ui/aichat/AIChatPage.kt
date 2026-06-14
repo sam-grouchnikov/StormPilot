@@ -2,14 +2,11 @@ package com.example.stormpilot.features.dashboard.ui.aichat
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,14 +44,10 @@ fun AIChat(title: String, genAIViewModel: GenAIViewModel) {
                     .padding(1.5.dp) // Thinner 1.5.dp border
                     .background(Color(0xFF1E1E1E), RoundedCornerShape(22.5.dp)) // Dark background for the popup
             ) {
-                Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
-                    Text(
-                        text = title,
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    // Additional chat UI could go here
-                }
+                ChatPanel(
+                    viewModel = genAIViewModel,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }
