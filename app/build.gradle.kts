@@ -13,6 +13,13 @@ val stormPilotEmulatorApiBaseUrl = providers.gradleProperty("stormpilotEmulatorA
 val stormPilotPhysicalDeviceApiBaseUrl = providers.gradleProperty("stormpilotPhysicalDeviceApiBaseUrl")
     .orElse(legacyStormPilotApiBaseUrl)
     .orElse("http://127.0.0.1:8080/api/v1")
+val legacyRadarTileBaseUrl = providers.gradleProperty("radarTileBaseUrl")
+val radarTileEmulatorBaseUrl = providers.gradleProperty("radarTileEmulatorBaseUrl")
+    .orElse(legacyRadarTileBaseUrl)
+    .orElse("http://10.0.2.2:8090")
+val radarTilePhysicalDeviceBaseUrl = providers.gradleProperty("radarTilePhysicalDeviceBaseUrl")
+    .orElse(legacyRadarTileBaseUrl)
+    .orElse("http://127.0.0.1:8090")
 
 android {
     namespace = "com.example.stormpilot"
@@ -43,6 +50,11 @@ android {
                 "STORMPILOT_API_BASE_URL",
                 "\"${stormPilotEmulatorApiBaseUrl.get()}\"",
             )
+            buildConfigField(
+                "String",
+                "RADAR_TILE_BASE_URL",
+                "\"${radarTileEmulatorBaseUrl.get()}\"",
+            )
         }
         create("physicalDevice") {
             dimension = "backendTarget"
@@ -50,6 +62,11 @@ android {
                 "String",
                 "STORMPILOT_API_BASE_URL",
                 "\"${stormPilotPhysicalDeviceApiBaseUrl.get()}\"",
+            )
+            buildConfigField(
+                "String",
+                "RADAR_TILE_BASE_URL",
+                "\"${radarTilePhysicalDeviceBaseUrl.get()}\"",
             )
         }
     }
