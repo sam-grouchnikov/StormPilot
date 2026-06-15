@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -74,11 +76,11 @@ internal fun RadarStatusPopup(
         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 18.dp, vertical = 8.dp),
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(1.dp),
@@ -104,7 +106,7 @@ internal fun RadarStatusPopup(
             Box {
                 TextButton(
                     onClick = { productMenuExpanded = true },
-                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    contentPadding = PaddingValues(start = 15.dp, end = 8.dp),
                 ) {
                     Text(
                         text = selectedProduct.displayName,
@@ -132,24 +134,15 @@ internal fun RadarStatusPopup(
                 }
             }
 
-            FilledIconButton(
-                onClick = onPlaybackToggled,
-                modifier = Modifier.size(36.dp),
-            ) {
-                Icon(
-                    imageVector = if (isPlaybackRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    contentDescription = if (isPlaybackRunning) "Pause" else "Play",
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+
 
             Box {
                 TextButton(
                     onClick = { frameMenuExpanded = true },
-                    contentPadding = PaddingValues(horizontal = 8.dp),
+                    contentPadding = PaddingValues(start = 15.dp, end = 8.dp),
                 ) {
                     Text(
-                        text = playbackFrameCount.toString(),
+                        text = "$playbackFrameCount Frames",
                         style = MaterialTheme.typography.labelLarge,
                     )
                     Icon(
@@ -172,6 +165,19 @@ internal fun RadarStatusPopup(
                         )
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            FilledIconButton(
+                onClick = onPlaybackToggled,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    imageVector = if (isPlaybackRunning) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    contentDescription = if (isPlaybackRunning) "Pause" else "Play",
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }

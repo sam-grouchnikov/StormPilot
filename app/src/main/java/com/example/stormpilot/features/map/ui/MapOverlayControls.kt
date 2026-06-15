@@ -68,7 +68,7 @@ internal fun MapOverlayControls(
             onClick = onSevereAlertsOverlayClick,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = if (showSevereAlertsOverlay) {
-                    MaterialTheme.colorScheme.primary
+                    MaterialTheme.colorScheme.inversePrimary
                 } else {
                     colors.iconButtonColor
                 },
@@ -82,7 +82,7 @@ internal fun MapOverlayControls(
                 imageVector = Icons.Outlined.WarningAmber,
                 contentDescription = "Toggle severe weather alerts overlay",
                 tint = if (showSevereAlertsOverlay) {
-                    MaterialTheme.colorScheme.onPrimary
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
                     MaterialTheme.colorScheme.onSurface
                 },
