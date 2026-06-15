@@ -54,7 +54,7 @@ public class ExtendedColors {
 
 
     public val purpleShadow: Color
-        get() = if (isDark) Color(0xFF1D1A20) else Color(0xFFD7D1DC)
+        get() = if (isDark) Color(0xFF1D1A20) else Color(0xFFC7BFCE)
 
     public val searchBarColor: Color
         get() = if (isDark) Color(0xFF131618) else Color(0xFFFFFFFF)

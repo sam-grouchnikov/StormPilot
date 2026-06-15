@@ -102,6 +102,7 @@ class MapsViewModel @Inject constructor(
     private var rerouteDebounceJob: Job? = null
     private var routeWarningsJob: Job? = null
     private var alertDetailJob: Job? = null
+    private var alertPolygonsJob: Job? = null
     private var latestAlertsGeoJson: String? = null
     private var latestSearchResultsQuery: String? = null
     private var stormAvoidanceForCurrentTrip = false
@@ -157,10 +158,12 @@ class MapsViewModel @Inject constructor(
     }
 
     init {
+        refreshAlertPolygons()
+
         viewModelScope.launch {
             while (true) {
-                fetchAlerts()
                 delay(300_000L)
+                refreshAlertPolygons()
             }
         }
 
@@ -170,6 +173,13 @@ class MapsViewModel @Inject constructor(
                 .collectLatest { query ->
                     runSearch(query)
                 }
+        }
+    }
+
+    fun refreshAlertPolygons() {
+        alertPolygonsJob?.cancel()
+        alertPolygonsJob = viewModelScope.launch {
+            fetchAlerts()
         }
     }
 
