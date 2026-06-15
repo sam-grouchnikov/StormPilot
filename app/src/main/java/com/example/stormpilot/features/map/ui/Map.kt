@@ -45,12 +45,16 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -123,6 +127,9 @@ import org.maplibre.spatialk.geojson.Position
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.math.abs
@@ -158,9 +165,10 @@ fun MapsPage(
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var alertsRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var selectedRadarSite by remember { mutableStateOf<NexradSite?>(null) }
+    var selectedRadarProduct by remember { mutableStateOf(RadarProduct.REFLECTIVITY) }
     var radarTileMetadata by remember { mutableStateOf<RadarTileMetadata?>(null) }
-    val radarTileMetadataBySite = remember { mutableStateMapOf<String, RadarTileMetadata>() }
-    var radarTileLoadingSiteId by remember { mutableStateOf<String?>(null) }
+    val radarTileMetadataByKey = remember { mutableStateMapOf<RadarTileMetadataKey, RadarTileMetadata>() }
+    var radarTileLoadingKey by remember { mutableStateOf<RadarTileMetadataKey?>(null) }
     var radarTileError by remember { mutableStateOf<String?>(null) }
     var lastMapTapPosition by remember { mutableStateOf<Position?>(null) }
     var focusedSearchResult by remember { mutableStateOf<PhotonFeature?>(null) }
@@ -352,8 +360,12 @@ fun MapsPage(
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
     val selectedRadarMetadata = selectedRadarSite
         ?.takeIf { showRadarOverlay }
-        ?.let { site -> radarTileMetadataBySite[site.id] ?: radarTileMetadata }
-        ?.takeIf { metadata -> metadata.site == selectedRadarSite?.id }
+        ?.let { site ->
+            radarTileMetadataByKey[RadarTileMetadataKey(site.id, selectedRadarProduct)] ?: radarTileMetadata
+        }
+        ?.takeIf { metadata ->
+            metadata.site == selectedRadarSite?.id && metadata.product == selectedRadarProduct
+        }
     val activeRadarMetadata = selectedRadarMetadata
         ?.takeIf { metadata -> metadata.tilesReady }
     val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.85f else 0f
@@ -413,33 +425,39 @@ fun MapsPage(
         }
     }
 
-    LaunchedEffect(showRadarOverlay, selectedRadarSite, radarRefreshKey) {
+    LaunchedEffect(showRadarOverlay, selectedRadarSite, selectedRadarProduct, radarRefreshKey) {
         val site = selectedRadarSite
         if (!showRadarOverlay || site == null) {
-            radarTileLoadingSiteId = null
+            radarTileLoadingKey = null
             radarTileError = null
             return@LaunchedEffect
         }
+        val product = selectedRadarProduct
+        val metadataKey = RadarTileMetadataKey(site.id, product)
 
-        val cachedMetadata = radarTileMetadataBySite[site.id]
+        val cachedMetadata = radarTileMetadataByKey[metadataKey]
         if (cachedMetadata?.tilesReady == true) {
             radarTileMetadata = cachedMetadata
-            radarTileLoadingSiteId = null
-        } else if (radarTileMetadata?.site != site.id) {
+            radarTileLoadingKey = null
+        } else if (radarTileMetadata?.site != site.id || radarTileMetadata?.product != product) {
             radarTileMetadata = null
-            radarTileLoadingSiteId = site.id
+            radarTileLoadingKey = metadataKey
         } else {
-            radarTileLoadingSiteId = site.id
+            radarTileLoadingKey = metadataKey
         }
         radarTileError = null
 
         try {
             do {
-                Log.d(RADAR_LOG_TAG, "Loading radar metadata for site=${site.id}")
-                val metadata = fetchRadarTileMetadata(site.id)
                 Log.d(
                     RADAR_LOG_TAG,
-                    "Loaded radar metadata site=${metadata.site}, scan=${metadata.scanTimeUtc}, " +
+                    "Loading radar metadata for site=${site.id}, product=${product.pathSegment}",
+                )
+                val metadata = fetchRadarTileMetadata(site.id, product)
+                Log.d(
+                    RADAR_LOG_TAG,
+                    "Loaded radar metadata site=${metadata.site}, product=${metadata.product.pathSegment}, " +
+                            "scan=${metadata.scanTimeUtc}, " +
                             "ready=${metadata.tilesReady}, warmupStarted=${metadata.warmupStarted}, " +
                             "zoom=${metadata.minZoom}-${metadata.maxZoom}, " +
                             "rasterNativeMaxZoom=${metadata.rasterNativeMaxZoom}, tileSize=${metadata.tileSize}, " +
@@ -447,18 +465,22 @@ fun MapsPage(
                 )
                 radarTileMetadata = metadata
                 if (metadata.tilesReady) {
-                    radarTileMetadataBySite[metadata.site] = metadata
+                    radarTileMetadataByKey[RadarTileMetadataKey(metadata.site, metadata.product)] = metadata
                 }
                 if (!metadata.tilesReady) {
                     delay(RADAR_TILE_WARMUP_POLL_INTERVAL_MS)
                 }
             } while (!metadata.tilesReady)
         } catch (e: Exception) {
-            Log.e(RADAR_LOG_TAG, "Radar metadata unavailable for site=${site.id}", e)
+            Log.e(
+                RADAR_LOG_TAG,
+                "Radar metadata unavailable for site=${site.id}, product=${product.pathSegment}",
+                e,
+            )
             radarTileError = e.message ?: "Radar tiles unavailable."
         } finally {
-            if (radarTileLoadingSiteId == site.id) {
-                radarTileLoadingSiteId = null
+            if (radarTileLoadingKey == metadataKey) {
+                radarTileLoadingKey = null
             }
         }
     }
@@ -506,21 +528,23 @@ fun MapsPage(
                 ),
             ) {
                 activeRadarMetadata?.let { metadata ->
-                    val radarSource = rememberRasterSource(
-                        tiles = listOf(metadata.rasterTileRequestUrl),
-                        options = TileSetOptions(
-                            minZoom = metadata.minZoom,
-                            maxZoom = metadata.rasterNativeMaxZoom,
-                        ),
-                        tileSize = metadata.tileSize,
-                    )
-                    RasterLayer(
-                        id = "radar-reflectivity-layer",
-                        source = radarSource,
-                        opacity = const(0.62f),
-                        resampling = const(RasterResampling.Linear),
-                        fadeDuration = const(RADAR_TILE_FADE_DURATION),
-                    )
+                    key(metadata.rasterTileRequestUrl) {
+                        val radarSource = rememberRasterSource(
+                            tiles = listOf(metadata.rasterTileRequestUrl),
+                            options = TileSetOptions(
+                                minZoom = metadata.minZoom,
+                                maxZoom = metadata.rasterNativeMaxZoom,
+                            ),
+                            tileSize = metadata.tileSize,
+                        )
+                        RasterLayer(
+                            id = "radar-${metadata.product.pathSegment}-layer",
+                            source = radarSource,
+                            opacity = const(0.62f),
+                            resampling = const(RasterResampling.Linear),
+                            fadeDuration = const(RADAR_TILE_FADE_DURATION),
+                        )
+                    }
                 }
 
                 val userLocationFeatureCollection = remember(uiState.origin) {
@@ -875,7 +899,14 @@ fun MapsPage(
                 RadarStatusPopup(
                     site = selectedRadarSite,
                     metadata = selectedRadarMetadata,
-                    isLoading = radarTileLoadingSiteId == selectedRadarSite?.id,
+                    selectedProduct = selectedRadarProduct,
+                    onProductSelected = { product ->
+                        selectedRadarProduct = product
+                        radarTileError = null
+                    },
+                    isLoading = radarTileLoadingKey == selectedRadarSite?.let {
+                        RadarTileMetadataKey(it.id, selectedRadarProduct)
+                    },
                     errorMessage = radarTileError,
                 )
             }
@@ -1137,10 +1168,13 @@ private fun View.forEachViewInTree(action: (View) -> Unit) {
 private fun searchSurfaceColor(isDarkMode: Boolean): Color =
     if (isDarkMode) Color(0xFF131618) else Color(0xFFFFFFFF)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RadarStatusPopup(
     site: NexradSite?,
     metadata: RadarTileMetadata?,
+    selectedProduct: RadarProduct,
+    onProductSelected: (RadarProduct) -> Unit,
     isLoading: Boolean,
     errorMessage: String?,
 ) {
@@ -1149,7 +1183,7 @@ private fun RadarStatusPopup(
         metadata?.tilesReady == false -> "Preparing"
         isLoading -> "Loading"
         metadata?.scanTimeUtc != null -> metadata.scanTimeUtc.toRadarScanTimeLabel()
-        else -> "Reflectivity"
+        else -> selectedProduct.displayName
     }
 
     Card(
@@ -1160,44 +1194,77 @@ private fun RadarStatusPopup(
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(1.dp),
-                modifier = Modifier.weight(1f),
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
             ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(1.dp),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(
+                        text = site?.id ?: "Radar",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (errorMessage == null) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                    )
+                }
+
                 Text(
-                    text = site?.id ?: "Radar",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = statusText,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (errorMessage == null) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    },
+                    text = selectedProduct.displayName,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
 
-            Text(
-                text = "Reflectivity",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                RadarProduct.entries.forEachIndexed { index, product ->
+                    SegmentedButton(
+                        selected = product == selectedProduct,
+                        onClick = { onProductSelected(product) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = RadarProduct.entries.size,
+                        ),
+                        label = { Text(product.displayName) },
+                    )
+                }
+            }
         }
     }
 }
 
+private enum class RadarProduct(
+    val pathSegment: String,
+    val displayName: String,
+) {
+    REFLECTIVITY("reflectivity", "Reflectivity"),
+    VELOCITY("velocity", "Velocity"),
+}
+
+private data class RadarTileMetadataKey(
+    val site: String,
+    val product: RadarProduct,
+)
+
 private data class RadarTileMetadata(
     val site: String,
+    val product: RadarProduct,
     val scanTimeUtc: String,
     val tileSize: Int,
     val minZoom: Int,
@@ -1220,10 +1287,13 @@ private val RadarTileMetadata.rasterTileRequestUrl: String
         }
     }
 
-private suspend fun fetchRadarTileMetadata(siteId: String): RadarTileMetadata =
+private suspend fun fetchRadarTileMetadata(
+    siteId: String,
+    product: RadarProduct,
+): RadarTileMetadata =
     withContext(Dispatchers.IO) {
         val normalizedBaseUrl = BuildConfig.RADAR_TILE_BASE_URL.trimEnd('/')
-        val metadataUrl = "$normalizedBaseUrl/radar/$siteId/reflectivity/latest/metadata"
+        val metadataUrl = "$normalizedBaseUrl/radar/$siteId/${product.pathSegment}/latest/metadata"
         Log.d(RADAR_LOG_TAG, "GET $metadataUrl")
         val connection = (URL(metadataUrl).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
@@ -1241,6 +1311,7 @@ private suspend fun fetchRadarTileMetadata(siteId: String): RadarTileMetadata =
 
         RadarTileMetadata(
             site = normalizedSite,
+            product = product,
             scanTimeUtc = responseJson.optString("scanTimeUtc"),
             tileSize = responseJson.optInt("tileSize", 512),
             minZoom = responseJson.optInt("minZoom", 5),
@@ -1249,14 +1320,14 @@ private suspend fun fetchRadarTileMetadata(siteId: String): RadarTileMetadata =
                 "rasterNativeMaxZoom",
                 responseJson.optInt("nativeMaxZoom", RADAR_RASTER_NATIVE_MAX_ZOOM),
             ),
-            vectorTileLayer = responseJson.optString("vectorTileLayer", "reflectivity"),
+            vectorTileLayer = responseJson.optString("vectorTileLayer", product.pathSegment),
             vectorTileUrl = responseJson.optString(
                 "vectorTileUrl",
-                "/radar/$normalizedSite/reflectivity/latest/{z}/{x}/{y}.mvt",
+                "/radar/$normalizedSite/${product.pathSegment}/latest/{z}/{x}/{y}.mvt",
             ),
             rasterTileUrl = responseJson.optString(
                 "rasterTileUrl",
-                "/radar/$normalizedSite/reflectivity/latest/{z}/{x}/{y}.png",
+                "/radar/$normalizedSite/${product.pathSegment}/latest/{z}/{x}/{y}.png",
             ),
             tilesReady = responseJson.optBoolean("tilesReady", true),
             warmupStarted = responseJson.optBoolean("warmupStarted", false),
@@ -1305,10 +1376,20 @@ private fun nexradSitesGeoJson(sites: List<NexradSite>): String {
 }
 
 private fun String.toRadarScanTimeLabel(): String {
-    val time = substringAfter('T', missingDelimiterValue = "")
-        .substringBefore('Z')
-        .take(5)
-    return if (time.length == 5) "$time UTC" else this
+    return try {
+        val instant = Instant.parse(this)
+        val zoneId = ZoneId.of("America/New_York")
+        val formatter = DateTimeFormatter.ofPattern("h:mm a", java.util.Locale.US)
+            .withZone(zoneId)
+        val timePart = formatter.format(instant)
+        val isDst = zoneId.rules.isDaylightSavings(instant)
+        "$timePart ${if (isDst) "EDT" else "EST"}"
+    } catch (e: Exception) {
+        val time = substringAfter('T', missingDelimiterValue = "")
+            .substringBefore('Z')
+            .take(5)
+        if (time.length == 5) "$time UTC" else this
+    }
 }
 
 private const val RADAR_TILE_CONNECT_TIMEOUT_MS = 60_000
