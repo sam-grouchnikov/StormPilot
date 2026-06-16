@@ -139,15 +139,15 @@ internal fun SevereAlertsLayers(
         color = switch(
             condition(
                 alertEventType.contains("Tornado Warning"),
-                const(Color(0x3DFF0000)),
+                const(Color(0x1AFF0000)),
             ),
             condition(
                 alertEventType.contains("Severe Thunderstorm Warning"),
-                const(Color(0x3EFF9F15)),
+                const(Color(0x1AFF9F15)),
             ),
             condition(
                 alertEventType.contains("Flash Flood Warning"),
-                const(Color(0x3D00BB00)),
+                const(Color(0x1A00BB00)),
             ),
             fallback = const(Color.Transparent),
         ),
@@ -155,6 +155,17 @@ internal fun SevereAlertsLayers(
             handleAlertLayerClick(features, lastMapTapPosition, onAlertTapped)
         },
     )
+
+    LineLayer(
+        id = "alerts-outline-border",
+        source = alertsSource,
+        color = const(Color.Black),
+        width = const(4.dp), // 2dp line + 1dp border on each side
+        onClick = { features ->
+            handleAlertLayerClick(features, lastMapTapPosition, onAlertTapped)
+        },
+    )
+
     LineLayer(
         id = "alerts-outline",
         source = alertsSource,
@@ -178,6 +189,8 @@ internal fun SevereAlertsLayers(
             handleAlertLayerClick(features, lastMapTapPosition, onAlertTapped)
         },
     )
+
+
 }
 
 @Composable

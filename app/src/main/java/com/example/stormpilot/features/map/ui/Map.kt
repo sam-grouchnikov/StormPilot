@@ -89,6 +89,7 @@ import kotlinx.coroutines.withContext
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.CameraState
 import org.maplibre.compose.camera.rememberCameraState
+import org.maplibre.compose.layers.Anchor
 import org.maplibre.compose.map.MapOptions
 import org.maplibre.compose.map.MaplibreMap
 import org.maplibre.compose.map.OrnamentOptions
@@ -600,21 +601,24 @@ fun MapsPage(
                     ),
                 ),
             ) {
-                RadarRasterLayer(metadata = activeRadarMetadata)
+                val labelLayerId = if (isDarkMode) "places_locality" else "labels"
+                Anchor.Below(labelLayerId) {
+                    RadarRasterLayer(metadata = activeRadarMetadata)
+                    RouteLayer(
+                        routeGeoJson = uiState.routeGeoJson,
+                        isNavigationMode = navMode,
+                        colors = colors,
+                    )
+                    SevereAlertsLayers(
+                        visible = showSevereAlertsOverlay,
+                        alertsGeoJson = uiState.alertsGeoJson,
+                        opacity = severeAlertsOverlayOpacity,
+                        lastMapTapPosition = lastMapTapPosition,
+                        onAlertTapped = viewModel::onAlertPolygonTapped,
+                    )
+                }
                 UserLocationLayer(origin = uiState.origin)
                 DestinationLayer(destination = uiState.destination)
-                RouteLayer(
-                    routeGeoJson = uiState.routeGeoJson,
-                    isNavigationMode = navMode,
-                    colors = colors,
-                )
-                SevereAlertsLayers(
-                    visible = showSevereAlertsOverlay,
-                    alertsGeoJson = uiState.alertsGeoJson,
-                    opacity = severeAlertsOverlayOpacity,
-                    lastMapTapPosition = lastMapTapPosition,
-                    onAlertTapped = viewModel::onAlertPolygonTapped,
-                )
                 RadarSiteLayers(
                     visible = showRadarOverlay,
                     selectedSite = selectedRadarSite,

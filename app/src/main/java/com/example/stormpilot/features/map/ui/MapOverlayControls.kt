@@ -43,7 +43,7 @@ internal fun MapOverlayControls(
             onClick = onRadarOverlayClick,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = if (showRadarOverlay) {
-                    MaterialTheme.colorScheme.inversePrimary
+                    MaterialTheme.colorScheme.surfaceContainerLowest
                 } else {
                     colors.iconButtonColor
                 },
@@ -68,7 +68,7 @@ internal fun MapOverlayControls(
             onClick = onSevereAlertsOverlayClick,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = if (showSevereAlertsOverlay) {
-                    MaterialTheme.colorScheme.inversePrimary
+                    MaterialTheme.colorScheme.surfaceContainerLowest
                 } else {
                     colors.iconButtonColor
                 },
