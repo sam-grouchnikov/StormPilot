@@ -61,9 +61,10 @@ import com.example.stormpilot.features.map.ui.radar.NexradSite
 import com.example.stormpilot.features.map.ui.radar.RADAR_LOG_TAG
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_FRAME_COUNTS
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_FRAME_DELAY_MS
+import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_RESTART_PAUSE_MS
 import com.example.stormpilot.features.map.ui.radar.RADAR_TILE_WARMUP_POLL_INTERVAL_MS
 import com.example.stormpilot.features.map.ui.radar.RadarProduct
-import com.example.stormpilot.features.map.ui.radar.RadarRasterLayer
+import com.example.stormpilot.features.map.ui.radar.RadarRasterLayers
 import com.example.stormpilot.features.map.ui.radar.RadarSiteLayers
 import com.example.stormpilot.features.map.ui.radar.RadarStatusPopup
 import com.example.stormpilot.features.map.ui.radar.RadarTileMetadata
@@ -348,6 +349,23 @@ fun MapsPage(
         }
     val activeRadarMetadata = selectedRadarMetadata
         ?.takeIf { metadata -> metadata.tilesReady }
+    val playbackRadarMetadata = selectedRadarSite
+        ?.takeIf { showRadarOverlay && isRadarPlaybackRunning }
+        ?.let { site ->
+            (radarPlaybackFrameCount downTo 0).mapNotNull { changesAgo ->
+                val key = RadarTileMetadataKey(
+                    site = site.id,
+                    product = selectedRadarProduct,
+                    changesAgo = changesAgo,
+                )
+                radarTileMetadataByKey[key]
+                    ?.takeIf { metadata ->
+                        metadata.tilesReady &&
+                            radarTileRefreshKeyByMetadataKey[key] == radarRefreshKey
+                    }
+            }
+        }
+        .orEmpty()
     val severeAlertsOverlayOpacity = if (showSevereAlertsOverlay) 0.85f else 0f
     val footerState = when {
         navMode -> MapsFooterState.Navigation
@@ -414,28 +432,59 @@ fun MapsPage(
             return@LaunchedEffect
         }
 
-        val initialPlaybackChangesAgo = radarPlaybackChangesAgo
-        if (initialPlaybackChangesAgo == null || initialPlaybackChangesAgo !in 0..radarPlaybackFrameCount) {
-            radarPlaybackChangesAgo = radarPlaybackFrameCount
-        }
-
         while (true) {
-            val currentChangesAgo = radarPlaybackChangesAgo ?: radarPlaybackFrameCount
+            val playbackFrameKeys = (radarPlaybackFrameCount downTo 0).map { changesAgo ->
+                RadarTileMetadataKey(
+                    site = site.id,
+                    product = selectedRadarProduct,
+                    changesAgo = changesAgo,
+                )
+            }
+            val arePlaybackFramesReady = playbackFrameKeys.all { key ->
+                radarTileMetadataByKey[key]
+                    ?.takeIf { radarTileRefreshKeyByMetadataKey[key] == radarRefreshKey }
+                    ?.tilesReady == true
+            }
+
+            if (!arePlaybackFramesReady) {
+                delay(RADAR_TILE_WARMUP_POLL_INTERVAL_MS)
+                continue
+            }
+
+            val currentChangesAgo = radarPlaybackChangesAgo
+            if (currentChangesAgo == null || currentChangesAgo !in 0..radarPlaybackFrameCount) {
+                radarPlaybackChangesAgo = radarPlaybackFrameCount
+                continue
+            }
             val currentKey = RadarTileMetadataKey(
                 site = site.id,
                 product = selectedRadarProduct,
                 changesAgo = currentChangesAgo,
             )
+            val nextChangesAgo = if (currentChangesAgo <= 0) {
+                radarPlaybackFrameCount
+            } else {
+                currentChangesAgo - 1
+            }
+            val nextKey = RadarTileMetadataKey(
+                site = site.id,
+                product = selectedRadarProduct,
+                changesAgo = nextChangesAgo,
+            )
 
             val currentMetadata = radarTileMetadataByKey[currentKey]
                 ?.takeIf { radarTileRefreshKeyByMetadataKey[currentKey] == radarRefreshKey }
-            if (currentMetadata?.tilesReady == true) {
-                delay(RADAR_PLAYBACK_FRAME_DELAY_MS)
-                radarPlaybackChangesAgo = if (currentChangesAgo <= 0) {
-                    radarPlaybackFrameCount
-                } else {
-                    currentChangesAgo - 1
-                }
+            val nextMetadata = radarTileMetadataByKey[nextKey]
+                ?.takeIf { radarTileRefreshKeyByMetadataKey[nextKey] == radarRefreshKey }
+            if (currentMetadata?.tilesReady == true && nextMetadata?.tilesReady == true) {
+                val delayBeforeNextFrame = RADAR_PLAYBACK_FRAME_DELAY_MS +
+                    if (nextChangesAgo == radarPlaybackFrameCount) {
+                        RADAR_PLAYBACK_RESTART_PAUSE_MS
+                    } else {
+                        0L
+                    }
+                delay(delayBeforeNextFrame)
+                radarPlaybackChangesAgo = nextChangesAgo
             } else {
                 delay(RADAR_TILE_WARMUP_POLL_INTERVAL_MS)
             }
@@ -603,7 +652,10 @@ fun MapsPage(
             ) {
                 val labelLayerId = if (isDarkMode) "places_locality" else "labels"
                 Anchor.Below(labelLayerId) {
-                    RadarRasterLayer(metadata = activeRadarMetadata)
+                    RadarRasterLayers(
+                        activeMetadata = activeRadarMetadata,
+                        playbackMetadata = playbackRadarMetadata,
+                    )
                     RouteLayer(
                         routeGeoJson = uiState.routeGeoJson,
                         isNavigationMode = navMode,
@@ -761,10 +813,10 @@ fun MapsPage(
                         } else {
                             val currentPlaybackChangesAgo = radarPlaybackChangesAgo
                             if (
-                                currentPlaybackChangesAgo == null ||
+                                currentPlaybackChangesAgo != null &&
                                 currentPlaybackChangesAgo !in 0..radarPlaybackFrameCount
                             ) {
-                                radarPlaybackChangesAgo = radarPlaybackFrameCount
+                                radarPlaybackChangesAgo = null
                             }
                             isRadarPlaybackRunning = true
                             radarTileError = null

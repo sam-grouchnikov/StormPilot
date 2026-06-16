@@ -155,8 +155,6 @@ internal fun String.toRadarScanTimeLabel(): String {
 private const val RADAR_TILE_CONNECT_TIMEOUT_MS = 60_000
 private const val RADAR_TILE_READ_TIMEOUT_MS = 60_000
 internal const val RADAR_TILE_WARMUP_POLL_INTERVAL_MS = 2_000L
-internal const val RADAR_PLAYBACK_FRAME_DELAY_MS = 700L
-internal val RADAR_PLAYBACK_FRAME_COUNTS = listOf(6, 12, 18, 24, 30)
 internal const val RADAR_LOG_TAG = "StormPilotRadar"
 private const val RADAR_RASTER_NATIVE_MAX_ZOOM = 10
 internal val RADAR_TILE_FADE_DURATION = 1.milliseconds
