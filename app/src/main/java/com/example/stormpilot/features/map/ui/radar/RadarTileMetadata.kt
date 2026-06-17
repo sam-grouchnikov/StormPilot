@@ -8,7 +8,14 @@ import java.net.URL
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import kotlin.time.Duration.Companion.milliseconds
@@ -25,6 +32,13 @@ internal data class RadarTileMetadataKey(
     val site: String,
     val product: RadarProduct,
     val changesAgo: Int? = null,
+)
+
+internal data class RadarScanEvent(
+    val site: String,
+    val product: RadarProduct,
+    val scanId: String,
+    val scanTimeUtc: String,
 )
 
 internal data class RadarTileMetadata(
@@ -115,6 +129,62 @@ internal suspend fun fetchRadarTileMetadata(
         )
     }
 
+internal fun radarScanEvents(
+    siteId: String,
+    product: RadarProduct,
+): Flow<RadarScanEvent> = channelFlow {
+    var activeConnection: HttpURLConnection? = null
+    val collector = launch(Dispatchers.IO) {
+        var reconnectDelayMs = RADAR_SCAN_EVENT_RECONNECT_INITIAL_DELAY_MS
+        while (isActive) {
+            try {
+                val normalizedBaseUrl = BuildConfig.RADAR_TILE_BASE_URL.trimEnd('/')
+                val eventsUrl = "$normalizedBaseUrl/radar/$siteId/${product.pathSegment}/events"
+                Log.d(RADAR_LOG_TAG, "Listening for radar scan events from $eventsUrl")
+
+                val connection = (URL(eventsUrl).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = RADAR_TILE_CONNECT_TIMEOUT_MS
+                    readTimeout = RADAR_SCAN_EVENT_READ_TIMEOUT_MS
+                    setRequestProperty("Accept", "text/event-stream")
+                    setRequestProperty("Cache-Control", "no-cache")
+                    setRequestProperty("User-Agent", "StormPilot Android")
+                }
+                activeConnection = connection
+                connection.readRadarScanEvents(siteId, product) { event ->
+                    trySend(event).isSuccess
+                }
+                reconnectDelayMs = RADAR_SCAN_EVENT_RECONNECT_INITIAL_DELAY_MS
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (isActive) {
+                    Log.e(
+                        RADAR_LOG_TAG,
+                        "Radar scan event stream unavailable for site=$siteId, " +
+                                "product=${product.pathSegment}",
+                        e,
+                    )
+                }
+            } finally {
+                activeConnection?.disconnect()
+                activeConnection = null
+            }
+
+            if (isActive) {
+                delay(reconnectDelayMs)
+                reconnectDelayMs = (reconnectDelayMs * 2)
+                    .coerceAtMost(RADAR_SCAN_EVENT_RECONNECT_MAX_DELAY_MS)
+            }
+        }
+    }
+
+    awaitClose {
+        activeConnection?.disconnect()
+        collector.cancel()
+    }
+}
+
 private fun HttpURLConnection.readRadarResponseBody(): String {
     try {
         val responseCode = responseCode
@@ -134,6 +204,88 @@ private fun HttpURLConnection.readRadarResponseBody(): String {
         disconnect()
     }
 }
+
+private fun HttpURLConnection.readRadarScanEvents(
+    siteId: String,
+    product: RadarProduct,
+    onEvent: (RadarScanEvent) -> Unit,
+) {
+    try {
+        val responseCode = responseCode
+        Log.d(
+            RADAR_LOG_TAG,
+            "Radar SSE HTTP $responseCode ${requestMethod.orEmpty()} $url " +
+                    "contentType=${contentType.orEmpty()}",
+        )
+        if (responseCode !in 200..299) {
+            val body = errorStream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            throw IOException(
+                "Radar scan event stream failed with HTTP $responseCode from $url: " +
+                        body.truncateForLog(),
+            )
+        }
+
+        val dataLines = mutableListOf<String>()
+        inputStream.bufferedReader().use { reader ->
+            while (true) {
+                val line = reader.readLine() ?: break
+                when {
+                    line.isEmpty() -> {
+                        dispatchRadarScanEvent(dataLines, siteId, product, onEvent)
+                    }
+                    line.startsWith(":") -> Unit
+                    line.startsWith("data:") -> {
+                        dataLines += line.removePrefix("data:").trimStart()
+                    }
+                }
+            }
+        }
+        dispatchRadarScanEvent(dataLines, siteId, product, onEvent)
+    } finally {
+        disconnect()
+    }
+}
+
+private fun dispatchRadarScanEvent(
+    dataLines: MutableList<String>,
+    siteId: String,
+    product: RadarProduct,
+    onEvent: (RadarScanEvent) -> Unit,
+) {
+    if (dataLines.isEmpty()) return
+    val event = dataLines.joinToString(separator = "\n")
+        .toRadarScanEventOrNull(siteId, product)
+    dataLines.clear()
+    if (event != null) {
+        onEvent(event)
+    }
+}
+
+private fun String.toRadarScanEventOrNull(
+    siteId: String,
+    product: RadarProduct,
+): RadarScanEvent? {
+    return try {
+        val json = JSONObject(this)
+        if (json.optString("event") != RADAR_SCAN_READY_EVENT) {
+            return null
+        }
+        RadarScanEvent(
+            site = json.optString("site", siteId).ifBlank { siteId }.uppercase(),
+            product = json.optString("product", product.pathSegment)
+                .toRadarProductOrNull()
+                ?: product,
+            scanId = json.optString("scanId"),
+            scanTimeUtc = json.optString("scanTimeUtc"),
+        )
+    } catch (e: Exception) {
+        Log.w(RADAR_LOG_TAG, "Ignoring malformed radar scan event: ${truncateForLog()}", e)
+        null
+    }
+}
+
+private fun String.toRadarProductOrNull(): RadarProduct? =
+    RadarProduct.entries.firstOrNull { product -> product.pathSegment == this }
 
 private fun String.truncateForLog(maxLength: Int = 600): String =
     if (length <= maxLength) this else take(maxLength) + "...(truncated)"
@@ -163,8 +315,11 @@ internal fun String.toRadarScanTimeLabel(): String {
 
 private const val RADAR_TILE_CONNECT_TIMEOUT_MS = 60_000
 private const val RADAR_TILE_READ_TIMEOUT_MS = 60_000
+private const val RADAR_SCAN_EVENT_READ_TIMEOUT_MS = 45_000
+private const val RADAR_SCAN_EVENT_RECONNECT_INITIAL_DELAY_MS = 1_000L
+private const val RADAR_SCAN_EVENT_RECONNECT_MAX_DELAY_MS = 15_000L
+private const val RADAR_SCAN_READY_EVENT = "scan_ready"
 internal const val RADAR_TILE_WARMUP_POLL_INTERVAL_MS = 2_000L
-internal const val RADAR_SCAN_REFRESH_INTERVAL_MS = 5_000L
 internal const val RADAR_LOG_TAG = "StormPilotRadar"
 private const val RADAR_RASTER_NATIVE_MAX_ZOOM = 10
 internal val RADAR_TILE_FADE_DURATION = 300.milliseconds

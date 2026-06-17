@@ -62,7 +62,6 @@ import com.example.stormpilot.features.map.ui.radar.RADAR_LOG_TAG
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_FRAME_COUNTS
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_FRAME_DELAY_MS
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_RESTART_PAUSE_MS
-import com.example.stormpilot.features.map.ui.radar.RADAR_SCAN_REFRESH_INTERVAL_MS
 import com.example.stormpilot.features.map.ui.radar.RADAR_TILE_WARMUP_POLL_INTERVAL_MS
 import com.example.stormpilot.features.map.ui.radar.RadarProduct
 import com.example.stormpilot.features.map.ui.radar.RadarRasterLayers
@@ -71,6 +70,7 @@ import com.example.stormpilot.features.map.ui.radar.RadarStatusPopup
 import com.example.stormpilot.features.map.ui.radar.RadarTileMetadata
 import com.example.stormpilot.features.map.ui.radar.RadarTileMetadataKey
 import com.example.stormpilot.features.map.ui.radar.fetchRadarTileMetadata
+import com.example.stormpilot.features.map.ui.radar.radarScanEvents
 import com.example.stormpilot.features.map.ui.search.SearchScaffold
 import com.example.stormpilot.features.map.ui.search.SearchResultsBottomSheet
 import com.example.stormpilot.features.shared.data.search.PhotonFeature
@@ -86,6 +86,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.maplibre.compose.camera.CameraPosition
@@ -403,12 +404,19 @@ fun MapsPage(
     }
 
 
-    LaunchedEffect(showRadarOverlay) {
-        if (showRadarOverlay) {
-            while (true) {
-                delay(RADAR_SCAN_REFRESH_INTERVAL_MS)
-                radarRefreshKey = System.currentTimeMillis()
-            }
+    LaunchedEffect(showRadarOverlay, selectedRadarSite, selectedRadarProduct) {
+        val site = selectedRadarSite
+        if (!showRadarOverlay || site == null) {
+            return@LaunchedEffect
+        }
+
+        radarScanEvents(site.id, selectedRadarProduct).collect { event ->
+            Log.d(
+                RADAR_LOG_TAG,
+                "Radar scan event site=${event.site}, product=${event.product.pathSegment}, " +
+                        "scan=${event.scanTimeUtc}, id=${event.scanId}",
+            )
+            radarRefreshKey = max(radarRefreshKey + 1L, System.currentTimeMillis())
         }
     }
 
