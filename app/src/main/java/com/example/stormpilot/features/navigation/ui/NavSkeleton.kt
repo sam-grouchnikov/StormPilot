@@ -381,7 +381,7 @@ private fun StormPilotBottomBar(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 12.dp, bottom = 16.dp)
+            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
             .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         val showNavLabels = maxWidth >= 420.dp

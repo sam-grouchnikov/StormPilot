@@ -72,7 +72,7 @@ private fun RadarRasterLayer(
     opacity: Float,
 ) {
     val radarSource = rememberRasterSource(
-        tiles = listOf(metadata.rasterTileRequestUrl),
+        tiles = listOf(metadata.rasterTileRenderUrl),
         options = TileSetOptions(
             minZoom = metadata.minZoom,
             maxZoom = metadata.rasterNativeMaxZoom,

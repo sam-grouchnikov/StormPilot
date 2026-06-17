@@ -62,6 +62,7 @@ import com.example.stormpilot.features.map.ui.radar.RADAR_LOG_TAG
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_FRAME_COUNTS
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_FRAME_DELAY_MS
 import com.example.stormpilot.features.map.ui.radar.RADAR_PLAYBACK_RESTART_PAUSE_MS
+import com.example.stormpilot.features.map.ui.radar.RADAR_SCAN_REFRESH_INTERVAL_MS
 import com.example.stormpilot.features.map.ui.radar.RADAR_TILE_WARMUP_POLL_INTERVAL_MS
 import com.example.stormpilot.features.map.ui.radar.RadarProduct
 import com.example.stormpilot.features.map.ui.radar.RadarRasterLayers
@@ -340,12 +341,10 @@ fun MapsPage(
         ?.let {
             selectedRadarKey?.let { key ->
                 radarTileMetadataByKey[key]
-                    ?.takeIf { radarTileRefreshKeyByMetadataKey[key] == radarRefreshKey }
             } ?: radarTileMetadata
         }
         ?.takeIf { metadata ->
-            metadata.key == selectedRadarKey &&
-                    radarTileRefreshKeyByMetadataKey[metadata.key] == radarRefreshKey
+            metadata.key == selectedRadarKey
         }
     val activeRadarMetadata = selectedRadarMetadata
         ?.takeIf { metadata -> metadata.tilesReady }
@@ -360,8 +359,7 @@ fun MapsPage(
                 )
                 radarTileMetadataByKey[key]
                     ?.takeIf { metadata ->
-                        metadata.tilesReady &&
-                            radarTileRefreshKeyByMetadataKey[key] == radarRefreshKey
+                        metadata.tilesReady
                     }
             }
         }
@@ -408,7 +406,7 @@ fun MapsPage(
     LaunchedEffect(showRadarOverlay) {
         if (showRadarOverlay) {
             while (true) {
-                delay(300_000L)
+                delay(RADAR_SCAN_REFRESH_INTERVAL_MS)
                 radarRefreshKey = System.currentTimeMillis()
             }
         }
@@ -442,7 +440,6 @@ fun MapsPage(
             }
             val arePlaybackFramesReady = playbackFrameKeys.all { key ->
                 radarTileMetadataByKey[key]
-                    ?.takeIf { radarTileRefreshKeyByMetadataKey[key] == radarRefreshKey }
                     ?.tilesReady == true
             }
 
@@ -473,9 +470,7 @@ fun MapsPage(
             )
 
             val currentMetadata = radarTileMetadataByKey[currentKey]
-                ?.takeIf { radarTileRefreshKeyByMetadataKey[currentKey] == radarRefreshKey }
             val nextMetadata = radarTileMetadataByKey[nextKey]
-                ?.takeIf { radarTileRefreshKeyByMetadataKey[nextKey] == radarRefreshKey }
             if (currentMetadata?.tilesReady == true && nextMetadata?.tilesReady == true) {
                 val delayBeforeNextFrame = RADAR_PLAYBACK_FRAME_DELAY_MS +
                     if (nextChangesAgo == radarPlaybackFrameCount) {
@@ -783,9 +778,9 @@ fun MapsPage(
                         start = 12.dp,
                         end = 12.dp,
                         bottom = when (footerState) {
-                            MapsFooterState.Navigation -> 124.dp
-                            MapsFooterState.Summary -> 174.dp
-                            MapsFooterState.Hidden -> 84.dp
+                            MapsFooterState.Navigation -> 117.dp
+                            MapsFooterState.Summary -> 167.dp
+                            MapsFooterState.Hidden -> 77.dp
                         },
                     ),
             ) {

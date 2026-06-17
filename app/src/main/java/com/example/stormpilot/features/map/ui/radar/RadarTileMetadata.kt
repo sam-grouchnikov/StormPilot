@@ -57,6 +57,9 @@ internal data class RadarTileMetadata(
                 "$normalizedBaseUrl/${rasterTileUrl.trimStart('/')}"
             }
         }
+
+    val rasterTileRenderUrl: String
+        get() = rasterTileRequestUrl.withRadarScanCacheBuster(scanTimeUtc)
 }
 
 internal suspend fun fetchRadarTileMetadata(
@@ -135,6 +138,12 @@ private fun HttpURLConnection.readRadarResponseBody(): String {
 private fun String.truncateForLog(maxLength: Int = 600): String =
     if (length <= maxLength) this else take(maxLength) + "...(truncated)"
 
+private fun String.withRadarScanCacheBuster(scanTimeUtc: String): String {
+    val revision = scanTimeUtc.filter { it.isLetterOrDigit() }.ifBlank { return this }
+    val separator = if ('?' in this) "&" else "?"
+    return "$this${separator}scan=$revision"
+}
+
 internal fun String.toRadarScanTimeLabel(): String {
     return try {
         val instant = Instant.parse(this)
@@ -155,6 +164,7 @@ internal fun String.toRadarScanTimeLabel(): String {
 private const val RADAR_TILE_CONNECT_TIMEOUT_MS = 60_000
 private const val RADAR_TILE_READ_TIMEOUT_MS = 60_000
 internal const val RADAR_TILE_WARMUP_POLL_INTERVAL_MS = 2_000L
+internal const val RADAR_SCAN_REFRESH_INTERVAL_MS = 5_000L
 internal const val RADAR_LOG_TAG = "StormPilotRadar"
 private const val RADAR_RASTER_NATIVE_MAX_ZOOM = 10
-internal val RADAR_TILE_FADE_DURATION = 1.milliseconds
+internal val RADAR_TILE_FADE_DURATION = 300.milliseconds
