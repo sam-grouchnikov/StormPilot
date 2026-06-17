@@ -109,10 +109,10 @@ internal fun RadarSiteLayers(
         id = "radar-site-markers",
         source = radarSitesSource,
         minZoom = 2.0f,
-        color = const(Color(0xFFEAF9FF)),
+        color = const(Color(0xFFCCCCCC)),
         radius = const(7.dp),
-        strokeColor = const(Color(0xFF1D252B)),
-        strokeWidth = const(1.5.dp),
+        strokeColor = const(Color(0xFF868686)),
+        strokeWidth = const(3.5.dp),
         onClick = { features ->
             val siteId = features.firstOrNull()
                 ?.properties
@@ -147,10 +147,10 @@ internal fun RadarSiteLayers(
             id = "selected-radar-site-marker",
             source = selectedRadarSiteSource,
             minZoom = 2.0f,
-            color = const(MaterialTheme.colorScheme.primary),
-            radius = const(7.dp),
-            strokeColor = const(MaterialTheme.colorScheme.onPrimary),
-            strokeWidth = const(2.dp),
+            color = const(Color(0xFF54AD44)),
+            radius = const(8.dp),
+            strokeColor = const(Color(0xFF606060)),
+            strokeWidth = const(3.5.dp),
         )
     }
 }

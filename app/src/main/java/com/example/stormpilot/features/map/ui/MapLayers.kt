@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.example.stormpilot.features.shared.data.search.PhotonFeature
 import com.example.stormpilot.ui.theme.ExtendedColors
@@ -48,14 +49,23 @@ internal fun UserLocationLayer(origin: Position?) {
         GeoJsonData.JsonString(json)
     }
 
+    val colors = ExtendedColors()
     val userLocationSource = rememberGeoJsonSource(data = userLocationFeatureCollection)
+    CircleLayer(
+        id = "user-location-shadow",
+        source = userLocationSource,
+        color = const(Color.Black.copy(alpha = 0.65f)),
+        radius = const(12.5.dp),
+        blur = const(0.85f),
+        translate = const(DpOffset(0.dp, 1.dp)),
+    )
     CircleLayer(
         id = "user-location",
         source = userLocationSource,
-        color = const(MaterialTheme.colorScheme.onPrimary),
-        radius = const(6.dp),
-        strokeColor = const(MaterialTheme.colorScheme.primary),
-        strokeWidth = const(3.dp),
+        color = const(colors.locationCircle),
+        radius = const(6.5.dp),
+        strokeColor = const(Color.White),
+        strokeWidth = const(2.5.dp),
     )
 }
 
