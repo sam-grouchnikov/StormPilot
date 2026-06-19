@@ -116,6 +116,7 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
                     param("avoidStorms", avoidStorms),
                     param("includeWarnings", includeWarnings),
                 ),
+                readTimeoutMs = if (avoidStorms) STORM_AWARE_ROUTE_READ_TIMEOUT_MS else READ_TIMEOUT_MS,
             ),
         )
 
@@ -194,8 +195,12 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
     override suspend fun assistantOutlook(location: String): JsonObject =
         getJsonObject("assistant/weather/outlook", params(param("location", location)))
 
-    private suspend fun getJSONObject(path: String, params: List<Pair<String, Any?>> = emptyList()): JSONObject =
-        JSONObject(getBody(path, params))
+    private suspend fun getJSONObject(
+        path: String,
+        params: List<Pair<String, Any?>> = emptyList(),
+        readTimeoutMs: Int = READ_TIMEOUT_MS,
+    ): JSONObject =
+        JSONObject(getBody(path, params, readTimeoutMs))
 
     private suspend fun getJSONArray(path: String, params: List<Pair<String, Any?>> = emptyList()): JSONArray =
         JSONArray(getBody(path, params))
@@ -203,12 +208,16 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
     private suspend fun getJsonObject(path: String, params: List<Pair<String, Any?>> = emptyList()): JsonObject =
         json.parseToJsonElement(getBody(path, params)).jsonObject
 
-    private suspend fun getBody(path: String, params: List<Pair<String, Any?>> = emptyList()): String =
+    private suspend fun getBody(
+        path: String,
+        params: List<Pair<String, Any?>> = emptyList(),
+        readTimeoutMs: Int = READ_TIMEOUT_MS,
+    ): String =
         withContext(Dispatchers.IO) {
             val connection = (buildUrl(path, params).openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = CONNECT_TIMEOUT_MS
-                readTimeout = READ_TIMEOUT_MS
+                readTimeout = readTimeoutMs
                 setRequestProperty("Accept", "application/json, application/geo+json")
                 setRequestProperty("User-Agent", USER_AGENT)
             }
@@ -525,6 +534,7 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
         const val NO_TIMEOUT_MS = 0
         const val CONNECT_TIMEOUT_MS = 10_000
         const val READ_TIMEOUT_MS = 20_000
+        const val STORM_AWARE_ROUTE_READ_TIMEOUT_MS = 60_000
         const val USER_AGENT = "StormPilot/1.0"
     }
 }
