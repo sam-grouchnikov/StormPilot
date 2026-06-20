@@ -745,6 +745,28 @@
       }
     },
     {
+      "id": "pois_label",
+      "type": "symbol",
+      "source": "protomaps",
+      "source-layer": "pois",
+      "minzoom": 16,
+      "filter": ["has", "name"],
+      "layout": {
+        "text-font": ["Noto Sans Regular"],
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-size": 11,
+        "text-anchor": "top",
+        "text-offset": [0, 0.6],
+        "icon-image": "marker",
+        "icon-size": 0.8
+      },
+      "paint": {
+        "text-color": "#cdd9e8",
+        "text-halo-color": "#1a2632",
+        "text-halo-width": 1
+      }
+    },
+    {
       "id": "places_subplace",
       "type": "symbol",
       "source": "protomaps",

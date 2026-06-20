@@ -34,6 +34,12 @@ public class ExtendedColors {
     public val blueBackground: Color
         get() = if (isDark) Color(0xFF252538) else Color(0xFFE4EAF6)
 
+    public val welcomeNavyStart: Color
+        get() = Color(0xFF030C1A)
+
+    public val welcomeNavyEnd: Color
+        get() = Color(0xFF08203B)
+
     public val purpleBackground: Color
         get() = if (isDark) Color(0xFF312538) else Color(0xFFEFE8F6)
 

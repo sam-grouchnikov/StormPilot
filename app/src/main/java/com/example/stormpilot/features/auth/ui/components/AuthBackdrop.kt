@@ -23,45 +23,17 @@ fun StormBackdrop() {
             val height = size.height
             val sweepDistance = width + height
             val fineRainWidth = 1.1.dp.toPx()
-            val broadRainWidth = 18.dp.toPx()
-
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        scheme.primary.copy(alpha = 0.18f),
-                        scheme.tertiary.copy(alpha = 0.08f),
-                        Color.Transparent,
-                    ),
-                    center = Offset(width * 0.76f, height * 0.18f),
-                    radius = width * 0.72f,
-                ),
-                radius = width * 0.72f,
-                center = Offset(width * 0.76f, height * 0.18f),
-            )
-
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        scheme.secondary.copy(alpha = 0.14f),
-                        scheme.primaryContainer.copy(alpha = 0.09f),
-                        Color.Transparent,
-                    ),
-                    center = Offset(width * 0.18f, height * 0.84f),
-                    radius = width * 0.64f,
-                ),
-                radius = width * 0.64f,
-                center = Offset(width * 0.18f, height * 0.84f),
-            )
+            val broadRainWidth = 12.dp.toPx()
 
             rotate(degrees = -14f, pivot = Offset(width / 2f, height / 2f)) {
-                repeat(4) { index ->
-                    val y = height * (0.16f + index * 0.23f)
+                repeat(3) { index ->
+                    val y = height * (0.18f + index * 0.28f)
                     drawLine(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                scheme.primary.copy(alpha = 0.08f),
-                                scheme.tertiary.copy(alpha = 0.05f),
+                                scheme.primary.copy(alpha = 0.055f),
+                                scheme.tertiary.copy(alpha = 0.035f),
                                 Color.Transparent,
                             ),
                         ),
@@ -73,14 +45,14 @@ fun StormBackdrop() {
                 }
             }
 
-            repeat(18) { index ->
-                val spacing = sweepDistance / 7f
-                val startX = ((index * spacing * 0.68f) % (width + spacing * 2f)) - spacing
-                val startY = -height * 0.12f + (index % 6) * height * 0.18f
+            repeat(14) { index ->
+                val spacing = sweepDistance / 8f
+                val startX = ((index * spacing * 0.72f) % (width + spacing * 2f)) - spacing
+                val startY = -height * 0.08f + (index % 7) * height * 0.16f
                 drawLine(
-                    color = scheme.primary.copy(alpha = if (index % 3 == 0) 0.18f else 0.11f),
+                    color = scheme.primary.copy(alpha = if (index % 3 == 0) 0.12f else 0.07f),
                     start = Offset(startX, startY),
-                    end = Offset(startX - width * 0.32f, startY + height * 0.72f),
+                    end = Offset(startX - width * 0.26f, startY + height * 0.58f),
                     strokeWidth = fineRainWidth,
                     cap = StrokeCap.Round,
                 )

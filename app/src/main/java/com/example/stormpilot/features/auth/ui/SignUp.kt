@@ -7,10 +7,10 @@ import com.example.stormpilot.features.auth.ui.components.AuthExperienceScreen
 fun SignUp(onLogin: () -> Unit, onSwitchToSignIn: () -> Unit) {
     AuthExperienceScreen(
         modeTitle = "Sign up",
-        heroText = "Modern storm chasing, with a touch of AI.",
+        heroText = "Start with a more intelligent way to track storms on the move.",
         switchPrompt = "Already have an account?",
         switchActionLabel = "Sign in",
-        primaryButtonLabel = "Create your account",
+        primaryButtonLabel = "Create account",
         onPrimaryAction = onLogin,
         onSwitchMode = onSwitchToSignIn,
     )
