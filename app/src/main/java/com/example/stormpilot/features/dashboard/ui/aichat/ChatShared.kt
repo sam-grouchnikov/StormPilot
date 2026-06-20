@@ -61,8 +61,8 @@ fun ChatBubble(
     val bubbleBrush = if (isUser) {
         Brush.linearGradient(
             listOf(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary
+                MaterialTheme.colorScheme.primaryContainer,
+                MaterialTheme.colorScheme.tertiaryContainer
             )
         )
     } else {
@@ -128,7 +128,7 @@ fun ChatBubble(
                         ThinkingIndicator()
                     } else {
                         val textColor = if (isUser) {
-                            MaterialTheme.colorScheme.onPrimary
+                            MaterialTheme.colorScheme.onSurface
                         } else {
                             MaterialTheme.colorScheme.onSurface
                         }

@@ -699,7 +699,7 @@
         "text-size": 12
       },
       "paint": {
-        "text-color": "#7a94b0",
+        "text-color": "#638E64",
         "text-halo-color": "#1a2632",
         "text-halo-width": 1
       }
@@ -739,7 +739,7 @@
         "text-size": 12
       },
       "paint": {
-        "text-color": "#8aaac8",
+        "text-color": "#A3814F",
         "text-halo-color": "#1a2632",
         "text-halo-width": 1.5
       }

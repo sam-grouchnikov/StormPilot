@@ -21,12 +21,12 @@ import com.example.stormpilot.core.isAppInDarkMode
 import com.google.android.material.color.utilities.DynamicColor
 import com.google.android.material.color.utilities.Hct
 import com.google.android.material.color.utilities.MaterialDynamicColors
-import com.google.android.material.color.utilities.SchemeVibrant
+import com.google.android.material.color.utilities.SchemeTonalSpot
 
 /**
  * Change this seed to recolor the whole app with the Material 3 expressive palette.
  */
-val StormPilotColorSeed = Color(0xFF2C76B0)
+val StormPilotColorSeed = Color(0xFF2C8BB0)
 
 @SuppressLint("RestrictedApi")
 private val expressiveColors = MaterialDynamicColors()
@@ -41,7 +41,7 @@ private val StormPilotShapes = Shapes(
 
 @SuppressLint("RestrictedApi")
 internal fun stormPilotColorScheme(darkTheme: Boolean): ColorScheme {
-    val scheme = SchemeVibrant(
+    val scheme = SchemeTonalSpot(
         Hct.fromInt(StormPilotColorSeed.toArgb()),
         darkTheme,
         0.0,
@@ -153,7 +153,7 @@ internal fun stormPilotColorScheme(darkTheme: Boolean): ColorScheme {
 }
 
 @SuppressLint("RestrictedApi")
-private fun DynamicColor.composeColor(@SuppressLint("RestrictedApi") scheme: SchemeVibrant): Color = Color(getArgb(scheme))
+private fun DynamicColor.composeColor(@SuppressLint("RestrictedApi") scheme: SchemeTonalSpot): Color = Color(getArgb(scheme))
 
 @Composable
 fun StormPilotTheme(

@@ -139,7 +139,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                     .matchParentSize()
                     .padding(1.5.dp),
                 shape = RoundedCornerShape(28.5.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f),
+                color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f),
                 tonalElevation = 12.dp,
                 shadowElevation = 18.dp
             ) {
@@ -147,7 +147,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.98f)
+                            MaterialTheme.colorScheme.surfaceContainerLowest
                         )
                 ) {
                     Column(
@@ -190,7 +190,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.88f),
                         border = BorderStroke(
                             1.dp,
                             MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)

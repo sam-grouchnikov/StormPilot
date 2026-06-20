@@ -91,7 +91,7 @@ fun AnimatedStormAiShadowContainer(
                         val radius = cornerRadius
                             ?.toPx()
                             ?.coerceAtMost(min(size.width, size.height) / 2f)
-                            ?: size.height / 2f
+                            ?: (size.height / 2f)
                         val rect = Rect(0f, 0f, size.width, size.height)
 
                         drawIntoCanvas { canvas ->
