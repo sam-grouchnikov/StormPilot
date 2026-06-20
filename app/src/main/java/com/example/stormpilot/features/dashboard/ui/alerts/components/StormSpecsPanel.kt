@@ -120,49 +120,49 @@ private fun specToRisk(spec: StormSpec): String {
     return when (spec.label) {
         "CAPE" -> when {
             value < 1000 -> "Low"
-            value in 1000.0..2500.0 -> "Moderate"
+            value in 1000.0..2500.0 -> "Medium"
             value in 2501.0..4000.0 -> "High"
             else -> "Extreme"
         }
         "CIN" -> when {
             value > 100 -> "Low"
-            value in 25.0..100.0 -> "Moderate"
+            value in 25.0..100.0 -> "Medium"
             value in 1.0..24.0 -> "High"
             else -> "Extreme"
         }
         "SRH" -> when {
             value < 100 -> "Low"
-            value in 100.0..250.0 -> "Moderate"
+            value in 100.0..250.0 -> "Medium"
             value in 251.0..400.0 -> "High"
             else -> "Extreme"
         }
         "Lifted" -> when {
             value >= 0 -> "Low"
-            value in -4.0..-1.0 -> "Moderate"
+            value in -4.0..-1.0 -> "Medium"
             value in -7.0..-5.0 -> "High"
             else -> "Extreme"
         }
         "LL Shear" -> when {
             value < 15 -> "Low"
-            value in 15.0..25.0 -> "Moderate"
+            value in 15.0..25.0 -> "Medium"
             value in 26.0..40.0 -> "High"
             else -> "Extreme"
         }
         "Dew Pt" -> when {
             value < 55 -> "Low"
-            value in 55.0..64.0 -> "Moderate"
+            value in 55.0..64.0 -> "Medium"
             value in 65.0..72.0 -> "High"
             else -> "Extreme"
         }
         "RH" -> when {
             value < 50 -> "Low"
-            value in 50.0..70.0 -> "Moderate"
+            value in 50.0..70.0 -> "Medium"
             value in 71.0..85.0 -> "High"
             else -> "Extreme"
         }
         "Gust" -> when {
             value < 40 -> "Low"
-            value in 40.0..57.0 -> "Moderate"
+            value in 40.0..57.0 -> "Medium"
             value in 58.0..74.0 -> "High"
             else -> "Extreme"
         }
@@ -190,24 +190,24 @@ private fun StormSpecCard(spec: StormSpec) {
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp),
         ) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Text(
                     text = spec.label,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp,
+                    fontSize = 15.sp,
                     maxLines = 1,
                     modifier = Modifier.weight(1f),
                 )
-                Surface(shape = CircleShape, color = riskColor.copy(alpha = 0.14f)) {
+                Surface(shape = RoundedCornerShape(14.dp), color = riskColor.copy(alpha = 0.14f)) {
                     Text(
                         text = risk,
                         color = riskColor,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
                     )
                 }
             }
