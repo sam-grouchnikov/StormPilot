@@ -131,10 +131,10 @@ internal fun stormPilotColorScheme(darkTheme: Boolean): ColorScheme {
             scrim = expressiveColors.scrim().composeColor(scheme),
             surfaceBright = expressiveColors.surfaceBright().composeColor(scheme),
             surfaceContainer = expressiveColors.surfaceContainer().composeColor(scheme),
-            surfaceContainerHigh = expressiveColors.surfaceContainerHigh().composeColor(scheme),
-            surfaceContainerHighest = expressiveColors.surfaceContainerHighest().composeColor(scheme),
-            surfaceContainerLow = expressiveColors.surfaceContainerLow().composeColor(scheme),
-            surfaceContainerLowest = expressiveColors.surfaceContainerLowest().composeColor(scheme),
+            surfaceContainerHigh = expressiveColors.surfaceContainerLow().composeColor(scheme),
+            surfaceContainerHighest = expressiveColors.surfaceContainerLowest().composeColor(scheme),
+            surfaceContainerLow = expressiveColors.surfaceContainerHigh().composeColor(scheme),
+            surfaceContainerLowest = expressiveColors.surfaceContainerHighest().composeColor(scheme),
             surfaceDim = expressiveColors.surfaceDim().composeColor(scheme),
             primaryFixed = expressiveColors.primaryFixed().composeColor(scheme),
             primaryFixedDim = expressiveColors.primaryFixedDim().composeColor(scheme),
@@ -160,8 +160,9 @@ fun StormPilotTheme(
     darkTheme: Boolean = isAppInDarkMode(),
     dynamicColor: Boolean = true,
     isLoading: Boolean = false,
-    opaqueNavigationBar: Boolean = true,
+    opaqueNavigationBar: Boolean = false,
     useSurfaceContainerNavigationBar: Boolean = false,
+    navigationBarColorOverride: Color? = null,
     syncAppDarkMode: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -183,7 +184,7 @@ fun StormPilotTheme(
                 colorScheme.surfaceContainerHigh
             }
             val navigationBarColor = if (opaqueNavigationBar) {
-                navigationBarSurfaceColor.toArgb()
+                (navigationBarColorOverride ?: navigationBarSurfaceColor).toArgb()
             } else {
                 android.graphics.Color.TRANSPARENT
             }

@@ -36,6 +36,7 @@ import com.example.stormpilot.features.dashboard.ui.aichat.ChatPopup
 import com.example.stormpilot.R
 import com.example.stormpilot.features.common.ui.AccountMenuAnchor
 import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
+import com.example.stormpilot.ui.theme.ExtendedColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -48,10 +49,13 @@ fun RadarPage(
     val showWidgets = remember { mutableStateOf(false) }
 
     var showChat by remember { mutableStateOf(false) }
+    val colors = ExtendedColors()
 
 
-
-    StormPilotTheme {
+    StormPilotTheme(
+        opaqueNavigationBar = true,
+        navigationBarColorOverride = colors.purpleSurfaceContainer
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             ModernBubbleNavBarScreen(
                 showChat = showChat,

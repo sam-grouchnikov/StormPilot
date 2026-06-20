@@ -36,6 +36,10 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.auto(
                 lightScrim = Color.TRANSPARENT,
                 darkScrim = Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.TRANSPARENT,
+                darkScrim = Color.TRANSPARENT
             )
         )
 
