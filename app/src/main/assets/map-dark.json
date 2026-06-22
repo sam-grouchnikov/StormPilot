@@ -17,6 +17,7 @@
       "type": "background",
       "paint": { "background-color": "#1a2232" }
     },
+
     {
       "id": "earth",
       "type": "fill",
