@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +30,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.stormpilot.ui.theme.StormPilotTheme
-import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatPopup
 import com.example.stormpilot.R
@@ -42,12 +41,9 @@ import com.example.stormpilot.ui.theme.ExtendedColors
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun RadarPage(
-    alertsViewModel: AlertsViewModel = hiltViewModel(),
     genAIViewModel: GenAIViewModel = hiltViewModel(),
     onOpenSettings: () -> Unit = {},
 ) {
-    val showWidgets = remember { mutableStateOf(false) }
-
     var showChat by remember { mutableStateOf(false) }
     val colors = ExtendedColors()
 
@@ -57,10 +53,7 @@ fun RadarPage(
         navigationBarColorOverride = colors.purpleSurfaceContainer
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            ModernBubbleNavBarScreen(
-                showChat = showChat,
-                onChatClick = { showChat = true }
-            )
+            DashboardOverviewScreen()
 
             TopIconRow(
                 modifier = Modifier
@@ -69,6 +62,7 @@ fun RadarPage(
                     .statusBarsPadding()
                     .padding(top = 8.dp),
                 onOpenSettings = onOpenSettings,
+                onOpenChat = { showChat = true },
             )
 
             AnimatedStormAiChatBackdrop(
@@ -87,6 +81,7 @@ fun RadarPage(
 fun TopIconRow(
     modifier: Modifier = Modifier,
     onOpenSettings: () -> Unit = {},
+    onOpenChat: () -> Unit = {},
 ) {
     Row(
         modifier = modifier.padding(horizontal = 16.dp),
@@ -108,16 +103,25 @@ fun TopIconRow(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Icon(
-            imageVector = Icons.Outlined.Notifications,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            contentDescription = null,
-            modifier = Modifier
-                .size(33.dp)
-                .padding(top = 3.dp)
-        )
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
+        ) {
+            IconButton(
+                onClick = onOpenChat,
+                modifier = Modifier.size(43.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.AutoAwesome,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Open StormPilot AI chat",
+                    modifier = Modifier.size(23.dp),
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.width(15.dp))
+        Spacer(modifier = Modifier.width(12.dp))
 
         AccountMenuAnchor(onClick = onOpenSettings, circleSize = 43, textSize = 15)
 

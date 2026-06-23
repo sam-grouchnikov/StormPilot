@@ -102,21 +102,25 @@ fun Weather(
         }
     }
 
-    WeatherContent(cityName = cityName, uiState = uiState)
-}
-
-@Composable
-private fun WeatherContent(
-    cityName: String,
-    uiState: WeatherUiState,
-) {
-    Column(
+    WeatherOverviewSection(
+        cityName = cityName,
+        uiState = uiState,
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 14.dp)
             .verticalScroll(rememberScrollState())
             .padding(bottom = dashboardBottomContentPadding()),
+    )
+}
 
+@Composable
+fun WeatherOverviewSection(
+    cityName: String,
+    uiState: WeatherUiState,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         CurrentWeatherCard(cityName = cityName, current = uiState.current, isLoading = uiState.isLoading)
