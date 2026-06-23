@@ -2,8 +2,13 @@ package com.example.stormpilot.features.dashboard.ui.alerts.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -25,6 +30,8 @@ import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.Flood
 import androidx.compose.material.icons.outlined.Tornado
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.PriorityHigh
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -32,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,11 +53,54 @@ fun AlertStatusPanel(
     alertsState: AlertsUiState,
     onAlertClick: (NwsAlert) -> Unit,
 ) {
+    val colors = ExtendedColors()
+    val panelHasAlert = alertsState.hasAnyAlert
+    val panelContainerTarget = if (panelHasAlert) {
+        colors.alertRadarActiveContainer
+    } else {
+        colors.alertRadarClearContainer
+    }
+    val panelBorderTarget = if (panelHasAlert) {
+        colors.alertRadarActiveContent.copy(alpha = 0.26f)
+    } else {
+        colors.alertRadarClearOutline.copy(alpha = 0.34f)
+    }
+    val panelTitleTarget = if (panelHasAlert) {
+        colors.alertRadarActiveContent
+    } else {
+        colors.alertRadarClearContent
+    }
+    val panelSubtitleTarget = if (panelHasAlert) {
+        colors.alertRadarActiveContent.copy(alpha = 0.76f)
+    } else {
+        colors.alertRadarClearContent.copy(alpha = 0.74f)
+    }
+    val panelContainerColor by animateColorAsState(
+        targetValue = panelContainerTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_radar_panel_container",
+    )
+    val panelBorderColor by animateColorAsState(
+        targetValue = panelBorderTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_radar_panel_border",
+    )
+    val panelTitleColor by animateColorAsState(
+        targetValue = panelTitleTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_radar_panel_title",
+    )
+    val panelSubtitleColor by animateColorAsState(
+        targetValue = panelSubtitleTarget,
+        animationSpec = tween(durationMillis = 450),
+        label = "alert_radar_panel_subtitle",
+    )
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 04f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f)),
+        color = panelContainerColor,
+        border = BorderStroke(1.dp, panelBorderColor),
     ) {
         Column(
             modifier = Modifier.padding(vertical = 14.dp),
@@ -64,13 +115,13 @@ fun AlertStatusPanel(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "Alert Radar",
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = panelTitleColor,
                         fontWeight = FontWeight.Black,
                         fontSize = 21.sp,
                     )
                     Text(
                         text = "Tap active rows for details",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = panelSubtitleColor,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.sp,
                     )
@@ -128,10 +179,11 @@ private fun AlertStatusRow(
     onAlertClick: (NwsAlert) -> Unit,
 ) {
     val colors = ExtendedColors()
+    val isWarning = state.level == AlertLevel.Warning
     val containerTarget = when (state.level) {
-        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainer
-        AlertLevel.Watch -> colors.alertWatchContainer
-        AlertLevel.Warning -> colors.alertWarningContainer
+        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.6f)
+        AlertLevel.Watch -> colors.alertWatchContainer.copy(alpha = 0.4f)
+        AlertLevel.Warning -> colors.alertWarningContainer.copy(alpha = 0.1f)
     }
     val contentTarget = when (state.level) {
         AlertLevel.Clear -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -176,6 +228,25 @@ private fun AlertStatusRow(
         ),
         label = "alert_row_scale",
     )
+    val warningIconTransition = rememberInfiniteTransition(label = "warning_icon_pulse")
+    val warningIconScale by warningIconTransition.animateFloat(
+        initialValue = 0.92f,
+        targetValue = 1.10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 720, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "warning_icon_scale",
+    )
+    val warningIconAlpha by warningIconTransition.animateFloat(
+        initialValue = 0.68f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 720, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "warning_icon_alpha",
+    )
 
     Surface(
         modifier = Modifier
@@ -203,10 +274,13 @@ private fun AlertStatusRow(
             ) {
                 Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
                     Icon(
-                        imageVector = icon,
-                        contentDescription = null,
+                        imageVector = if (isWarning) Icons.Outlined.PriorityHigh else icon,
+                        contentDescription = if (isWarning) "Warning active" else null,
                         tint = iconColor,
-                        modifier = Modifier.size(23.dp),
+                        modifier = Modifier
+                            .size(23.dp)
+                            .scale(if (isWarning) warningIconScale else 1f)
+                            .alpha(if (isWarning) warningIconAlpha else 1f),
                     )
                 }
             }
@@ -216,12 +290,6 @@ private fun AlertStatusRow(
                     .padding(start = 12.dp),
                 verticalArrangement = Arrangement.Center,
             ) {
-                Text(
-                    text = label,
-                    color = titleColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                )
                 AnimatedContent(
                     targetState = state.text,
                     transitionSpec = {

@@ -4,6 +4,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,16 +17,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Thunderstorm
+import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,8 +56,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -60,6 +70,12 @@ import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+private data class ContextualChatPrompt(
+    val label: String,
+    val prompt: String,
+    val icon: ImageVector,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
@@ -68,6 +84,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
     var inputText by remember { mutableStateOf("") }
 
     val chatMessages = viewModel.chatMessages
+    val promptSuggestions = rememberContextualChatPrompts()
     val listState = rememberLazyListState()
 
     val sheetState = rememberModalBottomSheetState(
@@ -89,6 +106,12 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
         val prompt = inputText.trim()
         if (prompt.isBlank()) return
 
+        inputText = ""
+        focusManager.clearFocus()
+        viewModel.sendMessage(prompt)
+    }
+
+    fun sendPromptSuggestion(prompt: String) {
         inputText = ""
         focusManager.clearFocus()
         viewModel.sendMessage(prompt)
@@ -155,104 +178,141 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                             .fillMaxWidth()
                             .padding(horizontal = 18.dp, vertical = 14.dp)
                     ) {
-                    ChatPopupHeader(onDismiss = onDismiss)
+                        ChatPopupHeader(onDismiss = onDismiss)
 
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        if (chatMessages.isEmpty()) {
-                            item {
-                                EmptyChatState()
-                            }
-                        } else {
-                            items(
-                                items = chatMessages,
-                                key = { it.id }
-                            ) { message ->
-                                ChatBubble(
-                                    message = message,
-                                    onAnimatedContentChanged = {
-                                        if (chatMessages.lastOrNull()?.id == message.id) {
-                                            scrollToBottom()
-                                        }
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.88f),
-                        border = BorderStroke(
-                            1.dp,
-                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
-                        )
-                    ) {
-                        Row(
+                        LazyColumn(
+                            state = listState,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 6.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
-                            verticalAlignment = Alignment.Bottom
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            OutlinedTextField(
-                                value = inputText,
-                                onValueChange = { inputText = it },
-                                placeholder = {
-                                    Text(
-                                        "Ask StormPilot AI anything",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                            if (chatMessages.isEmpty()) {
+                                item {
+                                    EmptyChatState(
+                                        prompts = promptSuggestions,
+                                        onPromptClick = ::sendPromptSuggestion,
                                     )
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(22.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color.Transparent,
-                                    unfocusedBorderColor = Color.Transparent,
-                                    disabledBorderColor = Color.Transparent,
-                                    cursorColor = MaterialTheme.colorScheme.primary,
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent
-                                ),
-                                maxLines = 4,
-                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                                keyboardActions = KeyboardActions(onSend = { sendMessage() })
+                                }
+                            } else {
+                                items(
+                                    items = chatMessages,
+                                    key = { it.id }
+                                ) { message ->
+                                    ChatBubble(
+                                        message = message,
+                                        onAnimatedContentChanged = {
+                                            if (chatMessages.lastOrNull()?.id == message.id) {
+                                                scrollToBottom()
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        if (chatMessages.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            ContextualPromptRow(
+                                prompts = promptSuggestions,
+                                onPromptClick = ::sendPromptSuggestion,
                             )
+                        }
 
-                            Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
-                            FilledIconButton(
-                                onClick = { sendMessage() },
-                                enabled = inputText.isNotBlank(),
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(28.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.88f),
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)
+                            )
+                        ) {
+                            Row(
                                 modifier = Modifier
-                                    .padding(bottom = 4.dp)
-                                    .scale(sendButtonScale),
-                                colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                                )
+                                    .fillMaxWidth()
+                                    .padding(start = 6.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+                                verticalAlignment = Alignment.Bottom
                             ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.Send,
-                                    contentDescription = "Send prompt"
+                                OutlinedTextField(
+                                    value = inputText,
+                                    onValueChange = { inputText = it },
+                                    placeholder = {
+                                        Text(
+                                            "Ask StormPilot AI anything",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.78f)
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    shape = RoundedCornerShape(22.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = Color.Transparent,
+                                        unfocusedBorderColor = Color.Transparent,
+                                        disabledBorderColor = Color.Transparent,
+                                        cursorColor = MaterialTheme.colorScheme.primary,
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent
+                                    ),
+                                    maxLines = 4,
+                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                                    keyboardActions = KeyboardActions(onSend = { sendMessage() })
                                 )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                FilledIconButton(
+                                    onClick = { sendMessage() },
+                                    enabled = inputText.isNotBlank(),
+                                    modifier = Modifier
+                                        .padding(bottom = 4.dp)
+                                        .scale(sendButtonScale),
+                                    colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Rounded.Send,
+                                        contentDescription = "Send prompt"
+                                    )
+                                }
                             }
                         }
                     }
-                }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun rememberContextualChatPrompts(): List<ContextualChatPrompt> = remember {
+    listOf(
+        ContextualChatPrompt(
+            label = "Alert summary",
+            prompt = "Summarize active weather alerts for my current location. Include severity, timing, and what I should do first.",
+            icon = Icons.Outlined.WarningAmber,
+        ),
+        ContextualChatPrompt(
+            label = "Weather brief",
+            prompt = "Give me a concise weather brief for my current location, including current conditions, the next few hours, and anything that could affect travel.",
+            icon = Icons.Outlined.Cloud,
+        ),
+        ContextualChatPrompt(
+            label = "Storm setup",
+            prompt = "Explain the current storm environment near me in plain language. Focus on instability, wind, moisture, and what risks they imply.",
+            icon = Icons.Outlined.Thunderstorm,
+        ),
+        ContextualChatPrompt(
+            label = "Travel timing",
+            prompt = "Help me choose safer travel timing today based on current alerts and forecast trends near my location.",
+            icon = Icons.Outlined.LocationOn,
+        ),
+    )
 }
 
 @Composable
@@ -300,7 +360,10 @@ private fun ChatPopupHeader(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun EmptyChatState() {
+private fun EmptyChatState(
+    prompts: List<ContextualChatPrompt>,
+    onPromptClick: (String) -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,6 +384,68 @@ private fun EmptyChatState() {
                 overflow = TextOverflow.Ellipsis
             )
 
+            Spacer(modifier = Modifier.height(18.dp))
+
+            ContextualPromptRow(
+                prompts = prompts,
+                onPromptClick = onPromptClick,
+            )
+
+        }
+    }
+}
+
+@Composable
+private fun ContextualPromptRow(
+    prompts: List<ContextualChatPrompt>,
+    onPromptClick: (String) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(9.dp),
+    ) {
+        prompts.forEach { prompt ->
+            ContextualPromptChip(
+                prompt = prompt,
+                onClick = { onPromptClick(prompt.prompt) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContextualPromptChip(
+    prompt: ContextualChatPrompt,
+    onClick: () -> Unit,
+) {
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.56f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(CircleShape)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(7.dp),
+        ) {
+            Icon(
+                imageVector = prompt.icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(17.dp),
+            )
+            Text(
+                text = prompt.label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                maxLines = 1,
+            )
         }
     }
 }
