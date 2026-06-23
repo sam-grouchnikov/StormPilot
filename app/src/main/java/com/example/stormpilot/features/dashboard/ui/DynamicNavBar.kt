@@ -15,23 +15,32 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,10 +53,12 @@ import com.example.stormpilot.features.shared.data.alerts.bestMatchForEvent
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
+import com.example.stormpilot.ui.theme.ExtendedColors
 import org.maplibre.spatialk.geojson.Position
 
 @Composable
 fun DashboardOverviewScreen(
+    modifier: Modifier = Modifier,
     alertsViewModel: AlertsViewModel = hiltViewModel(),
     weatherViewModel: WeatherViewModel = hiltViewModel(),
     mapsViewModel: MapsViewModel = hiltViewModel(),
@@ -84,38 +95,37 @@ fun DashboardOverviewScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        AnimatedDashboardBackdrop()
+    Box(modifier = modifier.fillMaxSize()) {
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .padding(top = 70.dp, start = 14.dp, end = 14.dp)
+                .padding(top = 84.dp, start = 10.dp, end = 10.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = dashboardBottomContentPadding()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
-            LocationAlertsMapCard(
-                cityName = cityName,
-                position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
-                locationGeoJson = locationGeoJson,
-                alertsGeoJson = mapsState.alertsGeoJson,
-                onAlertPolygonClick = { point, eventType ->
-                    val localMatch = alertsState.allAlerts.bestMatchForEvent(eventType)
-                    if (localMatch != null) {
-                        mapsViewModel.showAlertDetail(localMatch)
-                    } else {
-                        mapsViewModel.onAlertPolygonTapped(point, eventType)
-                    }
-                },
-            )
-
+//            LocationAlertsMapCard(
+//                cityName = cityName,
+//                position = location?.let { Position(longitude = it.longitude, latitude = it.latitude) },
+//                locationGeoJson = locationGeoJson,
+//                alertsGeoJson = mapsState.alertsGeoJson,
+//                onAlertPolygonClick = { point, eventType ->
+//                    val localMatch = alertsState.allAlerts.bestMatchForEvent(eventType)
+//                    if (localMatch != null) {
+//                        mapsViewModel.showAlertDetail(localMatch)
+//                    } else {
+//                        mapsViewModel.onAlertPolygonTapped(point, eventType)
+//                    }
+//                },
+//            )
+            ForecastSectionTitle("Alert Radar")
             AlertStatusPanel(
                 alertsState = alertsState,
                 onAlertClick = mapsViewModel::showAlertDetail,
             )
-
+            ForecastSectionTitle("Storm Environment")
             StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
 
             WeatherOverviewSection(
@@ -138,9 +148,12 @@ fun DashboardOverviewScreen(
 private fun dashboardBottomContentPadding() =
     112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
+
+
 @Composable
 private fun AnimatedDashboardBackdrop() {
     val colors = MaterialTheme.colorScheme
+    val extended = ExtendedColors()
     val transition = rememberInfiniteTransition(label = "dashboard_backdrop")
     val drift by transition.animateFloat(
         initialValue = 0f,
@@ -155,14 +168,20 @@ private fun AnimatedDashboardBackdrop() {
     Canvas(
         modifier = Modifier
             .fillMaxSize()
-            .background(colors.surfaceContainerLowest),
+            .background(
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        extended.welcomeNavyStart,
+                        extended.welcomeNavyEnd,
+                    ),
+                ),
+            ),
     ) {
         drawRect(
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    colors.surfaceContainerLowest,
-                    colors.surfaceContainerLowest,
-                    colors.surface.copy(alpha = 0.72f),
+                    extended.welcomeNavyStart,
+                    extended.welcomeNavyStart.copy(alpha = 0.5f),
                 ),
             ),
         )

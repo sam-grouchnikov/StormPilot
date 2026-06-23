@@ -99,34 +99,13 @@ fun AlertStatusPanel(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        color = panelContainerColor,
-        border = BorderStroke(1.dp, panelBorderColor),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
     ) {
         Column(
             modifier = Modifier.padding(vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Alert Radar",
-                        color = panelTitleColor,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 21.sp,
-                    )
-                    Text(
-                        text = "Tap active rows for details",
-                        color = panelSubtitleColor,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                    )
-                }
-            }
             AlertStatusRow(
                 icon = Icons.Outlined.Tornado,
                 label = "Tornado",
@@ -268,9 +247,9 @@ private fun AlertStatusRow(
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
             Surface(
-                shape = CircleShape,
+                shape = RoundedCornerShape(13.dp),
                 color = contentColor.copy(alpha = if (state.level == AlertLevel.Clear) 0.08f else 0.16f),
-                modifier = Modifier.size(42.dp),
+                modifier = Modifier.size(36.dp),
             ) {
                 Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
                     Icon(
@@ -278,7 +257,7 @@ private fun AlertStatusRow(
                         contentDescription = if (isWarning) "Warning active" else null,
                         tint = iconColor,
                         modifier = Modifier
-                            .size(23.dp)
+                            .size(21.dp)
                             .scale(if (isWarning) warningIconScale else 1f)
                             .alpha(if (isWarning) warningIconAlpha else 1f),
                     )

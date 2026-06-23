@@ -32,7 +32,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFFFFBEB7) else Color(0xFF93000A)
 
     public val alertRadarClearContainer: Color
-        get() = if (isDark) Color(0xFF212623) else Color(0xFFE7F7EA)
+        get() = if (isDark) Color(0xFF232624) else Color(0xFFE7F7EA)
 
     public val alertRadarClearOutline: Color
         get() = if (isDark) Color(0xFF3B8348) else Color(0xFF3C8B4C)
@@ -50,7 +50,7 @@ public class ExtendedColors {
         get() = if (isDark) Color(0xFF252538) else Color(0xFFE4EAF6)
 
     public val welcomeNavyStart: Color
-        get() = Color(0xFF030C1A)
+        get() = Color(0xFF0F131A)
 
     public val welcomeNavyEnd: Color
         get() = Color(0xFF08203B)

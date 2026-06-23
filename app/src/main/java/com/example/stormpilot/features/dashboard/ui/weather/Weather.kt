@@ -74,6 +74,7 @@ import com.example.stormpilot.features.shared.data.weather.HourlyForecast
 import com.example.stormpilot.features.shared.viewmodels.WeatherUiState
 import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
 import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.features.dashboard.ui.ForecastSectionTitle
 
 @Composable
 fun Weather(
@@ -123,7 +124,7 @@ fun WeatherOverviewSection(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        CurrentWeatherCard(cityName = cityName, current = uiState.current, isLoading = uiState.isLoading)
+//        CurrentWeatherCard(cityName = cityName, current = uiState.current, isLoading = uiState.isLoading)
 
         ForecastSectionTitle("5 Day Outlook")
         FiveDayOutlook(daily = uiState.daily)
@@ -270,29 +271,7 @@ private fun CurrentWeatherPill(label: String, value: String) {
     }
 }
 
-@Composable
-private fun ForecastSectionTitle(text: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .width(5.dp)
-                .height(20.dp)
-                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(99.dp)),
-        )
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 18.sp,
-            modifier = Modifier.padding(start = 9.dp),
-        )
-    }
-}
+
 
 @Composable
 private fun HourlyForecastRow(hourly: List<HourlyForecast>) {
@@ -395,7 +374,7 @@ private fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(vertical = 5.dp)) {
@@ -425,14 +404,14 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
     ) {
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.70f),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
             modifier = Modifier.size(38.dp),
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = getWeatherIconForCondition(outlook.conditions),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(21.dp),
                 )
             }
@@ -454,14 +433,14 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
         }
         Text(
             text = "${outlook.high?.toString() ?: "--"}°/${outlook.low?.toString() ?: "--"}°",
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Black,
             fontSize = 17.sp,
             modifier = Modifier.padding(horizontal = 12.dp),
         )
         Surface(
             shape = CircleShape,
-            color = badgeColor,
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
             border = BorderStroke(1.dp, badgeContent.copy(alpha = 0.18f)),
         ) {
             Text(
@@ -512,8 +491,9 @@ private fun EmptyWeatherCard(text: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainer,
-    ) {
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+        ) {
         Box(
             modifier = Modifier.fillMaxWidth().height(100.dp).padding(horizontal = 30.dp),
             contentAlignment = Alignment.Center

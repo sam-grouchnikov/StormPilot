@@ -40,8 +40,8 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f),
+        shape = RoundedCornerShape(15.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
     ) {
         Box {
@@ -49,40 +49,40 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
                 modifier = Modifier.padding(vertical = 15.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                ) {
-                    Surface(
-                        modifier = Modifier.size(40.dp),
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f)),
-                    ) {
-                        Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Outlined.Thunderstorm,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(23.dp),
-                            )
-                        }
-                    }
-                    Column(modifier = Modifier.padding(start = 11.dp)) {
-                        Text(
-                            text = "Storm Environment",
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 20.sp,
-                        )
-                        Text(
-                            text = "Convective ingredients near you",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 12.sp,
-                        )
-                    }
-                }
+//                Row(
+//                    modifier = Modifier.padding(horizontal = 16.dp),
+//                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+//                ) {
+//                    Surface(
+//                        modifier = Modifier.size(40.dp),
+//                        shape = CircleShape,
+//                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+//                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f)),
+//                    ) {
+//                        Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+//                            Icon(
+//                                imageVector = Icons.Outlined.Thunderstorm,
+//                                contentDescription = null,
+//                                tint = MaterialTheme.colorScheme.primary,
+//                                modifier = Modifier.size(23.dp),
+//                            )
+//                        }
+//                    }
+//                    Column(modifier = Modifier.padding(start = 11.dp)) {
+//                        Text(
+//                            text = "Storm Environment",
+//                            color = MaterialTheme.colorScheme.onSurface,
+//                            fontWeight = FontWeight.Black,
+//                            fontSize = 20.sp,
+//                        )
+//                        Text(
+//                            text = "Convective ingredients near you",
+//                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                            fontWeight = FontWeight.SemiBold,
+//                            fontSize = 12.sp,
+//                        )
+//                    }
+//                }
                 Row(
                     modifier = Modifier
                         .horizontalScroll(rememberScrollState())
@@ -201,10 +201,10 @@ private fun StormSpecCard(spec: StormSpec) {
                     maxLines = 1,
                     modifier = Modifier.weight(1f),
                 )
-                Surface(shape = RoundedCornerShape(14.dp), color = riskColor.copy(alpha = 0.14f)) {
+                Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                     Text(
                         text = risk,
-                        color = riskColor,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium,
                         fontSize = 11.sp,
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
@@ -219,15 +219,15 @@ private fun StormSpecCard(spec: StormSpec) {
                 maxLines = 1,
             )
             RiskMeter(risk = risk, color = riskColor)
-            Text(
-                text = spec.detail,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium,
-                fontSize = 11.sp,
-                lineHeight = 13.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+//            Text(
+//                text = spec.detail,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                fontWeight = FontWeight.Medium,
+//                fontSize = 11.sp,
+//                lineHeight = 13.sp,
+//                maxLines = 2,
+//                overflow = TextOverflow.Ellipsis,
+//            )
         }
     }
 }
@@ -244,6 +244,7 @@ private fun RiskMeter(risk: String, color: Color) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(bottom = 5.dp, top = 3.dp)
             .height(7.dp)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape),
     ) {
@@ -251,7 +252,7 @@ private fun RiskMeter(risk: String, color: Color) {
             modifier = Modifier
                 .fillMaxWidth(progress)
                 .height(7.dp)
-                .background(color, CircleShape),
+                .background(MaterialTheme.colorScheme.outline, CircleShape),
         )
     }
 }

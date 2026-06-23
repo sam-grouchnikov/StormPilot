@@ -3,22 +3,29 @@ package com.example.stormpilot.features.dashboard.ui
 import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,16 +33,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatPopup
 import com.example.stormpilot.R
 import com.example.stormpilot.features.common.ui.AccountMenuAnchor
 import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
+import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.ui.theme.ExtendedColors
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -45,6 +68,7 @@ fun RadarPage(
     onOpenSettings: () -> Unit = {},
 ) {
     var showChat by remember { mutableStateOf(false) }
+    var topIconRowHeightPx by remember { mutableStateOf(0) }
     val colors = ExtendedColors()
 
 
@@ -52,15 +76,27 @@ fun RadarPage(
         opaqueNavigationBar = true,
         navigationBarColorOverride = colors.purpleSurfaceContainer
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            DashboardOverviewScreen()
+        Box(
+            modifier = Modifier.fillMaxSize()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            colors.welcomeNavyStart,
+                            colors.welcomeNavyStart,
+                        ),
+                    ),
+                ),
+
+        ) {
+            DashboardOverviewScreen(
+                modifier = Modifier.dashboardTopIconRowBackdropBlur(topIconRowHeightPx),
+            )
 
             TopIconRow(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(top = 8.dp),
+                    .fillMaxWidth(),
+                onHeightChanged = { topIconRowHeightPx = it },
                 onOpenSettings = onOpenSettings,
                 onOpenChat = { showChat = true },
             )
@@ -79,51 +115,147 @@ fun RadarPage(
 
 @Composable
 fun TopIconRow(
-    modifier: Modifier = Modifier,
+    alertsViewModel: AlertsViewModel = hiltViewModel(),
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier,
+    onHeightChanged: (Int) -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onOpenChat: () -> Unit = {},
 ) {
-    Row(
-        modifier = modifier.padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+
+    val cityName by alertsViewModel.cityName.collectAsStateWithLifecycle()
+    val displayCityName = remember(cityName) { formatCityAndState(cityName) }
+    Box(
+        modifier = modifier
+            .onSizeChanged { onHeightChanged(it.height) }
+            .background(colorScheme.surface.copy(alpha = 0.22f))
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(vertical = 15.dp, horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = "StormPilot",
-                modifier = Modifier
-                    .size(46.dp)
-                    .padding(8.dp)
+            Surface(
+                shape = CircleShape,
+                color = colorScheme.surface.copy(alpha = 0.44f),
+                border = BorderStroke(1.dp, colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.LocationOn,
+                        contentDescription = null,
+                        tint = colorScheme.primary,
+                        modifier = Modifier.size(23.dp),
+                    )
+                    Text(
+                        text = displayCityName,
+                        color = colorScheme.onSurface,
+                        fontWeight = FontWeight.W700,
+                        fontSize = 17.sp,
+                        modifier = Modifier.padding(start = 6.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+                IconButton(
+                    onClick = onOpenChat,
+                    modifier = Modifier.size(43.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AutoAwesome,
+                        tint = MaterialTheme.colorScheme.primary,
+                        contentDescription = "Open StormPilot AI chat",
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            AccountMenuAnchor(onClick = onOpenSettings, circleSize = 43, textSize = 15)
+
+        }
+    }
+
+}
+
+private fun formatCityAndState(cityName: String): String {
+    val parts = cityName
+        .split(',')
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    return if (parts.size >= 2) {
+        parts.take(2).joinToString(", ")
+    } else {
+        cityName
+    }
+}
+
+private val TopIconRowBackdropBlurRadius = 56.dp
+
+private fun Modifier.dashboardTopIconRowBackdropBlur(topIconRowHeightPx: Int): Modifier {
+    if (topIconRowHeightPx <= 0) return this
+
+    return drawWithCache {
+        val blurBottom = (topIconRowHeightPx - 0.dp.toPx()).coerceAtMost(size.height)
+        val blurRadiusPx = TopIconRowBackdropBlurRadius.toPx()
+        val captureBottom = (blurBottom + blurRadiusPx * 2f).coerceAtMost(size.height)
+        val blurLayerSize = IntSize(size.width.roundToInt(), captureBottom.roundToInt())
+        val blurLayer = obtainGraphicsLayer().apply {
+            clip = true
+            renderEffect = BlurEffect(
+                blurRadiusPx,
+                blurRadiusPx,
+                TileMode.Clamp,
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        onDrawWithContent {
+            val contentScope = this
 
-        Surface(
-            shape = MaterialTheme.shapes.large,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)),
-        ) {
-            IconButton(
-                onClick = onOpenChat,
-                modifier = Modifier.size(43.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AutoAwesome,
-                    tint = MaterialTheme.colorScheme.primary,
-                    contentDescription = "Open StormPilot AI chat",
-                    modifier = Modifier.size(23.dp),
-                )
+            if (blurBottom <= 0f) return@onDrawWithContent
+
+            blurLayer.record(size = blurLayerSize) {
+                contentScope.drawContent()
+            }
+
+            drawContent()
+
+            clipRect(left = 0f, top = 0f, right = size.width, bottom = blurBottom) {
+                drawLayer(blurLayer)
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.width(12.dp))
-
-        AccountMenuAnchor(onClick = onOpenSettings, circleSize = 43, textSize = 15)
-
+@Composable
+fun ForecastSectionTitle(text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 2.dp, start = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(5.dp)
+                .height(20.dp)
+                .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(99.dp)),
+        )
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(start = 9.dp),
+        )
     }
 }
