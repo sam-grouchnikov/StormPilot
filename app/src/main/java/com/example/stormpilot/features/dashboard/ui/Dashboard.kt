@@ -80,12 +80,7 @@ fun RadarPage(
         Box(
             modifier = Modifier.fillMaxSize()
                 .background(
-                    brush = Brush.linearGradient(
-                        colors = listOf(
-                            colors.welcomeNavyStart,
-                            colors.welcomeNavyStart,
-                        ),
-                    ),
+                    color = MaterialTheme.colorScheme.surfaceContainerLowest
                 ),
 
             ) {
@@ -128,7 +123,7 @@ fun TopIconRow(
     Box(
         modifier = modifier
             .onSizeChanged { onHeightChanged(it.height) }
-            .background(colorScheme.surface.copy(alpha = 0.08f))
+            .background(colorScheme.surfaceContainer.copy(alpha = 0.38f))
     ) {
         Row(
             modifier = Modifier

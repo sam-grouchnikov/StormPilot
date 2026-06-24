@@ -134,18 +134,18 @@ fun DashboardOverviewScreen(
 //                    }
 //                },
 //            )
-            ForecastSectionTitle("Alert Radar")
+//            ForecastSectionTitle("Alert Radar")
             AlertStatusPanel(
                 alertsState = alertsState,
                 onAlertClick = mapsViewModel::showAlertDetail,
             )
-            ForecastSectionTitle("Storm Environment")
-            StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
-
-            WeatherOverviewSection(
-                cityName = weatherCityName,
-                uiState = weatherState,
-            )
+//            ForecastSectionTitle("Storm Environment")
+//            StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
+//
+//            WeatherOverviewSection(
+//                cityName = weatherCityName,
+//                uiState = weatherState,
+//            )
         }
 
         AlertDetailBottomSheet(

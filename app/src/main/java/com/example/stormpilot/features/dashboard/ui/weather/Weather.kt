@@ -1,6 +1,7 @@
 package com.example.stormpilot.features.dashboard.ui.weather
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -85,6 +86,8 @@ import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
 import com.patrykandpatrick.vico.compose.common.rememberVerticalLegend
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
+import com.patrykandpatrick.vico.compose.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
 
 
@@ -312,47 +315,58 @@ private fun HourlyForecastRow(hourly: List<HourlyForecast>) {
 
     LaunchedEffect(Unit) {
         modelProducer.runTransaction {
-            lineSeries {
-                series(2, 4, 3, 5, 7, 6, 8)
-            }
+            lineModel { series(2, 4, 3, 5, 7, 6, 8) }
         }
     }
-
-    val line = LineCartesianLayer.rememberLine(
-        fill = LineCartesianLayer.LineFill.single(Fill(Color.Blue)),
-    )
 
     ComposeBasicLineChart(modelProducer)
 }
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 private fun ComposeBasicLineChart(
     modelProducer: CartesianChartModelProducer,
-    modifier: Modifier = Modifier,
-) {
-    CartesianChartHost(
-        chart =
-            rememberCartesianChart(
-                rememberLineCartesianLayer(),
-                startAxis = VerticalAxis.rememberStart(),
-                bottomAxis = HorizontalAxis.rememberBottom(),
-            ),
-        modelProducer = modelProducer,
-        modifier = modifier,
+        modifier: Modifier = Modifier,
+    ) {
+    val customBrush = Brush.verticalGradient(
+        0.0f to Color.Red.copy(alpha = 0.3f),
+        0.3f to Color.Yellow.copy(alpha = 0.3f),
+        0.7f to Color.Green.copy(alpha = 0.3f),
+        1.0f to Color.Blue.copy(alpha = 0.3f)
     )
-}
+    val customRangeProvider = CartesianLayerRangeProvider.fixed(
+        minX = 0.0,
+        maxX = 10.0,
+        minY = 0.0,
+        maxY = 10.0
+    )
 
-@Composable
-fun ComposeBasicLineChart(modifier: Modifier = Modifier) {
-    val modelProducer = remember { CartesianChartModelProducer() }
-    LaunchedEffect(Unit) {
-        modelProducer.runTransaction {
-            // Learn more: https://patrykandpatrick.com/z5ah6v.
-            lineModel { series(13, 8, 7, 12, 0, 1, 15, 14, 0, 11, 6, 12, 0, 11, 12, 11) }
-        }
+
+        CartesianChartHost(
+            chart =
+                rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(
+                                // 1. Fill style for the line itself
+                                fill = LineCartesianLayer.LineFill.single(Fill(Color.White)),
+                                // 2. Fill style for the area below the line
+                                areaFill = LineCartesianLayer.AreaFill.single(
+                                    Fill(brush = customBrush)
+                                )
+
+                            )
+                        ),
+                        rangeProvider = customRangeProvider
+                    ),
+                    startAxis = VerticalAxis.rememberStart(),
+                    bottomAxis = HorizontalAxis.rememberBottom(),
+                ),
+            modelProducer = modelProducer,
+            modifier = modifier,
+        )
     }
-    ComposeBasicLineChart(modelProducer, modifier)
-}
+
 
 @Composable
 private fun HourlyMetricToggle(
