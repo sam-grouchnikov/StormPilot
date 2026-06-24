@@ -84,9 +84,10 @@ fun RadarPage(
                 ),
 
             ) {
-            DashboardOverviewScreen(
-                modifier = Modifier.dashboardTopIconRowBackdropBlur(topIconRowHeightPx),
-            )
+//            DashboardOverviewScreen(
+//                modifier = Modifier.dashboardTopIconRowBackdropBlur(topIconRowHeightPx),
+//            )
+            DashboardOverviewScreen()
 
             TopIconRow(
                 modifier = Modifier
@@ -123,7 +124,7 @@ fun TopIconRow(
     Box(
         modifier = modifier
             .onSizeChanged { onHeightChanged(it.height) }
-            .background(colorScheme.surfaceContainer.copy(alpha = 0.38f))
+//            .background(colorScheme.surfaceContainer.copy(alpha = 0.38f))
     ) {
         Row(
             modifier = Modifier

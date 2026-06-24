@@ -1,7 +1,9 @@
 package com.example.stormpilot.features.dashboard.ui.alerts.components
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
@@ -11,6 +13,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.fadeIn
@@ -20,7 +25,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -35,9 +42,12 @@ import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.PriorityHigh
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.sharp.Check
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -68,7 +78,14 @@ fun AlertStatusPanel(
 
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ),
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
@@ -76,72 +93,125 @@ fun AlertStatusPanel(
             modifier = Modifier.padding(vertical = 14.dp, horizontal = 15.dp),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
-            if (expanded) {
-                AlertStatusRow(
-                    icon = Icons.Outlined.Tornado,
-                    label = "Tornado",
-                    alert = alertsState.tornadoWarning ?: alertsState.tornadoWatch,
-                    state = alertState(
-                        warningActive = alertsState.tornadoWarning != null,
-                        watchActive = alertsState.tornadoWatch != null,
-                        warningText = "Tornado Warning",
-                        watchText = "Tornado Watch",
-                        clearText = "No Tornado Alerts",
-                    ),
-                    onAlertClick = onAlertClick,
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier
+                    .padding(start = 5.dp)
+                    .fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = if (!panelHasAlert) Icons.Outlined.Check else Icons.Outlined.Warning,
+                    tint = colors.alertClearContent,
+                    contentDescription = "Alert Status",
+                    modifier = Modifier.size(28.dp)
                 )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 10.dp)
+                Text(
+                    text = if (!panelHasAlert) "No Active Alerts" else "Active Alerts",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.weight(1f)
                 )
-                AlertStatusRow(
-                    icon = Icons.Outlined.Bolt,
-                    label = "Severe Thunderstorm",
-                    alert = alertsState.severeThunderstormWarning ?: alertsState.severeThunderstormWatch,
-                    state = alertState(
-                        warningActive = alertsState.severeThunderstormWarning != null,
-                        watchActive = alertsState.severeThunderstormWatch != null,
-                        warningText = "Severe T-Storm Warning",
-                        watchText = "Severe T-Storm Watch",
-                        clearText = "No Storm Alerts",
-                    ),
-                    onAlertClick = onAlertClick,
-                )
-                HorizontalDivider()
-                AlertStatusRow(
-                    icon = Icons.Outlined.Flood,
-                    label = "Flood",
-                    alert = alertsState.flashFloodWarning ?: alertsState.flashFloodWatch,
-                    state = alertState(
-                        warningActive = alertsState.flashFloodWarning != null,
-                        watchActive = alertsState.flashFloodWatch != null,
-                        warningText = "Flash Flood Warning",
-                        watchText = "Flash Flood Watch",
-                        clearText = "No Flood Alerts",
-                    ),
-                    onAlertClick = onAlertClick,
-                )
-            } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.padding(start = 5.dp)
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
-                        imageVector = if (!panelHasAlert) Icons.Outlined.Check else Icons.Outlined.Warning,
-                        tint = colors.alertClearContent,
-                        contentDescription = "Alert Status",
-                        modifier = Modifier.size(28.dp)
+                        imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        contentDescription = if (expanded) "Collapse alerts" else "Expand alerts"
                     )
-                    if (!panelHasAlert) {
-                        Text(
-                            "No Active Alerts",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.SemiBold
+                }
+            }
+
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(0.dp), modifier = Modifier.padding(0.dp)) {
+                    if(alertsState.tornadoWatch != null || alertsState.tornadoWarning != null) {
+                        StaggeredAlertRow(
+                            index = 0,
+                            expanded = expanded,
+                            icon = Icons.Outlined.Tornado,
+                            label = "Tornado",
+                            alert = alertsState.tornadoWarning ?: alertsState.tornadoWatch,
+                            state = alertState(
+                                warningActive = alertsState.tornadoWarning != null,
+                                watchActive = alertsState.tornadoWatch != null,
+                                warningText = "Tornado Warning",
+                                watchText = "Tornado Watch",
+                                clearText = "No Tornado Alerts",
+                            ),
+                            onAlertClick = onAlertClick,
+                        )
+                    }
+                    if (alertsState.severeThunderstormWatch != null || alertsState.severeThunderstormWarning != null) {
+                        StaggeredAlertRow(
+                            index = 1,
+                            expanded = expanded,
+                            icon = Icons.Outlined.Bolt,
+                            label = "Severe Thunderstorm",
+                            alert = alertsState.severeThunderstormWarning ?: alertsState.severeThunderstormWatch,
+                            state = alertState(
+                                warningActive = alertsState.severeThunderstormWarning != null,
+                                watchActive = alertsState.severeThunderstormWatch != null,
+                                warningText = "Severe T-Storm Warning",
+                                watchText = "Severe T-Storm Watch",
+                                clearText = "No Storm Alerts",
+                            ),
+                            onAlertClick = onAlertClick,
+                        )
+
+                    }
+                    if (alertsState.flashFloodWatch != null || alertsState.flashFloodWarning != null) {
+                        StaggeredAlertRow(
+                            index = 2,
+                            expanded = expanded,
+                            icon = Icons.Outlined.Flood,
+                            label = "Flood",
+                            alert = alertsState.flashFloodWarning ?: alertsState.flashFloodWatch,
+                            state = alertState(
+                                warningActive = alertsState.flashFloodWarning != null,
+                                watchActive = alertsState.flashFloodWatch != null,
+                                warningText = "Flash Flood Warning",
+                                watchText = "Flash Flood Watch",
+                                clearText = "No Flood Alerts",
+                            ),
+                            onAlertClick = onAlertClick,
                         )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun StaggeredAlertRow(
+    index: Int,
+    expanded: Boolean,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    alert: NwsAlert?,
+    state: LocationAlertState,
+    onAlertClick: (NwsAlert) -> Unit,
+) {
+    AnimatedVisibility(
+        visible = expanded,
+        enter = fadeIn(
+            animationSpec = tween(durationMillis = 300, delayMillis = index * 100)
+        ) + slideInHorizontally(
+            animationSpec = tween(durationMillis = 400, delayMillis = index * 100)
+        ) { -it / 6 }
+    ) {
+        AlertStatusRow(
+            icon = icon,
+            label = label,
+            alert = alert,
+            state = state,
+            onAlertClick = onAlertClick
+        )
     }
 }
 
