@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetailBottomSheet
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertStatusPanel
 import com.example.stormpilot.features.dashboard.ui.alerts.components.LocationAlertsMapCard
@@ -53,7 +54,7 @@ import com.example.stormpilot.features.shared.data.alerts.bestMatchForEvent
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 import org.maplibre.spatialk.geojson.Position
 
 @Composable
@@ -71,17 +72,30 @@ fun DashboardOverviewScreen(
     val mapsState by mapsViewModel.uiState.collectAsStateWithLifecycle()
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
     val weatherCityName by weatherViewModel.cityName.collectAsStateWithLifecycle()
+    val useDashboardPlaceholderData = AppSettings.useDashboardPlaceholderData
+    val dashboardPlaceholderAssetName = AppSettings.dashboardPlaceholderWeatherAssetName
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
-        if (isGranted) {
+        if (isGranted && !useDashboardPlaceholderData) {
             alertsViewModel.locationRepository.startTracking()
             weatherViewModel.locationRepository.startTracking()
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(useDashboardPlaceholderData, dashboardPlaceholderAssetName) {
+        alertsViewModel.setDashboardPlaceholderMode(useDashboardPlaceholderData)
+        mapsViewModel.setDashboardPlaceholderMode(useDashboardPlaceholderData)
+        weatherViewModel.setDashboardPlaceholderSource(
+            enabled = useDashboardPlaceholderData,
+            assetName = dashboardPlaceholderAssetName,
+        )
+    }
+
+    LaunchedEffect(useDashboardPlaceholderData) {
+        if (useDashboardPlaceholderData) return@LaunchedEffect
+
         if (
             ContextCompat.checkSelfPermission(
                 context,
@@ -153,7 +167,7 @@ private fun dashboardBottomContentPadding() =
 @Composable
 private fun AnimatedDashboardBackdrop() {
     val colors = MaterialTheme.colorScheme
-    val extended = ExtendedColors()
+    val extended = MaterialTheme.extendedColors
     val transition = rememberInfiniteTransition(label = "dashboard_backdrop")
     val drift by transition.animateFloat(
         initialValue = 0f,

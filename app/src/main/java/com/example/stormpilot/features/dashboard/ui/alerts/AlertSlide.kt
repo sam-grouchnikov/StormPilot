@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.features.shared.data.alerts.bestMatchForEvent
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetailBottomSheet
@@ -47,14 +48,30 @@ fun AlertSlide(
     val location by alertsViewModel.locationRepository.location.collectAsStateWithLifecycle()
     val mapsState by mapsViewModel.uiState.collectAsStateWithLifecycle()
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
+    val useDashboardPlaceholderData = AppSettings.useDashboardPlaceholderData
+    val dashboardPlaceholderAssetName = AppSettings.dashboardPlaceholderWeatherAssetName
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
     ) { isGranted ->
-        if (isGranted) alertsViewModel.locationRepository.startTracking()
+        if (isGranted && !useDashboardPlaceholderData) {
+            alertsViewModel.locationRepository.startTracking()
+            weatherViewModel.locationRepository.startTracking()
+        }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(useDashboardPlaceholderData, dashboardPlaceholderAssetName) {
+        alertsViewModel.setDashboardPlaceholderMode(useDashboardPlaceholderData)
+        mapsViewModel.setDashboardPlaceholderMode(useDashboardPlaceholderData)
+        weatherViewModel.setDashboardPlaceholderSource(
+            enabled = useDashboardPlaceholderData,
+            assetName = dashboardPlaceholderAssetName,
+        )
+    }
+
+    LaunchedEffect(useDashboardPlaceholderData) {
+        if (useDashboardPlaceholderData) return@LaunchedEffect
+
         if (
             ContextCompat.checkSelfPermission(
                 context,
@@ -62,6 +79,7 @@ fun AlertSlide(
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             alertsViewModel.locationRepository.startTracking()
+            weatherViewModel.locationRepository.startTracking()
         } else {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }

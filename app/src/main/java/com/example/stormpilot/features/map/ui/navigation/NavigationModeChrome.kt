@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.shared.data.routing.formatDistance
 import com.example.stormpilot.features.shared.data.routing.formatDuration
 import com.example.stormpilot.features.navigation.ui.components.coloredShadow
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 import java.util.Calendar
 
 @Composable
@@ -47,7 +47,7 @@ fun NavigationModeHeader(
     onExitNavigation: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     val directionIcon = when {
         instruction.startsWith("Turn left", ignoreCase = true) -> Icons.Filled.TurnLeft
         instruction.startsWith("Turn right", ignoreCase = true) -> Icons.Filled.TurnRight
@@ -105,7 +105,7 @@ fun NavigationModeFooter(
         val displayHour = if (hour % 12 == 0) 12 else hour % 12
         "$displayHour:${minute.toString().padStart(2, '0')} $amPm"
     }
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -178,7 +178,7 @@ fun NavigationRecenterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
 
     Button(
         onClick = onClick,

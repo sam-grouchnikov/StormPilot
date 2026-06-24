@@ -106,6 +106,7 @@ class MapsViewModel @Inject constructor(
     private var latestAlertsGeoJson: String? = null
     private var latestSearchResultsQuery: String? = null
     private var stormAvoidanceForCurrentTrip = false
+    private var useDashboardPlaceholderData = AppSettings.useDashboardPlaceholderData
 
     fun onUserLocationUpdated(position: Position, bearingDegrees: Double? = null) {
         val currentState = _uiState.value
@@ -158,12 +159,18 @@ class MapsViewModel @Inject constructor(
     }
 
     init {
-        refreshAlertPolygons()
+        if (useDashboardPlaceholderData) {
+            clearDashboardAlertPlaceholders()
+        } else {
+            refreshAlertPolygons()
+        }
 
         viewModelScope.launch {
             while (true) {
                 delay(300_000L)
-                refreshAlertPolygons()
+                if (!useDashboardPlaceholderData) {
+                    refreshAlertPolygons()
+                }
             }
         }
 
@@ -172,11 +179,29 @@ class MapsViewModel @Inject constructor(
                 .debounce(500)
                 .collectLatest { query ->
                     runSearch(query)
-                }
+            }
+        }
+    }
+
+    fun setDashboardPlaceholderMode(enabled: Boolean) {
+        if (enabled == useDashboardPlaceholderData) return
+
+        useDashboardPlaceholderData = enabled
+        if (enabled) {
+            alertPolygonsJob?.cancel()
+            alertDetailJob?.cancel()
+            clearDashboardAlertPlaceholders()
+        } else {
+            refreshAlertPolygons()
         }
     }
 
     fun refreshAlertPolygons() {
+        if (useDashboardPlaceholderData) {
+            clearDashboardAlertPlaceholders()
+            return
+        }
+
         alertPolygonsJob?.cancel()
         alertPolygonsJob = viewModelScope.launch {
             fetchAlerts()
@@ -316,6 +341,8 @@ class MapsViewModel @Inject constructor(
     }
 
     private suspend fun fetchAlerts() {
+        if (useDashboardPlaceholderData) return
+
         try {
             val geojson = alertsRepository.fetchWarningPolygonsGeoJson()
             latestAlertsGeoJson = geojson
@@ -497,6 +524,8 @@ class MapsViewModel @Inject constructor(
     }
 
     fun onAlertPolygonTapped(position: Position, eventType: String) {
+        if (useDashboardPlaceholderData) return
+
         alertDetailJob?.cancel()
         alertDetailJob = viewModelScope.launch {
             _uiState.update {
@@ -720,6 +749,10 @@ class MapsViewModel @Inject constructor(
     private fun checkRouteWarnings(routePolyline: List<Position>) {
         routeWarningsJob?.cancel()
         routeWarningsJob = viewModelScope.launch {
+            if (useDashboardPlaceholderData) {
+                _uiState.update { it.copy(routeWarningCount = 0, routeWarningError = null) }
+                return@launch
+            }
             if (routePolyline.size < 2) {
                 _uiState.update { it.copy(routeWarningCount = 0, routeWarningError = null) }
                 return@launch
@@ -775,12 +808,26 @@ class MapsViewModel @Inject constructor(
         }
     }
 
+    private fun clearDashboardAlertPlaceholders() {
+        latestAlertsGeoJson = EMPTY_FEATURE_COLLECTION
+        _uiState.update {
+            it.copy(
+                alertsGeoJson = GeoJsonData.JsonString(EMPTY_FEATURE_COLLECTION),
+                isAlertDetailVisible = false,
+                selectedAlert = null,
+                isAlertDetailLoading = false,
+                alertDetailError = null,
+            )
+        }
+    }
+
     companion object {
         private const val OFF_ROUTE_THRESHOLD_METERS = 40.0
         private const val STEP_REACHED_THRESHOLD_METERS = 25.0
         private const val REROUTE_DEBOUNCE_MS = 1_500L
         private const val MAX_MAP_SEARCH_RESULTS = 5
         private const val MAX_RECENT_SEARCHES = 3
+        private const val EMPTY_FEATURE_COLLECTION = """{"type":"FeatureCollection","features":[]}"""
         private const val DESTINATION_IN_WARNING_MESSAGE =
             "Destination is inside a storm warning polygon. This route enters the warning area to reach it."
         private const val NO_STORM_FREE_ROUTE_MESSAGE =

@@ -58,6 +58,7 @@ import com.example.stormpilot.features.common.ui.AccountMenuAnchor
 import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,7 +70,7 @@ fun RadarPage(
 ) {
     var showChat by remember { mutableStateOf(false) }
     var topIconRowHeightPx by remember { mutableStateOf(0) }
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
 
 
     StormPilotTheme(
@@ -87,7 +88,7 @@ fun RadarPage(
                     ),
                 ),
 
-        ) {
+            ) {
             DashboardOverviewScreen(
                 modifier = Modifier.dashboardTopIconRowBackdropBlur(topIconRowHeightPx),
             )
@@ -127,7 +128,7 @@ fun TopIconRow(
     Box(
         modifier = modifier
             .onSizeChanged { onHeightChanged(it.height) }
-            .background(colorScheme.surface.copy(alpha = 0.22f))
+            .background(colorScheme.surface.copy(alpha = 0.08f))
     ) {
         Row(
             modifier = Modifier
@@ -165,17 +166,17 @@ fun TopIconRow(
 
             Spacer(modifier = Modifier.weight(1f))
 
-                IconButton(
-                    onClick = onOpenChat,
-                    modifier = Modifier.size(43.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.AutoAwesome,
-                        tint = MaterialTheme.colorScheme.primary,
-                        contentDescription = "Open StormPilot AI chat",
-                        modifier = Modifier.size(28.dp),
-                    )
-                }
+            IconButton(
+                onClick = onOpenChat,
+                modifier = Modifier.size(43.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.AutoAwesome,
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "Open StormPilot AI chat",
+                    modifier = Modifier.size(28.dp),
+                )
+            }
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -199,7 +200,7 @@ private fun formatCityAndState(cityName: String): String {
     }
 }
 
-private val TopIconRowBackdropBlurRadius = 56.dp
+private val TopIconRowBackdropBlurRadius = 70.dp
 
 private fun Modifier.dashboardTopIconRowBackdropBlur(topIconRowHeightPx: Int): Modifier {
     if (topIconRowHeightPx <= 0) return this

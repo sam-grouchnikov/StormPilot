@@ -77,8 +77,8 @@ import com.example.stormpilot.features.shared.data.search.PhotonFeature
 import com.example.stormpilot.features.shared.viewmodels.MapsFooterState
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.features.shared.viewmodels.navigationInstruction
-import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.ui.theme.StormPilotTheme
+import com.example.stormpilot.ui.theme.extendedColors
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -143,8 +143,6 @@ fun MapsPage(
     var lastMapTapPosition by remember { mutableStateOf<Position?>(null) }
     var focusedSearchResult by remember { mutableStateOf<PhotonFeature?>(null) }
     val isDarkMode = isAppInDarkMode()
-
-    val colors = ExtendedColors()
 
     var hasLocationPermission by remember {
         mutableStateOf(
@@ -615,6 +613,7 @@ fun MapsPage(
         darkTheme = isDarkMode,
         opaqueNavigationBar = false,
     ) {
+        val colors = MaterialTheme.extendedColors
         val searchContainerColor = searchSurfaceColor(isDarkMode)
         val mapStyle = if (isDarkMode) {
             "asset://map-dark.json"

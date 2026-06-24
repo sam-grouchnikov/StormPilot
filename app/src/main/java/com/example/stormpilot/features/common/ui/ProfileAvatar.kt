@@ -17,7 +17,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun ProfileAvatar(
@@ -29,7 +29,7 @@ fun ProfileAvatar(
 ) {
     val avatarLetter = userName.firstOrNull()?.uppercase() ?: "?"
 
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     Box(
         modifier = modifier
             .size(circleSize.dp)

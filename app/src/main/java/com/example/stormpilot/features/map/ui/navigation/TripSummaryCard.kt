@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.shared.data.routing.formatDistance
 import com.example.stormpilot.features.shared.data.routing.formatDuration
 import com.example.stormpilot.features.shared.viewmodels.MapsUiState
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlinx.coroutines.delay
 
 @Composable
@@ -59,6 +59,7 @@ fun TripSummaryCard(
     modifier: Modifier = Modifier,
 ) {
     var showIndicator by remember { mutableStateOf(false) }
+    val colors = MaterialTheme.extendedColors
 
     LaunchedEffect(state.isLoadingRoute) {
         if (state.isLoadingRoute) {
@@ -176,14 +177,14 @@ fun TripSummaryCard(
                                 imageVector = Icons.Outlined.Shield,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = ExtendedColors().alertClearContentAlternate,
+                                tint = colors.alertClearContentAlternate,
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Safe Start",
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = ExtendedColors().alertClearContentAlternate,
+                                color = colors.alertClearContentAlternate,
                             )
                         }
                     }
@@ -203,7 +204,7 @@ fun TripSummaryCard(
                                 warningError != null && (warningCount ?: 0) > 0 -> MaterialTheme.colorScheme.error
                                 warningError != null -> MaterialTheme.colorScheme.onSurfaceVariant
                                 warningCount == null -> MaterialTheme.colorScheme.onSurfaceVariant
-                                warningCount == 0 -> ExtendedColors().alertClearContent
+                                warningCount == 0 -> colors.alertClearContent
                                 else -> MaterialTheme.colorScheme.error
                             }
 

@@ -135,5 +135,8 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:34.13.0"))
     implementation("com.google.firebase:firebase-analytics")
+    dependencies {
+        implementation("com.patrykandpatrick.vico:compose:3.2.3")
+    }
 
 }

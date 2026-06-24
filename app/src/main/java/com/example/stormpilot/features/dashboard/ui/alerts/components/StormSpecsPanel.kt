@@ -31,12 +31,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.shared.data.weather.StormSpec
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
-    val colors = ExtendedColors()
-
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
@@ -172,7 +170,7 @@ private fun specToRisk(spec: StormSpec): String {
 
 @Composable
 private fun StormSpecCard(spec: StormSpec) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     val risk = specToRisk(spec)
     val riskColor = when (risk) {
         "Low" -> colors.lowRisk
@@ -237,6 +235,7 @@ private fun RiskMeter(risk: String, color: Color) {
     val progress = when (risk) {
         "Low" -> 0.28f
         "Moderate" -> 0.52f
+        "Medium" -> 0.52f
         "High" -> 0.76f
         "Extreme" -> 1f
         else -> 0.18f

@@ -43,7 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.core.AppSettings
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlin.time.Duration.Companion.milliseconds
 import org.maplibre.compose.camera.CameraPosition
 import org.maplibre.compose.camera.rememberCameraState
@@ -78,7 +78,7 @@ fun LocationAlertsMapCard(
 ) {
     var showAlerts by remember { mutableStateOf(true) }
     val colorScheme = MaterialTheme.colorScheme
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
 
     Surface(
         modifier = Modifier.fillMaxWidth(),

@@ -1,41 +1,25 @@
 package com.example.stormpilot.ui.theme
 
-import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.testing.StormPilotUnitTest
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class ExtendedColorsTest : StormPilotUnitTest() {
-    @After
-    fun resetDarkMode() {
-        AppSettings.isDarkMode = true
-    }
-
     @Test
-    fun extendedColors_followCurrentDarkModeFlag() {
-        val colors = ExtendedColors()
+    fun extendedColors_followRequestedDarkMode() {
+        val darkColors = stormPilotExtendedColors(darkTheme = true)
+        val lightColors = stormPilotExtendedColors(darkTheme = false)
 
-        AppSettings.isDarkMode = true
-        val darkExitContainer = colors.exitContainer
-        val darkRouteLine = colors.routingLine
-
-        AppSettings.isDarkMode = false
-        val lightExitContainer = colors.exitContainer
-        val lightRouteLine = colors.routingLine
-
-        assertNotEquals(darkExitContainer, lightExitContainer)
-        assertNotEquals(darkRouteLine, lightRouteLine)
-        assertEquals(androidx.compose.ui.graphics.Color(0xFFFFDAD7), lightExitContainer)
-        assertEquals(androidx.compose.ui.graphics.Color(0xFF81C3FF), darkRouteLine)
+        assertNotEquals(darkColors.exitContainer, lightColors.exitContainer)
+        assertNotEquals(darkColors.routingLine, lightColors.routingLine)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFFFDAD7), lightColors.exitContainer)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF81C3FF), darkColors.routingLine)
     }
 
     @Test
     fun riskColorsReuseAndDifferentiateAlertPalette() {
-        val colors = ExtendedColors()
-
-        AppSettings.isDarkMode = false
+        val colors = stormPilotExtendedColors(darkTheme = false)
 
         assertEquals(colors.alertClearContent, colors.lowRisk)
         assertNotEquals(colors.lowRisk, colors.moderateRisk)

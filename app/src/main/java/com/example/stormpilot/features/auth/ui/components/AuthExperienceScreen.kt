@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import com.example.stormpilot.R
-import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.ui.theme.StormPilotTheme
+import com.example.stormpilot.ui.theme.extendedColors
 
 /**
  * Shared auth shell that keeps sign-in and sign-up visually aligned while the
@@ -66,7 +66,7 @@ fun AuthExperienceScreen(
         useSurfaceContainerNavigationBar = true,
         syncAppDarkMode = false,
     ) {
-        val colors = ExtendedColors()
+        val colors = MaterialTheme.extendedColors
         var email by remember { mutableStateOf("") }
         var password by remember { mutableStateOf("") }
 

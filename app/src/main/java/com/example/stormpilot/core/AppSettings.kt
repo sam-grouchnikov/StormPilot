@@ -12,6 +12,22 @@ object AppSettings {
     var isDarkMode by mutableStateOf(true)
 
     var avoidStorms by mutableStateOf(true)
+
+    val dashboardPlaceholderWeatherFiles = listOf(
+        "dashboard_weather_placeholder.json",
+        "dashboard_weather_placeholder.txt",
+    )
+    var useDashboardPlaceholderData by mutableStateOf(true)
+    var dashboardPlaceholderWeatherAssetName by mutableStateOf(dashboardPlaceholderWeatherFiles.first())
+
+    fun cycleDashboardPlaceholderWeatherFile() {
+        val currentIndex = dashboardPlaceholderWeatherFiles
+            .indexOf(dashboardPlaceholderWeatherAssetName)
+            .takeIf { it >= 0 }
+            ?: 0
+        dashboardPlaceholderWeatherAssetName =
+            dashboardPlaceholderWeatherFiles[(currentIndex + 1) % dashboardPlaceholderWeatherFiles.size]
+    }
 }
 
 @Composable

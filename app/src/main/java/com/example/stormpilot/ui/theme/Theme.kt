@@ -10,6 +10,7 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -170,6 +171,7 @@ fun StormPilotTheme(
         AppSettings.isDarkMode = darkTheme
     }
     val colorScheme = stormPilotColorScheme(darkTheme)
+    val extendedColors = stormPilotExtendedColors(darkTheme)
 
     val view = LocalView.current
     if (!view.isInEditMode) {
@@ -199,10 +201,12 @@ fun StormPilotTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        shapes = StormPilotShapes,
-        typography = StormPilotTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            shapes = StormPilotShapes,
+            typography = StormPilotTypography,
+            content = content,
+        )
+    }
 }

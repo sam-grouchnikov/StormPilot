@@ -46,14 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import com.example.stormpilot.features.shared.viewmodels.AlertsUiState
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun AlertStatusPanel(
     alertsState: AlertsUiState,
     onAlertClick: (NwsAlert) -> Unit,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     val panelHasAlert = alertsState.hasAnyAlert
     val panelContainerTarget = if (panelHasAlert) {
         colors.alertRadarActiveContainer
@@ -157,7 +157,7 @@ private fun AlertStatusRow(
     state: LocationAlertState,
     onAlertClick: (NwsAlert) -> Unit,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     val isWarning = state.level == AlertLevel.Warning
     val containerTarget = when (state.level) {
         AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.6f)

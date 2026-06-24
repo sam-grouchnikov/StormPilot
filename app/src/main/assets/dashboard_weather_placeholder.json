@@ -1,0 +1,114 @@
+{
+  "cityName": "Oklahoma City, OK",
+  "current": {
+    "temperature": 78,
+    "conditions": "Scattered Thunderstorms",
+    "dewPoint": 67,
+    "humidity": 69,
+    "windSpeed": 18,
+    "windGust": 31
+  },
+  "hourly": [
+    {
+      "time": "Now",
+      "temperature": 78,
+      "conditions": "Cloudy",
+      "precipitationChance": 28
+    },
+    {
+      "time": "1 PM",
+      "temperature": 80,
+      "conditions": "Thunderstorms",
+      "precipitationChance": 42
+    },
+    {
+      "time": "2 PM",
+      "temperature": 82,
+      "conditions": "Thunderstorms",
+      "precipitationChance": 58
+    },
+    {
+      "time": "3 PM",
+      "temperature": 81,
+      "conditions": "Heavy Rain",
+      "precipitationChance": 74
+    },
+    {
+      "time": "4 PM",
+      "temperature": 79,
+      "conditions": "Rain",
+      "precipitationChance": 65
+    },
+    {
+      "time": "5 PM",
+      "temperature": 77,
+      "conditions": "Cloudy",
+      "precipitationChance": 36
+    },
+    {
+      "time": "6 PM",
+      "temperature": 75,
+      "conditions": "Partly Cloudy",
+      "precipitationChance": 18
+    }
+  ],
+  "daily": [
+    {
+      "day": "Today",
+      "conditions": "Thunderstorms",
+      "high": 84,
+      "low": 66,
+      "spcOutlook": "Slight"
+    },
+    {
+      "day": "Thu",
+      "conditions": "Morning showers",
+      "high": 79,
+      "low": 62,
+      "spcOutlook": "Marginal"
+    },
+    {
+      "day": "Fri",
+      "conditions": "Mostly sunny",
+      "high": 86,
+      "low": 64,
+      "spcOutlook": "Not issued"
+    },
+    {
+      "day": "Sat",
+      "conditions": "Hot and humid",
+      "high": 91,
+      "low": 70,
+      "spcOutlook": "Not issued"
+    },
+    {
+      "day": "Sun",
+      "conditions": "Isolated storms",
+      "high": 88,
+      "low": 69,
+      "spcOutlook": "Not issued"
+    }
+  ],
+  "stormSpecs": [
+    {
+      "label": "CAPE",
+      "value": "0 J/kg",
+      "detail": "Moderate instability"
+    },
+    {
+      "label": "CIN",
+      "value": "35 J/kg",
+      "detail": "Weak cap"
+    },
+    {
+      "label": "SRH",
+      "value": "180 m2/s2",
+      "detail": "Curved low-level flow"
+    },
+    {
+      "label": "Shear",
+      "value": "42 kt",
+      "detail": "Organized storm potential"
+    }
+  ]
+}

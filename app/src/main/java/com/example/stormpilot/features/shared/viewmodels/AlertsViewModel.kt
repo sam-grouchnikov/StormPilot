@@ -74,13 +74,31 @@ class AlertsViewModel @Inject constructor(
     val locationGeoJson: StateFlow<GeoJsonData> = _locationGeoJson.asStateFlow()
 
     private var fetchJob: Job? = null
+    private var useDashboardPlaceholderData = false
 
     init {
-        locationRepository.startTracking()
         observeLocationForMapOverlay()
         observeLocationChanges()
         startPeriodicRefresh()
         observeLocationForCityName()
+    }
+
+    fun setDashboardPlaceholderMode(enabled: Boolean) {
+        if (enabled == useDashboardPlaceholderData) return
+
+        useDashboardPlaceholderData = enabled
+        if (enabled) {
+            fetchJob?.cancel()
+            locationRepository.stopTracking()
+            _uiState.value = AlertsUiState(isLoading = false)
+            _cityName.value = "Offline Sample"
+            _locationGeoJson.value = GeoJsonData.JsonString(EMPTY_FEATURE_COLLECTION)
+        } else {
+            _cityName.value = "Locating..."
+            locationRepository.location.value?.let { loc ->
+                fetchAlerts(loc.latitude, loc.longitude)
+            }
+        }
     }
 
     private suspend fun reverseGeocode(latitude: Double, longitude: Double): String? =
@@ -98,6 +116,7 @@ class AlertsViewModel @Inject constructor(
                             abs(old.longitude - new.longitude) < 0.01
                 }
                 .collectLatest { loc ->
+                    if (useDashboardPlaceholderData) return@collectLatest
                     val name = reverseGeocode(loc.latitude, loc.longitude)
                     _cityName.value = name ?: "Unknown Area"
                 }
@@ -109,6 +128,7 @@ class AlertsViewModel @Inject constructor(
             locationRepository.location
                 .filterNotNull()
                 .collect { loc ->
+                    if (useDashboardPlaceholderData) return@collect
                     _locationGeoJson.value = GeoJsonData.JsonString(
                         """
                         {
@@ -142,6 +162,7 @@ class AlertsViewModel @Inject constructor(
                 }
                 .distinctUntilChanged()
                 .collect { truncatedLocation ->
+                    if (useDashboardPlaceholderData) return@collect
                     truncatedLocation?.let { _ ->
                         // Use the actual raw location, not the truncated one
                         locationRepository.location.value?.let { loc ->
@@ -157,6 +178,7 @@ class AlertsViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 delay(1 * 1 * 1000L)
+                if (useDashboardPlaceholderData) continue
                 locationRepository.location.value?.let { loc ->
                     fetchAlerts(loc.latitude, loc.longitude)
                 }
@@ -165,6 +187,8 @@ class AlertsViewModel @Inject constructor(
     }
 
     private fun fetchAlerts(latitude: Double, longitude: Double) {
+        if (useDashboardPlaceholderData) return
+
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)

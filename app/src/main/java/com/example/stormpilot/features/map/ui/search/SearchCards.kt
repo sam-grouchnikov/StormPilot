@@ -33,14 +33,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 
 
 @Composable
 fun StormAiSearchCard(
     onClick: () -> Unit,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(
             Color(0xFF7173FF).copy(alpha = 0.25f),
@@ -98,7 +98,7 @@ fun GasSearchCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     PlaceSearchCard(
         label = "Gas",
         icon = Icons.Rounded.LocalGasStation,
@@ -115,7 +115,7 @@ fun HotelSearchCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     PlaceSearchCard(
         label = "Hotel",
         icon = Icons.Rounded.Hotel,
@@ -132,7 +132,7 @@ fun GrocerySearchCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     PlaceSearchCard(
         label = "Grocery",
         icon = Icons.Rounded.LocalGroceryStore,

@@ -64,7 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 import java.util.Locale
 
 enum class StormAiSheetMode {
@@ -103,7 +103,7 @@ fun StormAiVoiceButton(
         }
     }
 
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
 
     AnimatedStormAiShadowContainer(modifier = modifier) {
         FilledIconButton(

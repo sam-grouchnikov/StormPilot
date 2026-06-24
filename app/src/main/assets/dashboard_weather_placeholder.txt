@@ -1,0 +1,35 @@
+# Meta values are key=value. Tables use | separated columns.
+cityName=Oklahoma City, OK
+
+[current]
+temperature=78
+conditions=Scattered Thunderstorms
+dewPoint=67
+humidity=69
+windSpeed=18
+windGust=31
+
+[hourly]
+time|temperature|conditions|precipitationChance
+Now|78|Cloudy|28
+1 PM|80|Thunderstorms|42
+2 PM|82|Thunderstorms|58
+3 PM|81|Heavy Rain|74
+4 PM|79|Rain|65
+5 PM|77|Cloudy|36
+6 PM|75|Partly Cloudy|18
+
+[daily]
+day|conditions|high|low|spcOutlook
+Today|Strong storms possible|84|66|Slight
+Thu|Morning showers|79|62|Marginal
+Fri|Mostly sunny|86|64|Not issued
+Sat|Hot and humid|91|70|Not issued
+Sun|Isolated storms|88|69|General
+
+[stormSpecs]
+label|value|detail
+CAPE|2350 J/kg|Moderate instability
+CIN|35 J/kg|Weak cap
+SRH|180 m2/s2|Curved low-level flow
+Shear|42 kt|Organized storm potential

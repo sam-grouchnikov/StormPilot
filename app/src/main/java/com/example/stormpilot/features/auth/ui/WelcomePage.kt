@@ -33,8 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.R
-import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.ui.theme.StormPilotTheme
+import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
@@ -45,7 +45,7 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
         useSurfaceContainerNavigationBar = true,
         syncAppDarkMode = false,
     ) {
-        val colors = ExtendedColors()
+        val colors = MaterialTheme.extendedColors
 
         Surface(
             modifier = Modifier.fillMaxSize(),

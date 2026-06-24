@@ -36,6 +36,8 @@ import com.example.stormpilot.core.updateAppCompatNightMode
 import com.example.stormpilot.features.common.ui.ProfileAvatar
 import com.example.stormpilot.features.settings.ui.rows.ChangePasswordRow
 import com.example.stormpilot.features.settings.ui.rows.ChangeUserRow
+import com.example.stormpilot.features.settings.ui.rows.DashboardPlaceholderDataRow
+import com.example.stormpilot.features.settings.ui.rows.DashboardPlaceholderFileRow
 import com.example.stormpilot.features.settings.ui.rows.LogOutRow
 import com.example.stormpilot.features.settings.ui.rows.SmartRoutingRow
 import com.example.stormpilot.features.settings.ui.rows.ThemeSettingRow
@@ -45,6 +47,8 @@ fun SettingsPage(
     onDismiss: () -> Unit = {},
 ) {
     val isDarkMode = isAppInDarkMode()
+    val dashboardPlaceholderEnabled = AppSettings.useDashboardPlaceholderData
+    val dashboardPlaceholderFileName = AppSettings.dashboardPlaceholderWeatherAssetName
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -103,6 +107,22 @@ fun SettingsPage(
                     smartRouting = !smartRouting
                 },
             )
+
+            DashboardPlaceholderDataRow(
+                checked = dashboardPlaceholderEnabled,
+                fileName = dashboardPlaceholderFileName,
+                onCheckedChange = { checked ->
+                    AppSettings.useDashboardPlaceholderData = checked
+                },
+            )
+
+            if (dashboardPlaceholderEnabled) {
+                DashboardPlaceholderFileRow(
+                    fileName = dashboardPlaceholderFileName,
+                    onClick = AppSettings::cycleDashboardPlaceholderWeatherFile,
+                )
+            }
+
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
                 modifier = Modifier.padding(bottom = 5.dp, top = 0.dp))
 

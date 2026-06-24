@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.example.stormpilot.features.shared.data.search.PhotonFeature
 import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -49,7 +50,7 @@ internal fun UserLocationLayer(origin: Position?) {
         GeoJsonData.JsonString(json)
     }
 
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
     val userLocationSource = rememberGeoJsonSource(data = userLocationFeatureCollection)
     CircleLayer(
         id = "user-location-shadow",

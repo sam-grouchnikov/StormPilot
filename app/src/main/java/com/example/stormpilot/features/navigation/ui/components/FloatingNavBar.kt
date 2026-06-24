@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.navigation.ui.TabDest
-import com.example.stormpilot.ui.theme.ExtendedColors
+import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun FloatingNavBar(
@@ -64,7 +64,7 @@ fun FloatingNavBar(
         itemWidths.value.getOrElse(index) { 0 }
     }
 
-    val colors = ExtendedColors()
+    val colors = MaterialTheme.extendedColors
 
     Box(
         modifier = modifier,
