@@ -49,40 +49,7 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
                 modifier = Modifier.padding(vertical = 0.dp).fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-//                Row(
-//                    modifier = Modifier.padding(horizontal = 16.dp),
-//                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-//                ) {
-//                    Surface(
-//                        modifier = Modifier.size(40.dp),
-//                        shape = CircleShape,
-//                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-//                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.46f)),
-//                    ) {
-//                        Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-//                            Icon(
-//                                imageVector = Icons.Outlined.Thunderstorm,
-//                                contentDescription = null,
-//                                tint = MaterialTheme.colorScheme.primary,
-//                                modifier = Modifier.size(23.dp),
-//                            )
-//                        }
-//                    }
-//                    Column(modifier = Modifier.padding(start = 11.dp)) {
-//                        Text(
-//                            text = "Storm Environment",
-//                            color = MaterialTheme.colorScheme.onSurface,
-//                            fontWeight = FontWeight.Black,
-//                            fontSize = 20.sp,
-//                        )
-//                        Text(
-//                            text = "Convective ingredients near you",
-//                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                            fontWeight = FontWeight.SemiBold,
-//                            fontSize = 12.sp,
-//                        )
-//                    }
-//                }
+
                 Row(
                     modifier = Modifier
                         .horizontalScroll(rememberScrollState())
