@@ -62,7 +62,7 @@ fun ChatBubble(
         Brush.linearGradient(
             listOf(
                 MaterialTheme.colorScheme.primaryContainer,
-                MaterialTheme.colorScheme.tertiaryContainer
+                MaterialTheme.colorScheme.primaryContainer
             )
         )
     } else {
@@ -99,15 +99,15 @@ fun ChatBubble(
                     .widthIn(max = 320.dp)
                     .clip(bubbleShape)
                     .background(bubbleBrush)
-                    .border(
-                        width = 1.dp,
-                        color = if (isUser) {
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
-                        } else {
-                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        },
-                        shape = bubbleShape
-                    )
+//                    .border(
+//                        width = 1.dp,
+//                        color = if (isUser) {
+//                            MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+//                        } else {
+//                            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+//                        },
+//                        shape = bubbleShape
+//                    )
                     .padding(horizontal = 16.dp, vertical = 13.dp)
             ) {
                 if (!isUser) {

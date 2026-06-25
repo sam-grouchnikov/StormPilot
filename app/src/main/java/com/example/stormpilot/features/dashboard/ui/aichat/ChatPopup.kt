@@ -145,21 +145,22 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
         tonalElevation = 0.dp,
         scrimColor = Color.Transparent,
     ) {
-        AnimatedStormAiShadowContainer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.88f)
-                .padding(horizontal = 18.dp, vertical = 16.dp)
-                .navigationBarsPadding()
-                .imePadding(),
-            cornerRadius = 30.dp,
-            blurRadius = 20.dp,
-            shadowPadding = 0.dp,
-            drawBorder = true,
-        ) {
+//        AnimatedStormAiShadowContainer(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .fillMaxHeight(0.88f)
+//                .padding(horizontal = 10.dp, vertical = 12.dp)
+//                .navigationBarsPadding()
+//                .imePadding(),
+//            cornerRadius = 30.dp,
+//            blurRadius = 20.dp,
+//            shadowPadding = 0.dp,
+//            drawBorder = true,
+//        ) {
             Surface(
                 modifier = Modifier
-                    .matchParentSize()
+                    .fillMaxHeight(0.88f)
+                    .fillMaxWidth()
                     .padding(1.5.dp),
                 shape = RoundedCornerShape(28.5.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.96f),
@@ -285,7 +286,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                     }
                 }
             }
-        }
+//        }
     }
 }
 
@@ -422,8 +423,8 @@ private fun ContextualPromptChip(
 ) {
     Surface(
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.56f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+//        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
     ) {
         Row(
             modifier = Modifier
@@ -442,7 +443,7 @@ private fun ContextualPromptChip(
             Text(
                 text = prompt.label,
                 style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 maxLines = 1,
             )

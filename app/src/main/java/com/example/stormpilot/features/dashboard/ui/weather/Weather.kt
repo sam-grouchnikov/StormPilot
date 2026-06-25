@@ -61,6 +61,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -94,189 +96,11 @@ import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
 import kotlin.math.roundToInt
 
 
-@Composable
-fun Weather(
-    title: String,
-    weatherViewModel: WeatherViewModel = hiltViewModel(),
-) {
-    val context = LocalContext.current
-    val uiState by weatherViewModel.uiState.collectAsStateWithLifecycle()
-    val cityName by weatherViewModel.cityName.collectAsStateWithLifecycle()
-    val useDashboardPlaceholderData = AppSettings.useDashboardPlaceholderData
-    val dashboardPlaceholderAssetName = AppSettings.dashboardPlaceholderWeatherAssetName
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { isGranted ->
-        if (isGranted && !useDashboardPlaceholderData) {
-            weatherViewModel.locationRepository.startTracking()
-        }
-    }
-
-    LaunchedEffect(useDashboardPlaceholderData, dashboardPlaceholderAssetName) {
-        weatherViewModel.setDashboardPlaceholderSource(
-            enabled = useDashboardPlaceholderData,
-            assetName = dashboardPlaceholderAssetName,
-        )
-    }
-
-    LaunchedEffect(useDashboardPlaceholderData) {
-        if (useDashboardPlaceholderData) return@LaunchedEffect
-
-        if (ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            weatherViewModel.locationRepository.startTracking()
-        } else {
-            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-    }
-
-    WeatherOverviewSection(
-        cityName = cityName,
-        uiState = uiState,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 14.dp)
-            .verticalScroll(rememberScrollState())
-            .padding(bottom = dashboardBottomContentPadding()),
-    )
-}
-
-@Composable
-fun WeatherOverviewSection(
-    cityName: String,
-    uiState: WeatherUiState,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-//        CurrentWeatherCard(cityName = cityName, current = uiState.current, isLoading = uiState.isLoading)
-
-        ForecastSectionTitle("5 Day Outlook")
-        FiveDayOutlook(daily = uiState.daily)
-
-        ForecastSectionTitle("Hourly Forecast")
-        HourlyForecastRow(hourly = uiState.hourly)
-
-
-    }
-}
 
 @Composable
 private fun dashboardBottomContentPadding() =
     112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun CurrentWeatherCard(
-    cityName: String,
-    current: CurrentWeather?,
-    isLoading: Boolean,
-) {
-    val colorScheme = MaterialTheme.colorScheme
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        color = colorScheme.primaryContainer.copy(alpha = 0.82f),
-        border = BorderStroke(1.dp, colorScheme.onPrimaryContainer.copy(alpha = 0.10f)),
-        tonalElevation = 2.dp,
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    shape = RoundedCornerShape(15.dp),
-                    color = colorScheme.surface.copy(alpha = 0.42f),
-                    border = BorderStroke(1.dp, colorScheme.onPrimaryContainer.copy(alpha = 0.10f)),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 13.dp, vertical = 9.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.LocationOn,
-                            contentDescription = null,
-                            tint = colorScheme.primary,
-                            modifier = Modifier.size(17.dp),
-                        )
-                        Text(
-                            text = cityName,
-                            color = colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(start = 6.dp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                if (isLoading) {
-                    LoadingIndicator(modifier = Modifier.size(34.dp))
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    AnimatedContent(
-                        targetState = current?.temperature,
-                        transitionSpec = { fadeIn(tween(220)) togetherWith fadeOut(tween(120)) },
-                        label = "current_temperature",
-                    ) { temperature ->
-                        Text(
-                            text = temperature?.let { "$it°" } ?: "--°",
-                            color = colorScheme.onPrimaryContainer,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 64.sp,
-                            lineHeight = 66.sp,
-                        )
-                    }
-                    Text(
-                        text = current?.conditions ?: "Waiting on Weather",
-                        color = colorScheme.onPrimaryContainer.copy(alpha = 0.78f),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp,
-                        lineHeight = 21.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
-                Surface(
-                    shape = RoundedCornerShape(22.dp),
-                    color = colorScheme.surface.copy(alpha = 0.32f),
-                    border = BorderStroke(1.dp, colorScheme.onPrimaryContainer.copy(alpha = 0.10f)),
-                ) {
-                    AnimatedWeatherIcon(
-                        condition = current?.conditions ?: "",
-                        modifier = Modifier
-                            .size(94.dp)
-                            .padding(10.dp),
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
-            ) {
-                CurrentWeatherPill("Humidity", current?.humidity?.let { "$it%" } ?: "--")
-                CurrentWeatherPill("Dew Point", current?.dewPoint?.let { "$it°" } ?: "--")
-                CurrentWeatherPill("Wind", current?.windSpeed?.let { "$it mph" } ?: "--")
-            }
-        }
-    }
-}
 
 @Composable
 private fun CurrentWeatherPill(label: String, value: String) {
@@ -303,13 +127,8 @@ private fun CurrentWeatherPill(label: String, value: String) {
 }
 
 
-
 @Composable
-private fun HourlyForecastRow(hourly: List<HourlyForecast>) {
-    if (hourly.isEmpty()) {
-        EmptyWeatherCard("Hourly forecast will appear once your location loads.")
-        return
-    }
+fun HourlyForecastRow(hourly: List<HourlyForecast>) {
 
     val modelProducer = remember { CartesianChartModelProducer() }
 
@@ -319,7 +138,17 @@ private fun HourlyForecastRow(hourly: List<HourlyForecast>) {
         }
     }
 
-    ComposeBasicLineChart(modelProducer)
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
+            ComposeBasicLineChart(modelProducer)
+        }
+    }
+
 }
 
 @SuppressLint("SuspiciousIndentation")
@@ -329,10 +158,8 @@ private fun ComposeBasicLineChart(
         modifier: Modifier = Modifier,
     ) {
     val customBrush = Brush.verticalGradient(
-        0.0f to Color.Red.copy(alpha = 0.3f),
-        0.3f to Color.Yellow.copy(alpha = 0.3f),
-        0.7f to Color.Green.copy(alpha = 0.3f),
-        1.0f to Color.Blue.copy(alpha = 0.3f)
+        0.0f to Color.Blue,
+        1.0f to Color.Transparent
     )
     val customRangeProvider = CartesianLayerRangeProvider.fixed(
         minX = 0.0,
@@ -348,9 +175,7 @@ private fun ComposeBasicLineChart(
                     rememberLineCartesianLayer(
                         lineProvider = LineCartesianLayer.LineProvider.series(
                             LineCartesianLayer.rememberLine(
-                                // 1. Fill style for the line itself
                                 fill = LineCartesianLayer.LineFill.single(Fill(Color.White)),
-                                // 2. Fill style for the area below the line
                                 areaFill = LineCartesianLayer.AreaFill.single(
                                     Fill(brush = customBrush)
                                 )
@@ -569,27 +394,17 @@ private data class HourlyForecastChartPoint(
 )
 
 @Composable
-private fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
-    if (daily.isEmpty()) {
-        EmptyWeatherCard("5 day outlook will appear once your location loads.")
-        return
-    }
-
+fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
+//        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(vertical = 5.dp)) {
             daily.forEachIndexed { index, outlook ->
                 DailyOutlookRow(outlook = outlook)
-                if (index != daily.lastIndex) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.52f),
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                }
+
             }
         }
     }
@@ -603,24 +418,24 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Surface(
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            modifier = Modifier.size(38.dp),
-        ) {
+//        Surface(
+//            shape = CircleShape,
+//            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+//            modifier = Modifier.size(38.dp),
+//        ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = getWeatherIconForCondition(outlook.conditions),
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(21.dp),
+                    tint = badgeContent,
+                    modifier = Modifier.size(30.dp),
                 )
             }
-        }
-        Spacer(modifier = Modifier.width(10.dp))
+//        }
+        Spacer(modifier = Modifier.width(20.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = outlook.day,
@@ -635,27 +450,27 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
                 fontSize = 13.sp,
             )
         }
-        Text(
-            text = "${outlook.high?.toString() ?: "--"}°/${outlook.low?.toString() ?: "--"}°",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Black,
-            fontSize = 17.sp,
-            modifier = Modifier.padding(horizontal = 12.dp),
-        )
+//        Text(
+//            text = "${outlook.high?.toString() ?: "--"}°/${outlook.low?.toString() ?: "--"}°",
+//            color = MaterialTheme.colorScheme.onSurfaceVariant,
+//            fontWeight = FontWeight.Black,
+//            fontSize = 17.sp,
+//            modifier = Modifier.padding(horizontal = 12.dp),
+//        )
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            border = BorderStroke(1.dp, badgeContent.copy(alpha = 0.18f)),
+            color = badgeColor,
+//            border = BorderStroke(1.dp, badgeContent.copy(alpha = 0.18f)),
         ) {
             Text(
                 text = outlookSPC,
                 color = badgeContent,
                 fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
+                fontSize = 15.sp,
                 lineHeight = 14.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                modifier = Modifier.padding(horizontal = 15.dp, vertical = 7.dp),
             )
         }
     }
@@ -665,12 +480,12 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
 private fun outlookRiskContainer(outlook: String): Color {
     val colors = MaterialTheme.extendedColors
     return when {
-        outlook.contains("High", ignoreCase = true) -> colors.alertWarningContainer
-        outlook.contains("Moderate", ignoreCase = true) -> colors.alertWarningContainer.copy(alpha = 0.78f)
-        outlook.contains("Enhanced", ignoreCase = true) -> colors.alertWatchContainer
-        outlook.contains("Slight", ignoreCase = true) -> colors.alertWatchContainer.copy(alpha = 0.76f)
-        outlook.contains("Marginal", ignoreCase = true) -> MaterialTheme.colorScheme.tertiaryContainer
-        outlook.contains("TSTM", ignoreCase = true) -> MaterialTheme.colorScheme.primaryContainer
+        outlook.contains("High", ignoreCase = true) -> colors.highOutlookContainer
+        outlook.contains("Moderate", ignoreCase = true) -> colors.moderateOutlookContainer
+        outlook.contains("Enhanced", ignoreCase = true) -> colors.enhancedOutlookContainer
+        outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContainer
+        outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContainer
+        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer
         else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
 }
@@ -679,12 +494,12 @@ private fun outlookRiskContainer(outlook: String): Color {
 private fun outlookRiskContent(outlook: String): Color {
     val colors = MaterialTheme.extendedColors
     return when {
-        outlook.contains("High", ignoreCase = true) -> colors.alertWarningContent
-        outlook.contains("Moderate", ignoreCase = true) -> colors.alertWarningContent
-        outlook.contains("Enhanced", ignoreCase = true) -> colors.alertWatchContent
-        outlook.contains("Slight", ignoreCase = true) -> colors.alertWatchContent
-        outlook.contains("Marginal", ignoreCase = true) -> MaterialTheme.colorScheme.onTertiaryContainer
-        outlook.contains("TSTM", ignoreCase = true) -> MaterialTheme.colorScheme.onPrimaryContainer
+        outlook.contains("High", ignoreCase = true) -> colors.highOutlookContent
+        outlook.contains("Moderate", ignoreCase = true) -> colors.moderateOutlookContent
+        outlook.contains("Enhanced", ignoreCase = true) -> colors.enhancedOutlookContent
+        outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContent
+        outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContent
+        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContent
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 }

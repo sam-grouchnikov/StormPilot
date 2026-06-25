@@ -40,6 +40,7 @@ public data class ExtendedColors(
     public val stormTextNested: Color,
     public val stormContainerNested: Color,
     public val profileIcon: Color,
+    public val lowRisk: Color,
     public val moderateRisk: Color,
     public val highRisk: Color,
     public val extremeRisk: Color,
@@ -54,12 +55,23 @@ public data class ExtendedColors(
     public val hotelContent: Color,
     public val stormAIOutline: Color,
     public val locationCircle: Color,
+    public val tstmOutlookContainer: Color,
+    public val tstmOutlookContent: Color,
+    public val marginalOutlookContent: Color,
+    public val marginalOutlookContainer: Color,
+    public val slightOutlookContainer: Color,
+    public val slightOutlookContent: Color,
+    public val enhancedOutlookContainer: Color,
+    public val enhancedOutlookContent: Color,
+    public val moderateOutlookContainer: Color,
+    public val moderateOutlookContent: Color,
+    public val highOutlookContainer: Color,
+    public val highOutlookContent: Color,
 ) {
     public val alertRadarActiveContent: Color
         get() = alertWarningContent
 
-    public val lowRisk: Color
-        get() = alertClearContent
+
 }
 
 private val LightExtendedColors = ExtendedColors(
@@ -93,6 +105,7 @@ private val LightExtendedColors = ExtendedColors(
     stormTextNested = Color(0xFF900C3F),
     stormContainerNested = Color(0xFFF5EEEE),
     profileIcon = Color(0xFF679F38),
+    lowRisk = Color(0xFF6B6E40),
     moderateRisk = Color(0xFF6B6E40),
     highRisk = Color(0xFF7A573F),
     extremeRisk = Color(0xFF6F4B78),
@@ -107,6 +120,18 @@ private val LightExtendedColors = ExtendedColors(
     hotelContent = Color(0xFF1F4F9F),
     stormAIOutline = Color(0xFF623ABF),
     locationCircle = Color(0xFF1B36FF),
+    tstmOutlookContent = Color(0xFF66B259),
+    tstmOutlookContainer = Color(0xFF42733A),
+    marginalOutlookContent = Color(0xFF42733A),
+    marginalOutlookContainer = Color(0xFFFFFFFF),
+    moderateOutlookContainer = Color(0xFFFFFFFF),
+    moderateOutlookContent = Color(0xFF42733A),
+    slightOutlookContent = Color(0xFFFFFFFF),
+    slightOutlookContainer = Color(0xFFFFFFFF),
+    enhancedOutlookContent = Color(0xFFFFFFFF),
+    enhancedOutlookContainer = Color(0xFFFFFFFF),
+    highOutlookContent = Color(0xFFFFFFFF),
+    highOutlookContainer = Color(0xFFFFFFFF),
 )
 
 private val DarkExtendedColors = ExtendedColors(
@@ -140,9 +165,10 @@ private val DarkExtendedColors = ExtendedColors(
     stormTextNested = Color(0xFFFFB3B3),
     stormContainerNested = Color(0xFF503737),
     profileIcon = Color(0xFF5D8F33),
-    moderateRisk = Color(0xFFACAD93),
-    highRisk = Color(0xFFAD9D93),
-    extremeRisk = Color(0xFFA993AD),
+    lowRisk = Color(0xFF90D37D),
+    moderateRisk = Color(0xFFD3AC65),
+    highRisk = Color(0xFFC57267),
+    extremeRisk = Color(0xFFBE83C0),
     gasBox = Color(0xFF3D2A1A),
     gasOutline = Color(0xFFBF7B3A),
     gasContent = Color(0xFFFFB77A),
@@ -154,6 +180,18 @@ private val DarkExtendedColors = ExtendedColors(
     hotelContent = Color(0xFFA9CAFF),
     stormAIOutline = Color(0xFF4D318F),
     locationCircle = Color(0xFF364EFF),
+    tstmOutlookContent = Color(0xFF85DCD5),
+    tstmOutlookContainer = Color(0xFF0F4C45),
+    marginalOutlookContent = Color(0xFF8DDC85),
+    marginalOutlookContainer = Color(0xFF2F4C2C),
+    moderateOutlookContainer = Color(0xFF792A2A),
+    moderateOutlookContent = Color(0xFFFFB7B7),
+    slightOutlookContent = Color(0xFFDDD286),
+    slightOutlookContainer = Color(0xFF5A4C21),
+    enhancedOutlookContent = Color(0xFFFFBD9A),
+    enhancedOutlookContainer = Color(0xFF612E0C),
+    highOutlookContent = Color(0xFFF2C4FF),
+    highOutlookContainer = Color(0xFF76306A),
 )
 
 internal fun stormPilotExtendedColors(darkTheme: Boolean): ExtendedColors =

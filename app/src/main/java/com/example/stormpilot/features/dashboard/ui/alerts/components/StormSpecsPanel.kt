@@ -24,9 +24,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,12 +41,12 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+//        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
     ) {
         Box {
             Column(
-                modifier = Modifier.padding(vertical = 15.dp),
+                modifier = Modifier.padding(vertical = 0.dp).fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
 //                Row(
@@ -84,7 +86,7 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
                 Row(
                     modifier = Modifier
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 14.dp),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     if (stormSpecs.isEmpty()) {
@@ -101,8 +103,8 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                     } else {
-                        stormSpecs.forEach { spec ->
-                            StormSpecCard(spec = spec)
+                        stormSpecs.forEachIndexed { index, spec ->
+                            StormSpecCard(spec = spec, index = index)
                         }
                     }
                 }
@@ -169,22 +171,29 @@ private fun specToRisk(spec: StormSpec): String {
 }
 
 @Composable
-private fun StormSpecCard(spec: StormSpec) {
+private fun StormSpecCard(spec: StormSpec, index: Int) {
     val colors = MaterialTheme.extendedColors
     val risk = specToRisk(spec)
     val riskColor = when (risk) {
         "Low" -> colors.lowRisk
         "Moderate" -> colors.moderateRisk
+        "Medium" -> colors.moderateRisk
         "High" -> colors.highRisk
         "Extreme" -> colors.extremeRisk
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
+    val contentAlign = when (index) {
+        0 -> TextAlign.Start
+        1 -> TextAlign.Center
+        else -> TextAlign.End
+    }
+
     Surface(
-        modifier = Modifier.width(136.dp),
+        modifier = Modifier.width(115.dp),
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.18f)),
+//        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.18f)),
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
@@ -193,21 +202,21 @@ private fun StormSpecCard(spec: StormSpec) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Text(
                     text = spec.label,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     maxLines = 1,
                     modifier = Modifier.weight(1f),
                 )
-                Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                    Text(
-                        text = risk,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-                    )
-                }
+//                Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+//                    Text(
+//                        text = risk,
+//                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+//                        fontWeight = FontWeight.Medium,
+//                        fontSize = 11.sp,
+//                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+//                    )
+//                }
             }
             Text(
                 text = spec.value,
@@ -233,10 +242,10 @@ private fun StormSpecCard(spec: StormSpec) {
 @Composable
 private fun RiskMeter(risk: String, color: Color) {
     val progress = when (risk) {
-        "Low" -> 0.28f
-        "Moderate" -> 0.52f
-        "Medium" -> 0.52f
-        "High" -> 0.76f
+        "Low" -> 0.15f
+        "Moderate" -> 0.42f
+        "Medium" -> 0.42f
+        "High" -> 0.75f
         "Extreme" -> 1f
         else -> 0.18f
     }
@@ -251,7 +260,7 @@ private fun RiskMeter(risk: String, color: Color) {
             modifier = Modifier
                 .fillMaxWidth(progress)
                 .height(7.dp)
-                .background(MaterialTheme.colorScheme.outline, CircleShape),
+                .background(color , CircleShape),
         )
     }
 }

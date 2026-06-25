@@ -49,8 +49,10 @@ import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetai
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertStatusPanel
 import com.example.stormpilot.features.dashboard.ui.alerts.components.LocationAlertsMapCard
 import com.example.stormpilot.features.dashboard.ui.alerts.components.StormSpecsPanel
-import com.example.stormpilot.features.dashboard.ui.weather.WeatherOverviewSection
+import com.example.stormpilot.features.dashboard.ui.weather.FiveDayOutlook
+import com.example.stormpilot.features.dashboard.ui.weather.HourlyForecastRow
 import com.example.stormpilot.features.shared.data.alerts.bestMatchForEvent
+import com.example.stormpilot.features.shared.data.weather.HourlyForecast
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
@@ -118,7 +120,7 @@ fun DashboardOverviewScreen(
                 .padding(top = 84.dp, start = 10.dp, end = 10.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = dashboardBottomContentPadding()),
-            verticalArrangement = Arrangement.spacedBy(11.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
 //            LocationAlertsMapCard(
 //                cityName = cityName,
@@ -140,7 +142,12 @@ fun DashboardOverviewScreen(
                 onAlertClick = mapsViewModel::showAlertDetail,
             )
 //            ForecastSectionTitle("Storm Environment")
-//            StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
+            StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
+
+            FiveDayOutlook(weatherState.daily)
+
+            val hourly = weatherState.hourly
+//            HourlyForecastRow(hourly)
 //
 //            WeatherOverviewSection(
 //                cityName = weatherCityName,

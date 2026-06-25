@@ -58,35 +58,35 @@
       "conditions": "Thunderstorms",
       "high": 84,
       "low": 66,
-      "spcOutlook": "Slight"
+      "spcOutlook": "High"
     },
     {
       "day": "Thu",
       "conditions": "Morning showers",
       "high": 79,
       "low": 62,
-      "spcOutlook": "Marginal"
+      "spcOutlook": "Slight"
     },
     {
       "day": "Fri",
       "conditions": "Mostly sunny",
       "high": 86,
       "low": 64,
-      "spcOutlook": "Not issued"
+      "spcOutlook": "TSTM"
     },
     {
       "day": "Sat",
       "conditions": "Hot and humid",
       "high": 91,
       "low": 70,
-      "spcOutlook": "Not issued"
+      "spcOutlook": "None"
     },
     {
       "day": "Sun",
       "conditions": "Isolated storms",
       "high": 88,
       "low": 69,
-      "spcOutlook": "Not issued"
+      "spcOutlook": "None"
     }
   ],
   "stormSpecs": [
@@ -106,9 +106,9 @@
       "detail": "Curved low-level flow"
     },
     {
-      "label": "Shear",
-      "value": "42 kt",
-      "detail": "Organized storm potential"
+      "label": "TEMP",
+      "value": "180 m2/s2",
+      "detail": "Curved low-level flow"
     }
   ]
 }
