@@ -97,18 +97,19 @@ fun AlertStatusPanel(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier
-                    .padding(start = 5.dp)
+                    .padding(start = 10.dp)
                     .fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = if (!panelHasAlert) Icons.Outlined.Check else Icons.Outlined.Warning,
-                    tint = colors.alertClearContent,
+                    imageVector = if (!panelHasAlert) Icons.Outlined.Check else Icons.Outlined.WarningAmber,
+                    tint = MaterialTheme.colorScheme.secondary,
                     contentDescription = "Alert Status",
                     modifier = Modifier.size(28.dp)
                 )
                 Text(
                     text = if (!panelHasAlert) "No Active Alerts" else "Active Alerts",
                     fontSize = 17.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f)
                 )
@@ -128,7 +129,7 @@ fun AlertStatusPanel(
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(0.dp), modifier = Modifier.padding(0.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.padding(0.dp)) {
                     if(alertsState.tornadoWatch != null || alertsState.tornadoWarning != null) {
                         StaggeredAlertRow(
                             index = 0,
@@ -226,14 +227,14 @@ private fun AlertStatusRow(
     val colors = MaterialTheme.extendedColors
     val isWarning = state.level == AlertLevel.Warning
     val containerTarget = when (state.level) {
-        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.6f)
-        AlertLevel.Watch -> colors.alertWatchContainer.copy(alpha = 0.4f)
-        AlertLevel.Warning -> colors.alertWarningContainer.copy(alpha = 0.1f)
+        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerLow
+        AlertLevel.Watch -> colors.alertWatchContainer.copy(alpha = 0.5f)
+        AlertLevel.Warning -> colors.alertWarningContainer.copy(alpha = 0.7f)
     }
     val contentTarget = when (state.level) {
         AlertLevel.Clear -> MaterialTheme.colorScheme.onSurfaceVariant
         AlertLevel.Watch -> colors.alertWatchContent
-        AlertLevel.Warning -> colors.alertWarningContent
+        AlertLevel.Warning -> colors.moderateOutlookContent
     }
     val titleTarget = when (state.level) {
         AlertLevel.Clear -> colors.alertClearContent
@@ -266,7 +267,7 @@ private fun AlertStatusRow(
         label = "alert_icon_color",
     )
     val scale by animateFloatAsState(
-        targetValue = if (state.level == AlertLevel.Warning) 1.018f else 1f,
+        targetValue = 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow,
@@ -296,7 +297,7 @@ private fun AlertStatusRow(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 3.dp)
+            .padding(horizontal = 0.dp)
             .scale(scale)
             .clickable(enabled = alert != null) {
                 alert?.let(onAlertClick)
@@ -309,7 +310,7 @@ private fun AlertStatusRow(
 //        ),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 13.dp, vertical = 7.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
         ) {
             Surface(
@@ -317,7 +318,7 @@ private fun AlertStatusRow(
                 color = contentColor.copy(alpha = if (state.level == AlertLevel.Clear) 0.08f else 0.16f),
                 modifier = Modifier.size(36.dp),
             ) {
-                Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = if (isWarning) Icons.Outlined.PriorityHigh else icon,
                         contentDescription = if (isWarning) "Warning active" else null,

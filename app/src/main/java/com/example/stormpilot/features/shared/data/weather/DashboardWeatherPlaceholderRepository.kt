@@ -1,6 +1,7 @@
 package com.example.stormpilot.features.shared.data.weather
 
 import android.content.Context
+import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +12,7 @@ import org.json.JSONObject
 data class DashboardWeatherPlaceholder(
     val cityName: String,
     val snapshot: WeatherSnapshot,
+    val alerts: List<NwsAlert> = emptyList(),
 )
 
 class DashboardWeatherPlaceholderRepository @Inject constructor(
@@ -45,6 +47,9 @@ class DashboardWeatherPlaceholderRepository @Inject constructor(
 
         return DashboardWeatherPlaceholder(
             cityName = cityName,
+            alerts = (root.optJSONArray("alerts") ?: weatherRoot.optJSONArray("alerts"))
+                .orEmpty()
+                .mapObjects(::parseAlert),
             snapshot = WeatherSnapshot(
                 current = parseCurrentWeather(weatherRoot.getJSONObject("current")),
                 hourly = weatherRoot.optJSONArray("hourly").orEmpty().mapObjects(::parseHourlyForecast),
@@ -74,6 +79,7 @@ class DashboardWeatherPlaceholderRepository @Inject constructor(
 
         return DashboardWeatherPlaceholder(
             cityName = meta["cityName"] ?: meta["location"] ?: "Offline Sample",
+            alerts = parseTable(sections["alerts"].orEmpty()).map(::parseAlert),
             snapshot = WeatherSnapshot(
                 current = CurrentWeather(
                     temperature = current["temperature"].toNullableInt(),
@@ -145,6 +151,44 @@ class DashboardWeatherPlaceholderRepository @Inject constructor(
             detail = json.optString("detail"),
         )
 
+    private fun parseAlert(json: JSONObject): NwsAlert =
+        NwsAlert(
+            id = json.optString("id").ifBlank { json.optString("event") },
+            event = json.optString("event"),
+            headline = json.optNullableString("headline") ?: json.optString("event"),
+            description = json.optNullableString("description").orEmpty(),
+            instruction = json.optNullableString("instruction"),
+            severity = json.optNullableString("severity") ?: "Unknown",
+            urgency = json.optNullableString("urgency") ?: "Unknown",
+            effective = json.optNullableString("effective"),
+            onset = json.optNullableString("onset"),
+            expires = json.optNullableString("expires"),
+            areaDescription = json.optNullableString("areaDescription"),
+            affectedZones = json.optJSONArray("affectedZones").orEmpty().mapStrings(),
+            senderName = json.optNullableString("senderName") ?: "StormPilot sample data",
+        )
+
+    private fun parseAlert(row: Map<String, String>): NwsAlert =
+        NwsAlert(
+            id = row["id"].orEmpty().ifBlank { row["event"].orEmpty() },
+            event = row["event"].orEmpty(),
+            headline = row["headline"] ?: row["event"].orEmpty(),
+            description = row["description"].orEmpty(),
+            instruction = row["instruction"].takeUnless { it.isNullOrBlank() },
+            severity = row["severity"] ?: "Unknown",
+            urgency = row["urgency"] ?: "Unknown",
+            effective = row["effective"].takeUnless { it.isNullOrBlank() },
+            onset = row["onset"].takeUnless { it.isNullOrBlank() },
+            expires = row["expires"].takeUnless { it.isNullOrBlank() },
+            areaDescription = row["areaDescription"].takeUnless { it.isNullOrBlank() },
+            affectedZones = row["affectedZones"]
+                ?.split(';')
+                ?.map { it.trim() }
+                ?.filter { it.isNotEmpty() }
+                .orEmpty(),
+            senderName = row["senderName"] ?: "StormPilot sample data",
+        )
+
     private fun parseKeyValues(lines: List<String>): Map<String, String> =
         lines.mapNotNull { line ->
             val separatorIndex = line.indexOf('=')
@@ -176,6 +220,13 @@ class DashboardWeatherPlaceholderRepository @Inject constructor(
         buildList {
             for (index in 0 until length()) {
                 add(transform(getJSONObject(index)))
+            }
+        }
+
+    private fun JSONArray.mapStrings(): List<String> =
+        buildList {
+            for (index in 0 until length()) {
+                optString(index).takeIf { it.isNotBlank() }?.let(::add)
             }
         }
 

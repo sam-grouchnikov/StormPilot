@@ -1,5 +1,59 @@
 {
   "cityName": "Oklahoma City, OK",
+  "alerts": [
+    {
+      "id": "sample-tornado-warning",
+      "event": "Tornado Warning",
+      "headline": "Tornado Warning for central Oklahoma County",
+      "description": "A severe thunderstorm capable of producing a tornado was located near downtown Oklahoma City, moving northeast at 35 mph.",
+      "instruction": "Move to a basement or interior room on the lowest floor of a sturdy building. Avoid windows.",
+      "severity": "Extreme",
+      "urgency": "Immediate",
+      "effective": "2026-06-27T13:20:00-05:00",
+      "onset": "2026-06-27T13:20:00-05:00",
+      "expires": "2026-06-27T14:00:00-05:00",
+      "areaDescription": "Central Oklahoma County",
+      "affectedZones": [
+        "OKC109"
+      ],
+      "senderName": "NWS Norman OK"
+    },
+    {
+      "id": "sample-severe-thunderstorm-watch",
+      "event": "Severe Thunderstorm Watch",
+      "headline": "Severe Thunderstorm Watch remains in effect",
+      "description": "Scattered severe thunderstorms are possible with damaging wind gusts and large hail.",
+      "instruction": "Stay weather aware and be ready to move indoors quickly if warnings are issued.",
+      "severity": "Severe",
+      "urgency": "Expected",
+      "effective": "2026-06-27T12:00:00-05:00",
+      "onset": "2026-06-27T12:00:00-05:00",
+      "expires": "2026-06-27T19:00:00-05:00",
+      "areaDescription": "Central and eastern Oklahoma",
+      "affectedZones": [
+        "OKC109",
+        "OKC125"
+      ],
+      "senderName": "NWS Storm Prediction Center"
+    },
+    {
+      "id": "sample-flash-flood-warning",
+      "event": "Flash Flood Warning",
+      "headline": "Flash Flood Warning for low water crossings",
+      "description": "Thunderstorms producing heavy rain may cause rapid rises on creeks, streams, and low water crossings.",
+      "instruction": "Turn around, do not drive through flooded roads.",
+      "severity": "Severe",
+      "urgency": "Immediate",
+      "effective": "2026-06-27T13:10:00-05:00",
+      "onset": "2026-06-27T13:10:00-05:00",
+      "expires": "2026-06-27T15:15:00-05:00",
+      "areaDescription": "Oklahoma County",
+      "affectedZones": [
+        "OKC109"
+      ],
+      "senderName": "NWS Norman OK"
+    }
+  ],
   "current": {
     "temperature": 78,
     "conditions": "Scattered Thunderstorms",

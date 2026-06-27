@@ -8,6 +8,7 @@ import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import com.example.stormpilot.features.shared.data.alerts.alertType
 import com.example.stormpilot.features.shared.data.location.LocationLookupRepository
 import com.example.stormpilot.features.shared.data.location.LocationRepository
+import com.example.stormpilot.features.shared.data.weather.DashboardWeatherPlaceholderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -64,6 +65,7 @@ class AlertsViewModel @Inject constructor(
     val locationRepository: LocationRepository,
     private val alertsRepository: AlertsRepository,
     private val locationLookupRepository: LocationLookupRepository,
+    private val dashboardWeatherPlaceholderRepository: DashboardWeatherPlaceholderRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlertsUiState())
@@ -75,6 +77,7 @@ class AlertsViewModel @Inject constructor(
 
     private var fetchJob: Job? = null
     private var useDashboardPlaceholderData = false
+    private var dashboardPlaceholderAssetName: String? = null
 
     init {
         observeLocationForMapOverlay()
@@ -83,16 +86,18 @@ class AlertsViewModel @Inject constructor(
         observeLocationForCityName()
     }
 
-    fun setDashboardPlaceholderMode(enabled: Boolean) {
-        if (enabled == useDashboardPlaceholderData) return
+    fun setDashboardPlaceholderMode(enabled: Boolean, assetName: String) {
+        val sourceUnchanged = enabled == useDashboardPlaceholderData &&
+            (!enabled || dashboardPlaceholderAssetName == assetName)
+        if (sourceUnchanged) return
 
         useDashboardPlaceholderData = enabled
+        dashboardPlaceholderAssetName = assetName.takeIf { enabled }
         if (enabled) {
             fetchJob?.cancel()
             locationRepository.stopTracking()
-            _uiState.value = AlertsUiState(isLoading = false)
-            _cityName.value = "Offline Sample"
             _locationGeoJson.value = GeoJsonData.JsonString(EMPTY_FEATURE_COLLECTION)
+            loadDashboardPlaceholderAlerts(assetName)
         } else {
             _cityName.value = "Locating..."
             locationRepository.location.value?.let { loc ->
@@ -195,30 +200,7 @@ class AlertsViewModel @Inject constructor(
 
             alertsRepository.fetchAlerts(latitude, longitude)
                 .onSuccess { alerts ->
-                    _uiState.value = AlertsUiState(
-                        tornadoWarning = alerts.firstOrNull {
-                            it.alertType() == AlertType.TORNADO_WARNING
-                        },
-                        tornadoWatch = alerts.firstOrNull {
-                            it.alertType() == AlertType.TORNADO_WATCH
-                        },
-                        flashFloodWarning = alerts.firstOrNull {
-                            it.alertType() == AlertType.FLASH_FLOOD_WARNING
-                        },
-                        flashFloodWatch = alerts.firstOrNull {
-                            it.alertType() == AlertType.FLASH_FLOOD_WATCH
-                        },
-                        severeThunderstormWarning = alerts.firstOrNull {
-                            it.alertType() == AlertType.SEVERE_THUNDERSTORM_WARNING
-                        },
-                        severeThunderstormWatch = alerts.firstOrNull {
-                            it.alertType() == AlertType.SEVERE_THUNDERSTORM_WATCH
-                        },
-                        otherAlerts = alerts.filter {
-                            it.alertType() == AlertType.OTHER
-                        },
-                        isLoading = false,
-                    )
+                    _uiState.value = alerts.toAlertsUiState()
                 }
                 .onFailure { error ->
                     _uiState.value = _uiState.value.copy(
@@ -228,6 +210,51 @@ class AlertsViewModel @Inject constructor(
                 }
         }
     }
+
+    private fun loadDashboardPlaceholderAlerts(assetName: String) {
+        fetchJob?.cancel()
+        fetchJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            dashboardWeatherPlaceholderRepository.load(assetName)
+                .onSuccess { placeholder ->
+                    _cityName.value = placeholder.cityName
+                    _uiState.value = placeholder.alerts.toAlertsUiState()
+                }
+                .onFailure { error ->
+                    _cityName.value = "Offline Sample"
+                    _uiState.value = AlertsUiState(
+                        isLoading = false,
+                        error = error.localizedMessage ?: "Dashboard placeholder alerts could not be loaded.",
+                    )
+                }
+        }
+    }
+
+    private fun List<NwsAlert>.toAlertsUiState(): AlertsUiState =
+        AlertsUiState(
+            tornadoWarning = firstOrNull {
+                it.alertType() == AlertType.TORNADO_WARNING
+            },
+            tornadoWatch = firstOrNull {
+                it.alertType() == AlertType.TORNADO_WATCH
+            },
+            flashFloodWarning = firstOrNull {
+                it.alertType() == AlertType.FLASH_FLOOD_WARNING
+            },
+            flashFloodWatch = firstOrNull {
+                it.alertType() == AlertType.FLASH_FLOOD_WATCH
+            },
+            severeThunderstormWarning = firstOrNull {
+                it.alertType() == AlertType.SEVERE_THUNDERSTORM_WARNING
+            },
+            severeThunderstormWatch = firstOrNull {
+                it.alertType() == AlertType.SEVERE_THUNDERSTORM_WATCH
+            },
+            otherAlerts = filter {
+                it.alertType() == AlertType.OTHER
+            },
+            isLoading = false,
+        )
 
 
 

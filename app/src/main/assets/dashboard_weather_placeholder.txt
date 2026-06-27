@@ -9,6 +9,12 @@ humidity=69
 windSpeed=18
 windGust=31
 
+[alerts]
+id|event|headline|description|instruction|severity|urgency|effective|onset|expires|areaDescription|affectedZones|senderName
+sample-tornado-warning|Tornado Warning|Tornado Warning for central Oklahoma County|A severe thunderstorm capable of producing a tornado was located near downtown Oklahoma City, moving northeast at 35 mph.|Move to a basement or interior room on the lowest floor of a sturdy building. Avoid windows.|Extreme|Immediate|2026-06-27T13:20:00-05:00|2026-06-27T13:20:00-05:00|2026-06-27T14:00:00-05:00|Central Oklahoma County|OKC109|NWS Norman OK
+sample-severe-thunderstorm-watch|Severe Thunderstorm Watch|Severe Thunderstorm Watch remains in effect|Scattered severe thunderstorms are possible with damaging wind gusts and large hail.|Stay weather aware and be ready to move indoors quickly if warnings are issued.|Severe|Expected|2026-06-27T12:00:00-05:00|2026-06-27T12:00:00-05:00|2026-06-27T19:00:00-05:00|Central and eastern Oklahoma|OKC109;OKC125|NWS Storm Prediction Center
+sample-flash-flood-warning|Flash Flood Warning|Flash Flood Warning for low water crossings|Thunderstorms producing heavy rain may cause rapid rises on creeks, streams, and low water crossings.|Turn around, do not drive through flooded roads.|Severe|Immediate|2026-06-27T13:10:00-05:00|2026-06-27T13:10:00-05:00|2026-06-27T15:15:00-05:00|Oklahoma County|OKC109|NWS Norman OK
+
 [hourly]
 time|temperature|conditions|precipitationChance
 Now|78|Cloudy|28

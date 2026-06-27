@@ -61,7 +61,10 @@ fun AlertSlide(
     }
 
     LaunchedEffect(useDashboardPlaceholderData, dashboardPlaceholderAssetName) {
-        alertsViewModel.setDashboardPlaceholderMode(useDashboardPlaceholderData)
+        alertsViewModel.setDashboardPlaceholderMode(
+            enabled = useDashboardPlaceholderData,
+            assetName = dashboardPlaceholderAssetName,
+        )
         mapsViewModel.setDashboardPlaceholderMode(useDashboardPlaceholderData)
         weatherViewModel.setDashboardPlaceholderSource(
             enabled = useDashboardPlaceholderData,
