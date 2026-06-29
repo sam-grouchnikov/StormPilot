@@ -159,7 +159,7 @@ private fun StormSpecCard(spec: StormSpec, index: Int) {
     Surface(
         modifier = Modifier.width(115.dp),
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.85f),
 //        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.18f)),
     ) {
         Column(

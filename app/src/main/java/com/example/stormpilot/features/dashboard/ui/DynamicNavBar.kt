@@ -120,7 +120,7 @@ fun DashboardOverviewScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .padding(top = 84.dp, start = 10.dp, end = 10.dp)
+                .padding(top = 75.dp, start = 10.dp, end = 10.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = dashboardBottomContentPadding()),
             verticalArrangement = Arrangement.spacedBy(12.dp),

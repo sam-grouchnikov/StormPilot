@@ -2,11 +2,12 @@ package com.example.stormpilot.features.dashboard.ui.alerts.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
@@ -60,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,23 +77,65 @@ fun AlertStatusPanel(
     var expanded by remember { mutableStateOf(false) }
     val colors = MaterialTheme.extendedColors
     val panelHasAlert = alertsState.hasAnyAlert
+    val activeAlertRows = buildList {
+        if (alertsState.tornadoWatch != null || alertsState.tornadoWarning != null) {
+            add(
+                ActiveAlertRow(
+                    icon = Icons.Outlined.Tornado,
+                    label = "Tornado",
+                    alert = alertsState.tornadoWarning ?: alertsState.tornadoWatch,
+                    state = alertState(
+                        warningActive = alertsState.tornadoWarning != null,
+                        watchActive = alertsState.tornadoWatch != null,
+                        warningText = "Tornado Warning",
+                        watchText = "Tornado Watch",
+                        clearText = "No Tornado Alerts",
+                    ),
+                ),
+            )
+        }
+        if (alertsState.severeThunderstormWatch != null || alertsState.severeThunderstormWarning != null) {
+            add(
+                ActiveAlertRow(
+                    icon = Icons.Outlined.Bolt,
+                    label = "Severe Thunderstorm",
+                    alert = alertsState.severeThunderstormWarning ?: alertsState.severeThunderstormWatch,
+                    state = alertState(
+                        warningActive = alertsState.severeThunderstormWarning != null,
+                        watchActive = alertsState.severeThunderstormWatch != null,
+                        warningText = "Severe T-Storm Warning",
+                        watchText = "Severe T-Storm Watch",
+                        clearText = "No Storm Alerts",
+                    ),
+                ),
+            )
+        }
+        if (alertsState.flashFloodWatch != null || alertsState.flashFloodWarning != null) {
+            add(
+                ActiveAlertRow(
+                    icon = Icons.Outlined.Flood,
+                    label = "Flood",
+                    alert = alertsState.flashFloodWarning ?: alertsState.flashFloodWatch,
+                    state = alertState(
+                        warningActive = alertsState.flashFloodWarning != null,
+                        watchActive = alertsState.flashFloodWatch != null,
+                        warningText = "Flash Flood Warning",
+                        watchText = "Flash Flood Watch",
+                        clearText = "No Flood Alerts",
+                    ),
+                ),
+            )
+        }
+    }
 
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessMediumLow
-                )
-            ),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.85f),
     ) {
         Column(
             modifier = Modifier.padding(vertical = 14.dp, horizontal = 15.dp),
-            verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -102,7 +146,7 @@ fun AlertStatusPanel(
             ) {
                 Icon(
                     imageVector = if (!panelHasAlert) Icons.Outlined.Check else Icons.Outlined.WarningAmber,
-                    tint = MaterialTheme.colorScheme.secondary,
+                    tint = if (panelHasAlert) colors.moderateOutlookContent else colors.marginalOutlookContent,
                     contentDescription = "Alert Status",
                     modifier = Modifier.size(28.dp)
                 )
@@ -126,59 +170,28 @@ fun AlertStatusPanel(
 
             AnimatedVisibility(
                 visible = expanded,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically()
+                enter = expandVertically(
+                    animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing),
+                    expandFrom = Alignment.Top,
+                ) + fadeIn(
+                    animationSpec = tween(durationMillis = 220, delayMillis = 40),
+                ),
+                exit = shrinkVertically(
+                    animationSpec = tween(durationMillis = 240, easing = FastOutSlowInEasing),
+                    shrinkTowards = Alignment.Top,
+                ) + fadeOut(
+                    animationSpec = tween(durationMillis = 180),
+                ),
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(7.dp), modifier = Modifier.padding(0.dp)) {
-                    if(alertsState.tornadoWatch != null || alertsState.tornadoWarning != null) {
-                        StaggeredAlertRow(
-                            index = 0,
-                            expanded = expanded,
-                            icon = Icons.Outlined.Tornado,
-                            label = "Tornado",
-                            alert = alertsState.tornadoWarning ?: alertsState.tornadoWatch,
-                            state = alertState(
-                                warningActive = alertsState.tornadoWarning != null,
-                                watchActive = alertsState.tornadoWatch != null,
-                                warningText = "Tornado Warning",
-                                watchText = "Tornado Watch",
-                                clearText = "No Tornado Alerts",
-                            ),
-                            onAlertClick = onAlertClick,
-                        )
-                    }
-                    if (alertsState.severeThunderstormWatch != null || alertsState.severeThunderstormWarning != null) {
-                        StaggeredAlertRow(
-                            index = 1,
-                            expanded = expanded,
-                            icon = Icons.Outlined.Bolt,
-                            label = "Severe Thunderstorm",
-                            alert = alertsState.severeThunderstormWarning ?: alertsState.severeThunderstormWatch,
-                            state = alertState(
-                                warningActive = alertsState.severeThunderstormWarning != null,
-                                watchActive = alertsState.severeThunderstormWatch != null,
-                                warningText = "Severe T-Storm Warning",
-                                watchText = "Severe T-Storm Watch",
-                                clearText = "No Storm Alerts",
-                            ),
-                            onAlertClick = onAlertClick,
-                        )
-
-                    }
-                    if (alertsState.flashFloodWatch != null || alertsState.flashFloodWarning != null) {
-                        StaggeredAlertRow(
-                            index = 2,
-                            expanded = expanded,
-                            icon = Icons.Outlined.Flood,
-                            label = "Flood",
-                            alert = alertsState.flashFloodWarning ?: alertsState.flashFloodWatch,
-                            state = alertState(
-                                warningActive = alertsState.flashFloodWarning != null,
-                                watchActive = alertsState.flashFloodWatch != null,
-                                warningText = "Flash Flood Warning",
-                                watchText = "Flash Flood Watch",
-                                clearText = "No Flood Alerts",
-                            ),
+                Column(
+                    modifier = Modifier.padding(top = 11.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    activeAlertRows.forEachIndexed { index, row ->
+                        SlidingAlertStatusRow(
+                            row = row,
+                            index = index,
+                            rowCount = activeAlertRows.size,
                             onAlertClick = onAlertClick,
                         )
                     }
@@ -188,41 +201,71 @@ fun AlertStatusPanel(
     }
 }
 
+private data class ActiveAlertRow(
+    val icon: ImageVector,
+    val label: String,
+    val alert: NwsAlert?,
+    val state: LocationAlertState,
+)
+
 @Composable
-private fun StaggeredAlertRow(
+private fun SlidingAlertStatusRow(
+    row: ActiveAlertRow,
     index: Int,
-    expanded: Boolean,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    alert: NwsAlert?,
-    state: LocationAlertState,
+    rowCount: Int,
     onAlertClick: (NwsAlert) -> Unit,
 ) {
+    val visibleState = remember(row.label, row.alert?.id) {
+        MutableTransitionState(false).apply {
+            targetState = true
+        }
+    }
+    val staggerDelayMillis = alertRowStaggerDelayMillis(index = index, rowCount = rowCount)
+
     AnimatedVisibility(
-        visible = expanded,
-        enter = fadeIn(
-            animationSpec = tween(durationMillis = 300, delayMillis = index * 100)
-        ) + slideInHorizontally(
-            animationSpec = tween(durationMillis = 400, delayMillis = index * 100)
-        ) { -it / 6 }
+        visibleState = visibleState,
+        enter = slideInHorizontally(
+            animationSpec = tween(
+                durationMillis = 300,
+                delayMillis = staggerDelayMillis,
+                easing = FastOutSlowInEasing,
+            ),
+        ) { fullWidth -> -fullWidth / 3 } + fadeIn(
+            animationSpec = tween(
+                durationMillis = 180,
+                delayMillis = staggerDelayMillis,
+            ),
+        ),
+        exit = ExitTransition.None,
     ) {
         AlertStatusRow(
-            icon = icon,
-            label = label,
-            alert = alert,
-            state = state,
-            onAlertClick = onAlertClick
+            icon = row.icon,
+            label = row.label,
+            alert = row.alert,
+            state = row.state,
+            onAlertClick = onAlertClick,
         )
     }
 }
 
+private fun alertRowStaggerDelayMillis(index: Int, rowCount: Int): Int {
+    if (rowCount <= 1) return 0
+
+    val staggerStepMillis = (AlertRowStaggerWindowMillis / rowCount).coerceIn(
+        minimumValue = AlertRowMinStaggerMillis,
+        maximumValue = AlertRowMaxStaggerMillis,
+    )
+    return index * staggerStepMillis
+}
+
 @Composable
 private fun AlertStatusRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     alert: NwsAlert?,
     state: LocationAlertState,
     onAlertClick: (NwsAlert) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.extendedColors
     val isWarning = state.level == AlertLevel.Warning
@@ -295,7 +338,7 @@ private fun AlertStatusRow(
     )
 
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 0.dp)
             .scale(scale)
@@ -385,3 +428,7 @@ private fun alertState(
     watchActive -> LocationAlertState(AlertLevel.Watch, watchText)
     else -> LocationAlertState(AlertLevel.Clear, clearText)
 }
+
+private const val AlertRowStaggerWindowMillis = 180
+private const val AlertRowMinStaggerMillis = 60
+private const val AlertRowMaxStaggerMillis = 90

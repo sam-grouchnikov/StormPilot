@@ -398,13 +398,12 @@ fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.85f),
 //        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(vertical = 5.dp)) {
             daily.forEachIndexed { index, outlook ->
                 DailyOutlookRow(outlook = outlook)
-
             }
         }
     }
@@ -480,12 +479,12 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
 private fun outlookRiskContainer(outlook: String): Color {
     val colors = MaterialTheme.extendedColors
     return when {
-        outlook.contains("High", ignoreCase = true) -> colors.highOutlookContainer
-        outlook.contains("Moderate", ignoreCase = true) -> colors.moderateOutlookContainer
-        outlook.contains("Enhanced", ignoreCase = true) -> colors.enhancedOutlookContainer
-        outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContainer
-        outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContainer
-        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer
+        outlook.contains("High", ignoreCase = true) -> colors.highOutlookContainer.copy(alpha = 0.6f)
+        outlook.contains("Moderate", ignoreCase = true) -> colors.moderateOutlookContainer.copy(alpha = 0.6f)
+        outlook.contains("Enhanced", ignoreCase = true) -> if (AppSettings.isDarkMode) colors.enhancedOutlookContainer.copy(alpha = 0.8f) else colors.enhancedOutlookContainer.copy(alpha = 0.6f)
+        outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContainer.copy(alpha = 0.6f)
+        outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContainer.copy(alpha = 0.5f)
+        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer.copy(alpha = 0.6f)
         else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
 }

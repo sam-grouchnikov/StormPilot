@@ -119,28 +119,28 @@
       "conditions": "Morning showers",
       "high": 79,
       "low": 62,
-      "spcOutlook": "Slight"
+      "spcOutlook": "Moderate"
     },
     {
       "day": "Fri",
       "conditions": "Mostly sunny",
       "high": 86,
       "low": 64,
-      "spcOutlook": "TSTM"
+      "spcOutlook": "Enhanced"
     },
     {
       "day": "Sat",
       "conditions": "Hot and humid",
       "high": 91,
       "low": 70,
-      "spcOutlook": "None"
+      "spcOutlook": "Slight"
     },
     {
       "day": "Sun",
       "conditions": "Isolated storms",
       "high": 88,
       "low": 69,
-      "spcOutlook": "None"
+      "spcOutlook": "TSTM"
     }
   ],
   "stormSpecs": [
