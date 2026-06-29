@@ -1,19 +1,13 @@
 package com.example.stormpilot.features.dashboard.ui.weather
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +22,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,7 +36,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
-import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,10 +47,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -74,27 +67,30 @@ import com.example.stormpilot.features.shared.data.weather.DailyWeatherOutlook
 import com.example.stormpilot.features.shared.data.weather.HourlyForecast
 import com.example.stormpilot.features.shared.viewmodels.WeatherUiState
 import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
-import com.example.stormpilot.features.dashboard.ui.ForecastSectionTitle
 import com.example.stormpilot.ui.theme.extendedColors
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
-import com.patrykandpatrick.vico.compose.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.Fill
-import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
-import com.patrykandpatrick.vico.compose.common.rememberVerticalLegend
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
-import com.patrykandpatrick.vico.compose.cartesian.data.LineCartesianLayerModel
 import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
 
 
+import kotlin.math.max
 import kotlin.math.roundToInt
 
+
+private const val HOURLY_FORECAST_AXIS_LABEL_SLOTS = 4
 
 
 @Composable
@@ -129,68 +125,190 @@ private fun CurrentWeatherPill(label: String, value: String) {
 
 @Composable
 fun HourlyForecastRow(hourly: List<HourlyForecast>) {
-
+    var selectedMetric by remember { mutableStateOf(HourlyForecastMetric.Temperature) }
+    val chartPoints = remember(hourly, selectedMetric) {
+        hourly.toHourlyForecastChartPoints(selectedMetric)
+    }
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    LaunchedEffect(Unit) {
-        modelProducer.runTransaction {
-            lineModel { series(2, 4, 3, 5, 7, 6, 8) }
+    LaunchedEffect(chartPoints, selectedMetric) {
+        if (chartPoints.isNotEmpty()) {
+            modelProducer.runTransaction {
+                lineModel {
+                    series(
+                        x = chartPoints.indices.map { it },
+                        y = chartPoints.map { it.value },
+                        key = selectedMetric.name,
+                    )
+                }
+            }
         }
     }
 
     Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f),
     ) {
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
-            ComposeBasicLineChart(modelProducer)
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = selectedMetric.title,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 17.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = selectedMetric.subtitle(chartPoints),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                HourlyMetricToggle(
+                    selectedMetric = selectedMetric,
+                    onMetricSelected = { selectedMetric = it },
+                )
+            }
+
+            if (chartPoints.isEmpty()) {
+                HourlyForecastGraphEmpty(selectedMetric)
+            } else {
+                HourlyForecastLineChart(
+                    modelProducer = modelProducer,
+                    metric = selectedMetric,
+                    points = chartPoints,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                )
+                HourlyForecastGraphStats(
+                    metric = selectedMetric,
+                    points = chartPoints,
+                )
+            }
         }
     }
-
 }
 
-@SuppressLint("SuspiciousIndentation")
 @Composable
-private fun ComposeBasicLineChart(
+private fun HourlyForecastLineChart(
     modelProducer: CartesianChartModelProducer,
-        modifier: Modifier = Modifier,
-    ) {
-    val customBrush = Brush.verticalGradient(
-        0.0f to Color.Blue,
-        1.0f to Color.Transparent
+    metric: HourlyForecastMetric,
+    points: List<HourlyForecastChartPoint>,
+    modifier: Modifier = Modifier,
+) {
+    val colorScheme = MaterialTheme.colorScheme
+    val lineColor = metric.chartLineColor()
+    val areaBrush = Brush.verticalGradient(
+        0.0f to lineColor.copy(alpha = 0.34f),
+        0.62f to lineColor.copy(alpha = 0.12f),
+        1.0f to Color.Transparent,
     )
-    val customRangeProvider = CartesianLayerRangeProvider.fixed(
-        minX = 0.0,
-        maxX = 10.0,
-        minY = 0.0,
-        maxY = 10.0
+    val rangeProvider = remember(points, metric) {
+        metric.rangeProvider(points)
+    }
+    val labelSpacing = remember(points) {
+        max(1, points.lastIndex / HOURLY_FORECAST_AXIS_LABEL_SLOTS)
+    }
+    val firstLabelOffset = remember(points) {
+        if (points.size > 1 && points.first().label.equals("Now", ignoreCase = true)) 1 else 0
+    }
+    val xValueFormatter = remember(points) {
+        CartesianValueFormatter { _, value, _ ->
+            points[value.roundToInt().coerceIn(points.indices)].label.ifBlank { "--" }
+        }
+    }
+    val yValueFormatter = remember(metric) {
+        CartesianValueFormatter { _, value, _ ->
+            metric.formatValue(value.roundToInt())
+        }
+    }
+    val axisLabel = rememberTextComponent(
+        style = TextStyle(
+            color = colorScheme.onSurfaceVariant.copy(alpha = 0.78f),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+        ),
     )
-
-
-        CartesianChartHost(
-            chart =
-                rememberCartesianChart(
-                    rememberLineCartesianLayer(
-                        lineProvider = LineCartesianLayer.LineProvider.series(
-                            LineCartesianLayer.rememberLine(
-                                fill = LineCartesianLayer.LineFill.single(Fill(Color.White)),
-                                areaFill = LineCartesianLayer.AreaFill.single(
-                                    Fill(brush = customBrush)
-                                )
-
-                            )
-                        ),
-                        rangeProvider = customRangeProvider
-                    ),
-                    startAxis = VerticalAxis.rememberStart(),
-                    bottomAxis = HorizontalAxis.rememberBottom(),
-                ),
-            modelProducer = modelProducer,
-            modifier = modifier,
+    val horizontalGuideline = rememberLineComponent(
+        fill = Fill(colorScheme.outlineVariant.copy(alpha = 0.18f)),
+        thickness = 1.dp,
+    )
+    val pointComponent = rememberShapeComponent(
+        fill = Fill(colorScheme.surfaceContainerLow),
+        shape = CircleShape,
+        strokeFill = Fill(lineColor),
+        strokeThickness = 2.dp,
+    )
+    val pointProvider = remember(pointComponent) {
+        LineCartesianLayer.PointProvider.single(
+            LineCartesianLayer.Point(
+                pointComponent,
+                size = 7.dp,
+            )
         )
     }
+    val chartLine = LineCartesianLayer.rememberLine(
+        fill = LineCartesianLayer.LineFill.single(Fill(lineColor)),
+        stroke = LineCartesianLayer.LineStroke.Continuous(
+            thickness = 3.dp,
+            cap = StrokeCap.Round,
+        ),
+        areaFill = LineCartesianLayer.AreaFill.single(Fill(brush = areaBrush)),
+        pointProvider = pointProvider,
+        interpolator = LineCartesianLayer.Interpolator.cubic(curvature = 0.28f),
+    )
+
+    CartesianChartHost(
+        chart = rememberCartesianChart(
+            rememberLineCartesianLayer(
+                lineProvider = LineCartesianLayer.LineProvider.series(chartLine),
+                pointSpacing = 22.dp,
+                rangeProvider = rangeProvider,
+            ),
+            startAxis = VerticalAxis.rememberStart(
+                line = null,
+                tick = null,
+                guideline = horizontalGuideline,
+                label = axisLabel,
+                valueFormatter = yValueFormatter,
+                itemPlacer = remember {
+                    VerticalAxis.ItemPlacer.count(count = { 4 }, shiftTopLines = false)
+                },
+            ),
+            bottomAxis = HorizontalAxis.rememberBottom(
+                line = null,
+                tick = null,
+                guideline = null,
+                label = axisLabel,
+                valueFormatter = xValueFormatter,
+                itemPlacer = remember(labelSpacing, firstLabelOffset) {
+                    HorizontalAxis.ItemPlacer.aligned(
+                        spacing = { labelSpacing },
+                        offset = { firstLabelOffset },
+                        shiftExtremeLines = false,
+                    )
+                },
+            ),
+        ),
+        modelProducer = modelProducer,
+        scrollState = rememberVicoScrollState(scrollEnabled = false),
+        modifier = modifier,
+    )
+}
 
 
 @Composable
@@ -240,7 +358,11 @@ private fun HourlyMetricToggleOption(
                 color = if (selected) colorScheme.surfaceContainerHigh else Color.Transparent,
                 shape = RoundedCornerShape(11.dp),
             )
-            .clickable(onClick = onClick)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick,
+            )
             .padding(horizontal = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -248,12 +370,12 @@ private fun HourlyMetricToggleOption(
         Icon(
             imageVector = metric.icon,
             contentDescription = null,
-            tint = if (selected) colorScheme.onSurface else colorScheme.onSurfaceVariant,
+            tint = if (selected) colorScheme.primary else colorScheme.onSurfaceVariant,
             modifier = Modifier.size(15.dp),
         )
         Text(
             text = metric.tabLabel,
-            color = if (selected) colorScheme.onSurface else colorScheme.onSurfaceVariant,
+            color = if (selected) colorScheme.primary else colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
             modifier = Modifier.padding(start = 4.dp),
@@ -268,7 +390,7 @@ private fun HourlyForecastGraphStats(
 ) {
     val values = points.map { it.value }
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(start = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         HourlyForecastGraphStat(
@@ -337,6 +459,18 @@ private fun HourlyForecastGraphEmpty(metric: HourlyForecastMetric) {
     }
 }
 
+private fun List<HourlyForecast>.toHourlyForecastChartPoints(
+    metric: HourlyForecastMetric,
+): List<HourlyForecastChartPoint> =
+    mapNotNull { forecast ->
+        metric.valueFor(forecast)?.let { value ->
+            HourlyForecastChartPoint(
+                label = forecast.time.ifBlank { "--" },
+                value = metric.normalizeValue(value),
+            )
+        }
+    }
+
 private enum class HourlyForecastMetric(
     val tabLabel: String,
     val title: String,
@@ -368,6 +502,12 @@ private enum class HourlyForecastMetric(
             PrecipitationChance -> forecast.precipitationChance
         }
 
+    fun normalizeValue(value: Int): Int =
+        when (this) {
+            Temperature -> value
+            PrecipitationChance -> value.coerceIn(0, 100)
+        }
+
     fun formatValue(value: Int): String =
         when (this) {
             Temperature -> "$value°"
@@ -386,6 +526,49 @@ private enum class HourlyForecastMetric(
             Temperature -> values.min()
             PrecipitationChance -> values.average().roundToInt()
         }
+
+    fun chartLineColor(): Color =
+        when (this) {
+            Temperature -> if (AppSettings.isDarkMode) Color(0xFF8FE35A) else Color(0xFFD96F22)
+            PrecipitationChance -> if (AppSettings.isDarkMode) Color(0xFF7DDCFF) else Color(0xFF087EA4)
+        }
+
+    fun rangeProvider(points: List<HourlyForecastChartPoint>): CartesianLayerRangeProvider {
+        val values = points.map { it.value }
+        val minX = 0.0
+        val maxX = points.lastIndex.coerceAtLeast(1).toDouble()
+
+        return when (this) {
+            Temperature -> {
+                val low = values.min()
+                val high = values.max()
+                val spread = high - low
+                val padding = if (spread == 0) 4 else max(3, (spread * 0.22f).roundToInt())
+
+                CartesianLayerRangeProvider.fixed(
+                    minX = minX,
+                    maxX = maxX,
+                    minY = (low - padding).toDouble(),
+                    maxY = (high + padding).toDouble(),
+                )
+            }
+            PrecipitationChance -> {
+                val peak = values.max()
+                val maxY = when {
+                    peak <= 20 -> 40
+                    peak <= 50 -> 70
+                    else -> 100
+                }
+
+                CartesianLayerRangeProvider.fixed(
+                    minX = minX,
+                    maxX = maxX,
+                    minY = 0.0,
+                    maxY = maxY.toDouble(),
+                )
+            }
+        }
+    }
 }
 
 private data class HourlyForecastChartPoint(
@@ -484,7 +667,7 @@ private fun outlookRiskContainer(outlook: String): Color {
         outlook.contains("Enhanced", ignoreCase = true) -> if (AppSettings.isDarkMode) colors.enhancedOutlookContainer.copy(alpha = 0.8f) else colors.enhancedOutlookContainer.copy(alpha = 0.6f)
         outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContainer.copy(alpha = 0.6f)
         outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContainer.copy(alpha = 0.5f)
-        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer.copy(alpha = 0.6f)
+        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer.copy(alpha = 0.4f)
         else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
 }

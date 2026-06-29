@@ -150,7 +150,7 @@ fun DashboardOverviewScreen(
             FiveDayOutlook(weatherState.daily)
 
             val hourly = weatherState.hourly
-//            HourlyForecastRow(hourly)
+            HourlyForecastRow(hourly)
 //
 //            WeatherOverviewSection(
 //                cityName = weatherCityName,
