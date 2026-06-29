@@ -98,10 +98,10 @@ fun RadarPage(
                 onOpenChat = { showChat = true },
             )
 
-            AnimatedStormAiChatBackdrop(
-                visible = showChat,
-                modifier = Modifier.fillMaxSize(),
-            )
+//            AnimatedStormAiChatBackdrop(
+//                visible = showChat,
+//                modifier = Modifier.fillMaxSize(),
+//            )
 
             if (showChat) {
                 ChatPopup({ showChat = false }, genAIViewModel)
