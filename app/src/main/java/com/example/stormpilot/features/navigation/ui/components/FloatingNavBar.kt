@@ -79,7 +79,7 @@ fun FloatingNavBar(
                 )
                 .clip(CircleShape)
                 .background(colors.purpleSurfaceContainer)
-                .padding(horizontal = 8.dp, vertical = 8.dp),
+                .padding(horizontal = 6.dp, vertical = 6.dp),
             content = {
                 Box(
                     modifier = Modifier

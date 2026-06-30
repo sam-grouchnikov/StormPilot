@@ -222,6 +222,11 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
 
                         Spacer(modifier = Modifier.height(14.dp))
 
+                        AnimatedStormAiShadowContainer() {
+
+
+                        }
+
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(28.dp),

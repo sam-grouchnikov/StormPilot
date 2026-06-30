@@ -109,8 +109,8 @@ fun StormAiVoiceButton(
         FilledIconButton(
             onClick = { openVoiceSheet() },
             modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .size(47.dp),
+                .padding(horizontal = 9.dp, vertical = 9.dp)
+                .size(44.dp),
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = colors.purpleSurfaceContainer,
                 contentColor = MaterialTheme.colorScheme.onSurface,

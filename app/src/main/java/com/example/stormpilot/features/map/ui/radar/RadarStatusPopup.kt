@@ -78,9 +78,9 @@ internal fun RadarStatusPopup(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
     ) {
@@ -141,7 +141,8 @@ internal fun RadarStatusPopup(
                 }
                 DropdownMenu(
                     expanded = productMenuExpanded,
-                    onDismissRequest = { productMenuExpanded = false }
+                    onDismissRequest = { productMenuExpanded = false },
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     RadarProduct.entries.forEach { product ->
                         DropdownMenuItem(
@@ -180,7 +181,8 @@ internal fun RadarStatusPopup(
                 }
                 DropdownMenu(
                     expanded = frameMenuExpanded,
-                    onDismissRequest = { frameMenuExpanded = false }
+                    onDismissRequest = { frameMenuExpanded = false },
+                    containerColor = MaterialTheme.colorScheme.surface
                 ) {
                     RADAR_PLAYBACK_FRAME_COUNTS.forEach { frameCount ->
                         DropdownMenuItem(
