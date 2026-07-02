@@ -67,6 +67,7 @@ import com.example.stormpilot.features.shared.data.weather.DailyWeatherOutlook
 import com.example.stormpilot.features.shared.data.weather.HourlyForecast
 import com.example.stormpilot.features.shared.viewmodels.WeatherUiState
 import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
+import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.ui.theme.extendedColors
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
@@ -124,7 +125,10 @@ private fun CurrentWeatherPill(label: String, value: String) {
 
 
 @Composable
-fun HourlyForecastRow(hourly: List<HourlyForecast>) {
+fun HourlyForecastRow(
+    hourly: List<HourlyForecast>,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+) {
     var selectedMetric by remember { mutableStateOf(HourlyForecastMetric.Temperature) }
     val chartPoints = remember(hourly, selectedMetric) {
         hourly.toHourlyForecastChartPoints(selectedMetric)
@@ -148,7 +152,7 @@ fun HourlyForecastRow(hourly: List<HourlyForecast>) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.92f),
+        color = containerColor,
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 18.dp),
@@ -190,6 +194,7 @@ fun HourlyForecastRow(hourly: List<HourlyForecast>) {
                     modelProducer = modelProducer,
                     metric = selectedMetric,
                     points = chartPoints,
+                    pointContainerColor = containerColor,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(220.dp),
@@ -208,10 +213,11 @@ private fun HourlyForecastLineChart(
     modelProducer: CartesianChartModelProducer,
     metric: HourlyForecastMetric,
     points: List<HourlyForecastChartPoint>,
+    pointContainerColor: Color,
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val lineColor = metric.chartLineColor()
+    val lineColor = metric.chartLineColor(MaterialTheme.extendedColors)
     val areaBrush = Brush.verticalGradient(
         0.0f to lineColor.copy(alpha = 0.34f),
         0.62f to lineColor.copy(alpha = 0.12f),
@@ -248,7 +254,7 @@ private fun HourlyForecastLineChart(
         thickness = 1.dp,
     )
     val pointComponent = rememberShapeComponent(
-        fill = Fill(colorScheme.surfaceContainerLow),
+        fill = Fill(pointContainerColor),
         shape = CircleShape,
         strokeFill = Fill(lineColor),
         strokeThickness = 2.dp,
@@ -317,8 +323,8 @@ private fun HourlyMetricToggle(
     onMetricSelected: (HourlyForecastMetric) -> Unit,
 ) {
     Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Row(
@@ -351,12 +357,19 @@ private fun HourlyMetricToggleOption(
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val activeColor = if (metric == HourlyForecastMetric.Temperature) {
+        metric.chartLineColor(MaterialTheme.extendedColors)
+    } else {
+        colorScheme.primary
+    }
+    val activeContainerColor = if (metric == HourlyForecastMetric.Temperature) activeColor.copy(alpha = 0.24f) else colorScheme.secondaryContainer
+
     Row(
         modifier = modifier
             .height(32.dp)
             .background(
-                color = if (selected) colorScheme.surfaceContainerHigh else Color.Transparent,
-                shape = RoundedCornerShape(11.dp),
+                color = if (selected) activeContainerColor else Color.Transparent,
+                shape = RoundedCornerShape(20.dp),
             )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -370,13 +383,13 @@ private fun HourlyMetricToggleOption(
         Icon(
             imageVector = metric.icon,
             contentDescription = null,
-            tint = if (selected) colorScheme.primary else colorScheme.onSurfaceVariant,
+            tint = if (selected) activeColor else colorScheme.onSurfaceVariant,
             modifier = Modifier.size(15.dp),
         )
         Text(
             text = metric.tabLabel,
-            color = if (selected) colorScheme.primary else colorScheme.onSurfaceVariant,
-            fontWeight = FontWeight.Bold,
+            color = if (selected) activeColor else colorScheme.onSurfaceVariant,
+            fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Bold,
             fontSize = 12.sp,
             modifier = Modifier.padding(start = 4.dp),
         )
@@ -527,10 +540,10 @@ private enum class HourlyForecastMetric(
             PrecipitationChance -> values.average().roundToInt()
         }
 
-    fun chartLineColor(): Color =
+    fun chartLineColor(colors: ExtendedColors): Color =
         when (this) {
-            Temperature -> if (AppSettings.isDarkMode) Color(0xFF8FE35A) else Color(0xFFD96F22)
-            PrecipitationChance -> if (AppSettings.isDarkMode) Color(0xFF7DDCFF) else Color(0xFF087EA4)
+            Temperature -> colors.weatherTemperatureChartLine
+            PrecipitationChance -> colors.weatherPrecipitationChartLine
         }
 
     fun rangeProvider(points: List<HourlyForecastChartPoint>): CartesianLayerRangeProvider {
@@ -577,11 +590,14 @@ private data class HourlyForecastChartPoint(
 )
 
 @Composable
-fun FiveDayOutlook(daily: List<DailyWeatherOutlook>) {
+fun FiveDayOutlook(
+    daily: List<DailyWeatherOutlook>,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.85f),
+        color = containerColor,
 //        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(vertical = 5.dp)) {
@@ -597,6 +613,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
     val outlookSPC = if (outlook.spcOutlook.startsWith("General")) "TSTMs" else outlook.spcOutlook
     val badgeColor = outlookRiskContainer(outlookSPC)
     val badgeContent = outlookRiskContent(outlookSPC)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -612,7 +629,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
                 Icon(
                     imageVector = getWeatherIconForCondition(outlook.conditions),
                     contentDescription = null,
-                    tint = badgeContent,
+                    tint = badgeContent.copy(alpha = 0.8f),
                     modifier = Modifier.size(30.dp),
                 )
             }
@@ -667,7 +684,7 @@ private fun outlookRiskContainer(outlook: String): Color {
         outlook.contains("Enhanced", ignoreCase = true) -> if (AppSettings.isDarkMode) colors.enhancedOutlookContainer.copy(alpha = 0.8f) else colors.enhancedOutlookContainer.copy(alpha = 0.6f)
         outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContainer.copy(alpha = 0.6f)
         outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContainer.copy(alpha = 0.5f)
-        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer.copy(alpha = 0.4f)
+        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer.copy(alpha = 0.55f)
         else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
 }
@@ -688,11 +705,14 @@ private fun outlookRiskContent(outlook: String): Color {
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun EmptyWeatherCard(text: String) {
+private fun EmptyWeatherCard(
+    text: String,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        color = containerColor,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
         ) {
         Box(

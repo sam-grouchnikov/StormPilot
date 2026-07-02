@@ -81,6 +81,9 @@ fun ChatBubble(
         onAnimatedContentChanged()
     }
 
+    val shape = if (isUser) RoundedCornerShape(topStart = 20.dp, topEnd = 4.dp, bottomEnd = 20.dp, bottomStart = 20.dp)
+    else RoundedCornerShape(topStart = 4.dp, topEnd = 20.dp, bottomEnd = 20.dp, bottomStart = 20.dp)
+
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = alignment
@@ -97,7 +100,7 @@ fun ChatBubble(
             Column(
                 modifier = Modifier
                     .widthIn(max = 320.dp)
-                    .clip(bubbleShape)
+                    .clip(shape)
                     .background(bubbleBrush)
 //                    .border(
 //                        width = 1.dp,

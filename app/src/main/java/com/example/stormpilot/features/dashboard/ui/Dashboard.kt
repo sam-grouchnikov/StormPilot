@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,6 +27,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -54,6 +57,7 @@ import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.features.dashboard.ui.aichat.ChatPopup
 import com.example.stormpilot.R
+import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.features.common.ui.AccountMenuAnchor
 import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
@@ -72,22 +76,24 @@ fun RadarPage(
     var topIconRowHeightPx by remember { mutableStateOf(0) }
     val colors = MaterialTheme.extendedColors
 
-
+    val settings = AppSettings
     StormPilotTheme(
         opaqueNavigationBar = true,
         navigationBarColorOverride = colors.purpleSurfaceContainer
     ) {
+        val dashboardWidgetContainerColor = if (AppSettings.isDarkMode) colorScheme.surfaceContainerLow.copy(alpha = 0.85f) else colorScheme.surfaceContainerLowest
+
         Box(
             modifier = Modifier.fillMaxSize()
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceContainerLowest
+                    color = if (AppSettings.isDarkMode) colorScheme.surfaceContainerLowest else colorScheme.surfaceContainerLow
                 ),
 
             ) {
 //            DashboardOverviewScreen(
 //                modifier = Modifier.dashboardTopIconRowBackdropBlur(topIconRowHeightPx),
 //            )
-            DashboardOverviewScreen()
+            DashboardOverviewScreen(widgetContainerColor = dashboardWidgetContainerColor)
 
             TopIconRow(
                 modifier = Modifier
@@ -98,10 +104,10 @@ fun RadarPage(
                 onOpenChat = { showChat = true },
             )
 
-//            AnimatedStormAiChatBackdrop(
-//                visible = showChat,
-//                modifier = Modifier.fillMaxSize(),
-//            )
+            AnimatedStormAiChatBackdrop(
+                visible = showChat,
+                modifier = Modifier.fillMaxSize(),
+            )
 
             if (showChat) {
                 ChatPopup({ showChat = false }, genAIViewModel)
@@ -130,56 +136,62 @@ fun TopIconRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(vertical = 15.dp, horizontal = 16.dp),
+//                .background(color = Color.Red)
+                .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                shape = CircleShape,
-                color = colorScheme.surface.copy(alpha = 0.44f),
-                border = BorderStroke(1.dp, colorScheme.outlineVariant.copy(alpha = 0.4f)),
-            ) {
+
                 Row(
-                    modifier = Modifier.padding(horizontal = 15.dp, vertical = 10.dp),
+                    modifier = Modifier.padding(start = 8.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.LocationOn,
-                        contentDescription = null,
-                        tint = colorScheme.primary,
-                        modifier = Modifier.size(23.dp),
+//                    Icon(
+//                        imageVector = Icons.Outlined.LocationOn,
+//                        contentDescription = null,
+//                        tint = colorScheme.primary,
+//                        modifier = Modifier.size(24.dp),
+//                    )
+                    VerticalDivider(
+                        thickness = 6.dp,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .height(28.dp)
+                            .clip(CircleShape)
                     )
                     Text(
                         text = displayCityName,
                         color = colorScheme.onSurface,
                         fontWeight = FontWeight.W700,
-                        fontSize = 17.sp,
+                        fontSize = 21.sp,
                         modifier = Modifier.padding(start = 6.dp),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    IconButton(
+                        onClick = onOpenChat,
+                        modifier = Modifier.size(43.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.AutoAwesome,
+                            tint = MaterialTheme.colorScheme.primary,
+                            contentDescription = "Open StormPilot AI chat",
+                            modifier = Modifier.size(28.dp),
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    AccountMenuAnchor(onClick = onOpenSettings, circleSize = 43, textSize = 15)
                 }
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            IconButton(
-                onClick = onOpenChat,
-                modifier = Modifier.size(43.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.AutoAwesome,
-                    tint = MaterialTheme.colorScheme.primary,
-                    contentDescription = "Open StormPilot AI chat",
-                    modifier = Modifier.size(28.dp),
-                )
-            }
-
-            Spacer(modifier = Modifier.width(12.dp))
-
-            AccountMenuAnchor(onClick = onOpenSettings, circleSize = 43, textSize = 15)
 
         }
-    }
+
 
 }
 

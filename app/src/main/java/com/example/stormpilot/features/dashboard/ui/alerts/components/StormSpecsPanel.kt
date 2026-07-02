@@ -36,13 +36,15 @@ import com.example.stormpilot.features.shared.data.weather.StormSpec
 import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
-fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
+fun StormSpecsPanel(
+    stormSpecs: List<StormSpec>,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-//        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.48f)),
+        color = Color.Transparent
     ) {
         Box {
             Column(
@@ -71,7 +73,11 @@ fun StormSpecsPanel(stormSpecs: List<StormSpec>) {
                         Spacer(modifier = Modifier.height(10.dp))
                     } else {
                         stormSpecs.forEachIndexed { index, spec ->
-                            StormSpecCard(spec = spec, index = index)
+                            StormSpecCard(
+                                spec = spec,
+                                index = index,
+                                containerColor = containerColor,
+                            )
                         }
                     }
                 }
@@ -138,7 +144,11 @@ private fun specToRisk(spec: StormSpec): String {
 }
 
 @Composable
-private fun StormSpecCard(spec: StormSpec, index: Int) {
+private fun StormSpecCard(
+    spec: StormSpec,
+    index: Int,
+    containerColor: Color,
+) {
     val colors = MaterialTheme.extendedColors
     val risk = specToRisk(spec)
     val riskColor = when (risk) {
@@ -159,7 +169,7 @@ private fun StormSpecCard(spec: StormSpec, index: Int) {
     Surface(
         modifier = Modifier.width(115.dp),
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.85f),
+        color = containerColor,
 //        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.18f)),
     ) {
         Column(
@@ -169,7 +179,7 @@ private fun StormSpecCard(spec: StormSpec, index: Int) {
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Text(
                     text = spec.label,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = MaterialTheme.colorScheme.tertiary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     maxLines = 1,
@@ -187,7 +197,7 @@ private fun StormSpecCard(spec: StormSpec, index: Int) {
             }
             Text(
                 text = spec.value,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 1.0f),
                 fontWeight = FontWeight.Black,
                 fontSize = 20.sp,
                 maxLines = 1,

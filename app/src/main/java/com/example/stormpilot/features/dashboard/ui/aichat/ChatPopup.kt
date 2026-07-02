@@ -145,21 +145,21 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
         tonalElevation = 0.dp,
         scrimColor = Color.Transparent,
     ) {
-//        AnimatedStormAiShadowContainer(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .fillMaxHeight(0.88f)
-//                .padding(horizontal = 10.dp, vertical = 12.dp)
-//                .navigationBarsPadding()
-//                .imePadding(),
-//            cornerRadius = 30.dp,
-//            blurRadius = 20.dp,
-//            shadowPadding = 0.dp,
-//            drawBorder = true,
-//        ) {
+        AnimatedStormAiShadowContainer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.88f)
+                .padding(horizontal = 10.dp, vertical = 12.dp)
+                .navigationBarsPadding()
+                .imePadding(),
+            cornerRadius = 30.dp,
+            blurRadius = 11.dp,
+            shadowPadding = 0.dp,
+            drawBorder = true,
+        ) {
             Surface(
                 modifier = Modifier
-                    .fillMaxHeight(0.88f)
+                    .fillMaxHeight()
                     .fillMaxWidth()
                     .padding(1.5.dp),
                 shape = RoundedCornerShape(28.5.dp),
@@ -177,7 +177,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 18.dp, vertical = 14.dp)
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
                     ) {
                         ChatPopupHeader(onDismiss = onDismiss)
 
@@ -291,7 +291,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                     }
                 }
             }
-//        }
+        }
     }
 }
 
@@ -324,7 +324,7 @@ private fun rememberContextualChatPrompts(): List<ContextualChatPrompt> = rememb
 @Composable
 private fun ChatPopupHeader(onDismiss: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(

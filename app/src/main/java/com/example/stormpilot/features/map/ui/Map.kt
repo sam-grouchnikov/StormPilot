@@ -8,35 +8,22 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,12 +45,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -95,7 +78,6 @@ import com.example.stormpilot.features.shared.data.search.PhotonFeature
 import com.example.stormpilot.features.shared.viewmodels.MapsFooterState
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.features.shared.viewmodels.navigationInstruction
-import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.ui.theme.extendedColors
 import com.google.android.gms.location.LocationCallback
@@ -342,10 +324,10 @@ fun MapsPage(
     }
 
     var active by remember { mutableStateOf(false) }
-    var mapChromeExpanded by remember { mutableStateOf(false) }
     var showTripSummary by remember { mutableStateOf(false) }
     var showRadarOverlay by remember { mutableStateOf(false) }
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
+
     val selectedRadarKey = selectedRadarSite
         ?.takeIf { showRadarOverlay }
         ?.let { site ->
@@ -850,66 +832,48 @@ fun MapsPage(
             }
 
             if (!active) {
-                if (mapChromeExpanded) {
-                    MapOverlayControls(
-                        showRadarOverlay = showRadarOverlay,
-                        onRadarOverlayClick = {
-                            val willShowRadarOverlay = !showRadarOverlay
-                            showRadarOverlay = willShowRadarOverlay
-                            if (!willShowRadarOverlay) {
-                                isRadarPlaybackRunning = false
-                                radarPlaybackChangesAgo = null
-                            }
-                            Log.d(RADAR_LOG_TAG, "Radar overlay enabled=$showRadarOverlay")
-                        },
-                        showSevereAlertsOverlay = showSevereAlertsOverlay,
-                        onSevereAlertsOverlayClick = {
-                            showSevereAlertsOverlay = !showSevereAlertsOverlay
-                        },
-                        navMode = navMode,
-                        is2dNavView = is2dNavView,
-                        onNavViewToggleClick = {
-                            is2dNavView = !is2dNavView
-                            if (!navigationCameraTrackingEnabled) {
-                                scope.launch {
-                                    try {
-                                        isProgrammaticCameraUpdate = true
-                                        cameraState.animateTo(
-                                            finalPosition = cameraState.position.copy(
-                                                tilt = if (is2dNavView) 0.0 else 50.0,
-                                            ),
-                                            duration = 1.seconds,
-                                        )
-                                    } finally {
-                                        delay(50)
-                                        isProgrammaticCameraUpdate = false
-                                    }
+                MapOverlayControls(
+                    showRadarOverlay = showRadarOverlay,
+                    onRadarOverlayClick = {
+                        val willShowRadarOverlay = !showRadarOverlay
+                        showRadarOverlay = willShowRadarOverlay
+                        if (!willShowRadarOverlay) {
+                            isRadarPlaybackRunning = false
+                            radarPlaybackChangesAgo = null
+                        }
+                        Log.d(RADAR_LOG_TAG, "Radar overlay enabled=$showRadarOverlay")
+                    },
+                    showSevereAlertsOverlay = showSevereAlertsOverlay,
+                    onSevereAlertsOverlayClick = {
+                        showSevereAlertsOverlay = !showSevereAlertsOverlay
+                    },
+                    navMode = navMode,
+                    is2dNavView = is2dNavView,
+                    onNavViewToggleClick = {
+                        is2dNavView = !is2dNavView
+                        if (!navigationCameraTrackingEnabled) {
+                            scope.launch {
+                                try {
+                                    isProgrammaticCameraUpdate = true
+                                    cameraState.animateTo(
+                                        finalPosition = cameraState.position.copy(
+                                            tilt = if (is2dNavView) 0.0 else 50.0,
+                                        ),
+                                        duration = 1.seconds,
+                                    )
+                                } finally {
+                                    delay(50)
+                                    isProgrammaticCameraUpdate = false
                                 }
                             }
-                        },
-                        onFoldClick = {
-                            active = false
-                            mapChromeExpanded = false
-                        },
-                        colors = colors,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .statusBarsPadding()
-                            .padding(end = 13.dp, top = 74.dp),
-                    )
-                } else if (navMode) {
-                    FoldedMapChromeCard(
-                        colors = colors,
-                        onClick = { mapChromeExpanded = true },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .statusBarsPadding()
-                            .padding(
-                                end = 13.dp,
-                                top = 74.dp,
-                            ),
-                    )
-                }
+                        }
+                    },
+                    colors = colors,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .statusBarsPadding()
+                        .padding(end = 13.dp, top = 74.dp),
+                )
             }
 
             AnimatedVisibility(
@@ -936,10 +900,12 @@ fun MapsPage(
             }
 
             if (!navMode) {
-                MapSearchChrome(
-                    expanded = mapChromeExpanded,
-                    active = active,
+                SearchScaffold(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxSize(),
                     query = searchQuery,
+                    active = active,
                     searchResults = searchResults,
                     recentSearches = recentSearches,
                     isSearching = isSearching,
@@ -957,12 +923,7 @@ fun MapsPage(
                     },
                     onOpenSettings = onOpenSettings,
                     onOpenStormAiChat = onOpenStormAiChat,
-                    colors = colors,
-                    searchContainerColor = searchContainerColor,
-                    onExpand = { mapChromeExpanded = true },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .fillMaxSize(),
+                    containerColor = searchContainerColor,
                 )
             }
 
@@ -1013,130 +974,6 @@ fun MapsPage(
                     },
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun MapSearchChrome(
-    expanded: Boolean,
-    active: Boolean,
-    query: String,
-    searchResults: List<PhotonFeature>,
-    recentSearches: List<PhotonFeature>,
-    isSearching: Boolean,
-    onQueryChange: (String) -> Unit,
-    onActiveChange: (Boolean) -> Unit,
-    onSearchSubmit: () -> Unit,
-    onResultClick: (PhotonFeature) -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenStormAiChat: () -> Unit,
-    colors: ExtendedColors,
-    searchContainerColor: Color,
-    onExpand: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    BoxWithConstraints(modifier = modifier) {
-        val density = LocalDensity.current
-        val statusBarTopPadding = with(density) { WindowInsets.statusBars.getTop(this).toDp() }
-        val targetWidth = if (expanded || active) maxWidth else 84.dp
-        val targetHeight = if (active) {
-            maxHeight
-        } else {
-            statusBarTopPadding + 6.dp + if (expanded) 60.dp else 48.dp
-        }
-        val chromeWidth by animateDpAsState(
-            targetValue = targetWidth,
-            animationSpec = spring(
-                dampingRatio = 1.85f,
-            ),
-            label = "map_search_chrome_width",
-        )
-        val chromeHeight by animateDpAsState(
-            targetValue = targetHeight,
-            animationSpec = spring(
-                dampingRatio = 3.0f,
-                stiffness = Spring.StiffnessLow,
-            ),
-            label = "map_search_chrome_height",
-        )
-
-        if (!expanded && !active) {
-            FoldedMapChromeCard(
-                colors = colors,
-                onClick = onExpand,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-                    .padding(end = 13.dp, top = 6.dp),
-            )
-        }
-
-        if (expanded || active) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .width(chromeWidth)
-                    .height(chromeHeight)
-                    .clipToBounds(),
-            ) {
-                SearchScaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    query = query,
-                    active = active,
-                    searchResults = searchResults,
-                    recentSearches = recentSearches,
-                    isSearching = isSearching,
-                    onQueryChange = onQueryChange,
-                    onActiveChange = onActiveChange,
-                    onSearchSubmit = onSearchSubmit,
-                    onResultClick = onResultClick,
-                    onOpenSettings = onOpenSettings,
-                    onOpenStormAiChat = onOpenStormAiChat,
-                    containerColor = searchContainerColor,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FoldedMapChromeCard(
-    colors: ExtendedColors,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val shape = RoundedCornerShape(24.dp)
-
-    Surface(
-        modifier = modifier
-            .width(84.dp)
-            .height(48.dp)
-            .clip(shape)
-            .clickable(onClick = onClick),
-        shape = shape,
-        color = colors.searchBarColor,
-        shadowElevation = 4.dp,
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 14.dp, end = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Search,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp),
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = "Expand map controls",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(28.dp),
-            )
         }
     }
 }

@@ -55,6 +55,8 @@ data class AlertsUiState(
             ).forEach(::add)
             addAll(otherAlerts)
         }
+
+    val activeAlertsCount get() = allAlerts.size
 }
 
 /**
@@ -85,6 +87,7 @@ class AlertsViewModel @Inject constructor(
         startPeriodicRefresh()
         observeLocationForCityName()
     }
+    
 
     fun setDashboardPlaceholderMode(enabled: Boolean, assetName: String) {
         val sourceUnchanged = enabled == useDashboardPlaceholderData &&

@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -73,6 +74,7 @@ import com.example.stormpilot.ui.theme.extendedColors
 fun AlertStatusPanel(
     alertsState: AlertsUiState,
     onAlertClick: (NwsAlert) -> Unit,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
     var expanded by remember { mutableStateOf(false) }
     val colors = MaterialTheme.extendedColors
@@ -132,10 +134,10 @@ fun AlertStatusPanel(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.85f),
+        color = containerColor,
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 14.dp, horizontal = 15.dp),
+            modifier = Modifier.padding(vertical = 14.dp, horizontal = 12.dp),
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -151,9 +153,9 @@ fun AlertStatusPanel(
                     modifier = Modifier.size(28.dp)
                 )
                 Text(
-                    text = if (!panelHasAlert) "No Active Alerts" else "Active Alerts",
+                    text = if (!panelHasAlert) "No Active Alerts" else " ${alertsState.activeAlertsCount} Active Alert(s)",
                     fontSize = 17.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.95f),
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f)
                 )
@@ -193,6 +195,7 @@ fun AlertStatusPanel(
                             index = index,
                             rowCount = activeAlertRows.size,
                             onAlertClick = onAlertClick,
+                            clearContainerColor = containerColor,
                         )
                     }
                 }
@@ -214,6 +217,7 @@ private fun SlidingAlertStatusRow(
     index: Int,
     rowCount: Int,
     onAlertClick: (NwsAlert) -> Unit,
+    clearContainerColor: Color,
 ) {
     val visibleState = remember(row.label, row.alert?.id) {
         MutableTransitionState(false).apply {
@@ -244,6 +248,7 @@ private fun SlidingAlertStatusRow(
             alert = row.alert,
             state = row.state,
             onAlertClick = onAlertClick,
+            clearContainerColor = clearContainerColor,
         )
     }
 }
@@ -265,12 +270,13 @@ private fun AlertStatusRow(
     alert: NwsAlert?,
     state: LocationAlertState,
     onAlertClick: (NwsAlert) -> Unit,
+    clearContainerColor: Color,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.extendedColors
     val isWarning = state.level == AlertLevel.Warning
     val containerTarget = when (state.level) {
-        AlertLevel.Clear -> MaterialTheme.colorScheme.surfaceContainerLow
+        AlertLevel.Clear -> clearContainerColor
         AlertLevel.Watch -> colors.alertWatchContainer.copy(alpha = 0.5f)
         AlertLevel.Warning -> colors.alertWarningContainer.copy(alpha = 0.7f)
     }

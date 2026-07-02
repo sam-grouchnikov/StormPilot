@@ -8,7 +8,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -59,10 +58,22 @@ fun AnimatedStormAiShadowContainer(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .padding(shadowPadding)
                 .drawWithCache {
                     onDrawBehind {
                         if (size.width == 0f || size.height == 0f) return@onDrawBehind
+
+                        val shadowInset = shadowPadding
+                            .toPx()
+                            .coerceAtMost(min(size.width, size.height) / 2f)
+                        val shadowRect = Rect(
+                            left = shadowInset,
+                            top = shadowInset,
+                            right = size.width - shadowInset,
+                            bottom = size.height - shadowInset,
+                        )
+                        if (shadowRect.width == 0f || shadowRect.height == 0f) {
+                            return@onDrawBehind
+                        }
 
                         val shader = android.graphics.SweepGradient(
                             size.width / 2f,
@@ -88,20 +99,26 @@ fun AnimatedStormAiShadowContainer(
                             isAntiAlias = true
                             this.shader = shader
                         }
-                        val radius = cornerRadius
+                        val borderRadius = cornerRadius
                             ?.toPx()
                             ?.coerceAtMost(min(size.width, size.height) / 2f)
                             ?: (size.height / 2f)
+                        val shadowRadius = cornerRadius
+                            ?.toPx()
+                            ?.minus(shadowInset)
+                            ?.coerceAtLeast(0f)
+                            ?.coerceAtMost(min(shadowRect.width, shadowRect.height) / 2f)
+                            ?: (shadowRect.height / 2f)
                         val rect = Rect(0f, 0f, size.width, size.height)
 
                         drawIntoCanvas { canvas ->
                             canvas.drawRoundRect(
-                                left = rect.left,
-                                top = rect.top,
-                                right = rect.right,
-                                bottom = rect.bottom,
-                                radiusX = radius,
-                                radiusY = radius,
+                                left = shadowRect.left,
+                                top = shadowRect.top,
+                                right = shadowRect.right,
+                                bottom = shadowRect.bottom,
+                                radiusX = shadowRadius,
+                                radiusY = shadowRadius,
                                 paint = shadowPaint,
                             )
 
@@ -111,8 +128,8 @@ fun AnimatedStormAiShadowContainer(
                                     top = rect.top,
                                     right = rect.right,
                                     bottom = rect.bottom,
-                                    radiusX = radius,
-                                    radiusY = radius,
+                                    radiusX = borderRadius,
+                                    radiusY = borderRadius,
                                     paint = borderPaint,
                                 )
                             }

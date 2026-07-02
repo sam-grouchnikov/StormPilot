@@ -62,6 +62,7 @@ import org.maplibre.spatialk.geojson.Position
 @Composable
 fun DashboardOverviewScreen(
     modifier: Modifier = Modifier,
+    widgetContainerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     alertsViewModel: AlertsViewModel = hiltViewModel(),
     weatherViewModel: WeatherViewModel = hiltViewModel(),
     mapsViewModel: MapsViewModel = hiltViewModel(),
@@ -143,14 +144,24 @@ fun DashboardOverviewScreen(
             AlertStatusPanel(
                 alertsState = alertsState,
                 onAlertClick = mapsViewModel::showAlertDetail,
+                containerColor = widgetContainerColor,
             )
 //            ForecastSectionTitle("Storm Environment")
-            StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
+            StormSpecsPanel(
+                stormSpecs = weatherState.stormSpecs,
+                containerColor = widgetContainerColor,
+            )
 
-            FiveDayOutlook(weatherState.daily)
+            FiveDayOutlook(
+                daily = weatherState.daily,
+                containerColor = widgetContainerColor,
+            )
 
             val hourly = weatherState.hourly
-            HourlyForecastRow(hourly)
+            HourlyForecastRow(
+                hourly = hourly,
+                containerColor = widgetContainerColor,
+            )
 //
 //            WeatherOverviewSection(
 //                cityName = weatherCityName,
@@ -171,6 +182,5 @@ fun DashboardOverviewScreen(
 @Composable
 private fun dashboardBottomContentPadding() =
     112.dp + WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-
 
 

@@ -129,7 +129,7 @@
   "stormSpecs": [
     {
       "label": "CAPE",
-      "value": "0 J/kg",
+      "value": "3000 J/kg",
       "detail": "Moderate instability"
     },
     {
