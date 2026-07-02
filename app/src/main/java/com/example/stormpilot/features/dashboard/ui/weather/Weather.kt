@@ -629,7 +629,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
                 Icon(
                     imageVector = getWeatherIconForCondition(outlook.conditions),
                     contentDescription = null,
-                    tint = badgeContent.copy(alpha = 0.8f),
+                    tint = MaterialTheme.extendedColors.weatherTemperatureChartLine,
                     modifier = Modifier.size(30.dp),
                 )
             }
@@ -658,7 +658,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
 //        )
         Surface(
             shape = CircleShape,
-            color = badgeColor,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
 //            border = BorderStroke(1.dp, badgeContent.copy(alpha = 0.18f)),
         ) {
             Text(

@@ -40,6 +40,8 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Flood
 import androidx.compose.material.icons.outlined.Tornado
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.Error
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.PriorityHigh
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -63,9 +65,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.stormpilot.R
 import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import com.example.stormpilot.features.shared.viewmodels.AlertsUiState
 import com.example.stormpilot.ui.theme.extendedColors
@@ -147,8 +151,8 @@ fun AlertStatusPanel(
                     .fillMaxWidth()
             ) {
                 Icon(
-                    imageVector = if (!panelHasAlert) Icons.Outlined.Check else Icons.Outlined.WarningAmber,
-                    tint = if (panelHasAlert) colors.moderateOutlookContent else colors.marginalOutlookContent,
+                    painter = if (panelHasAlert) painterResource(id = R.drawable.thick_error) else painterResource(id = R.drawable.check_thick),
+                    tint = MaterialTheme.extendedColors.weatherTemperatureChartLine,
                     contentDescription = "Alert Status",
                     modifier = Modifier.size(28.dp)
                 )

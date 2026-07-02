@@ -1,6 +1,12 @@
 package com.example.stormpilot.features.dashboard.ui
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -11,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -21,8 +28,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
@@ -37,13 +45,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +71,8 @@ import com.example.stormpilot.R
 import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.features.common.ui.AccountMenuAnchor
 import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
+import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
+import com.example.stormpilot.features.common.ui.StormAiShadowColors
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.ui.theme.ExtendedColors
 import com.example.stormpilot.ui.theme.extendedColors
@@ -154,7 +167,7 @@ fun TopIconRow(
 //                    )
                     VerticalDivider(
                         thickness = 6.dp,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.extendedColors.weatherTemperatureChartLine,
                         modifier = Modifier
                             .height(28.dp)
                             .clip(CircleShape)
@@ -171,19 +184,20 @@ fun TopIconRow(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    IconButton(
-                        onClick = onOpenChat,
-                        modifier = Modifier.size(43.dp),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.AutoAwesome,
-                            tint = MaterialTheme.colorScheme.primary,
-                            contentDescription = "Open StormPilot AI chat",
-                            modifier = Modifier.size(28.dp),
-                        )
-                    }
+                        FilledIconButton(
+                            onClick = onOpenChat,
+                            modifier = Modifier
+                                .size(44.dp),
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                            ),
+                        ) {
+                            ShimmeringStormAiChatIcon()
+                        }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Spacer(modifier = Modifier.width(0.dp))
 
                     AccountMenuAnchor(onClick = onOpenSettings, circleSize = 43, textSize = 15)
                 }
@@ -193,6 +207,48 @@ fun TopIconRow(
         }
 
 
+}
+
+@Composable
+private fun ShimmeringStormAiChatIcon() {
+    val shimmerTransition = rememberInfiniteTransition(label = "stormAiChatIconShimmer")
+    val shimmerProgress by shimmerTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "stormAiChatIconShimmerProgress",
+    )
+
+    Icon(
+        imageVector = Icons.Rounded.AutoAwesome,
+        tint = Color.White,
+        contentDescription = "Open StormPilot AI chat",
+        modifier = Modifier
+            .size(28.dp)
+            .graphicsLayer {
+                compositingStrategy = CompositingStrategy.Offscreen
+            }
+            .drawWithCache {
+                val shimmerTravel = size.width * 2.4f
+                val startX = -shimmerTravel + shimmerProgress * shimmerTravel * 2f
+                val shimmerBrush = Brush.linearGradient(
+                    colors = StormAiShadowColors + StormAiShadowColors.first(),
+                    start = Offset(startX, 0f),
+                    end = Offset(startX + shimmerTravel, size.height),
+                )
+
+                onDrawWithContent {
+                    drawContent()
+                    drawRect(
+                        brush = shimmerBrush,
+                        blendMode = BlendMode.SrcIn,
+                    )
+                }
+            },
+    )
 }
 
 private fun formatCityAndState(cityName: String): String {

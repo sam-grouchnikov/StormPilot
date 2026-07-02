@@ -179,8 +179,8 @@ private fun StormSpecCard(
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 Text(
                     text = spec.label,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Black,
                     fontSize = 15.sp,
                     maxLines = 1,
                     modifier = Modifier.weight(1f),
@@ -198,7 +198,7 @@ private fun StormSpecCard(
             Text(
                 text = spec.value,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 1.0f),
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
                 maxLines = 1,
             )
@@ -218,26 +218,31 @@ private fun StormSpecCard(
 
 @Composable
 private fun RiskMeter(risk: String, color: Color) {
-    val progress = when (risk) {
-        "Low" -> 0.15f
-        "Moderate" -> 0.42f
-        "Medium" -> 0.42f
-        "High" -> 0.75f
-        "Extreme" -> 1f
-        else -> 0.18f
+    val activeDots = when (risk) {
+        "Low" -> 1
+        "Moderate", "Medium" -> 2
+        "High" -> 4
+        "Extreme" -> 5
+        else -> 1
     }
-    Box(
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 5.dp, top = 3.dp)
-            .height(7.dp)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape),
+            .padding(bottom = 5.dp, top = 3.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(progress)
-                .height(7.dp)
-                .background(color , CircleShape),
-        )
+        repeat(activeDots) { index ->
+            val isActive = index < activeDots
+            val transparency = (index) * 0.15f + 0.40f
+            Box(
+                modifier = Modifier
+                    .size(9.dp)
+                    .background(
+                        color = if (isActive) MaterialTheme.extendedColors.weatherTemperatureChartLine.copy(transparency) else MaterialTheme.colorScheme.surfaceContainerHighest,
+                        shape = CircleShape
+                    )
+            )
+        }
     }
 }
