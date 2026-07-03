@@ -37,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -83,8 +82,7 @@ fun LocationAlertsMapCard(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
-        color = colors.blueBackground,
-//        border = BorderStroke(1.dp, colorScheme.outlineVariant.copy(alpha = 0.50f)),
+        color = colors.map.locationAlertsCardContainer,
         tonalElevation = 2.dp,
     ) {
 
@@ -196,6 +194,7 @@ private fun LocationAlertsMap(
     modifier: Modifier = Modifier,
     showAlerts: Boolean,
 ) {
+    val colors = MaterialTheme.extendedColors
     var radarRefreshKey by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var lastTapPosition by remember { mutableStateOf<Position?>(null) }
     val mapTarget = position ?: Position(latitude = 39.8283, longitude = -98.5795)
@@ -261,9 +260,9 @@ private fun LocationAlertsMap(
                 id = "location-alerts-fill",
                 source = alertsSource,
                 color = switch(
-                    condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0x22FF0000))),
-                    condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0x22FFD700))),
-                    condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0x2200BB00))),
+                    condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(colors.alerts.dashboardMapTornadoFill)),
+                    condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(colors.alerts.dashboardMapSevereThunderstormFill)),
+                    condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(colors.alerts.dashboardMapFlashFloodFill)),
                     fallback = const(Color.Transparent),
                 ),
                 onClick = { features ->
@@ -287,9 +286,9 @@ private fun LocationAlertsMap(
                 id = "location-alerts-outline",
                 source = alertsSource,
                 color = switch(
-                    condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(Color(0xC8FF3030))),
-                    condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(Color(0xFFFFB020))),
-                    condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(Color(0xC800E676))),
+                    condition(Feature[const("prod_type")].asString() eq const("Tornado Warning"), const(colors.alerts.dashboardMapTornadoOutline)),
+                    condition(Feature[const("prod_type")].asString() eq const("Severe Thunderstorm Warning"), const(colors.alerts.dashboardMapSevereThunderstormOutline)),
+                    condition(Feature[const("prod_type")].asString() eq const("Flash Flood Warning"), const(colors.alerts.dashboardMapFlashFloodOutline)),
                     fallback = const(Color.Transparent),
                 ),
                 width = const(2.dp),

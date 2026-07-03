@@ -429,7 +429,6 @@ private fun ContextualPromptChip(
     Surface(
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-//        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)),
     ) {
         Row(
             modifier = Modifier

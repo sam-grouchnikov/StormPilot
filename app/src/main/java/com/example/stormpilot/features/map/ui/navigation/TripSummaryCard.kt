@@ -177,14 +177,14 @@ fun TripSummaryCard(
                                 imageVector = Icons.Outlined.Shield,
                                 contentDescription = null,
                                 modifier = Modifier.size(20.dp),
-                                tint = colors.alertClearContentAlternate,
+                                tint = colors.alerts.clearEmphasisContent,
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "Safe Start",
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = colors.alertClearContentAlternate,
+                                color = colors.alerts.clearEmphasisContent,
                             )
                         }
                     }
@@ -204,7 +204,7 @@ fun TripSummaryCard(
                                 warningError != null && (warningCount ?: 0) > 0 -> MaterialTheme.colorScheme.error
                                 warningError != null -> MaterialTheme.colorScheme.onSurfaceVariant
                                 warningCount == null -> MaterialTheme.colorScheme.onSurfaceVariant
-                                warningCount == 0 -> colors.alertClearContent
+                                warningCount == 0 -> colors.alerts.clearContent
                                 else -> MaterialTheme.colorScheme.error
                             }
 

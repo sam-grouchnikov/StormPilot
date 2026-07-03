@@ -81,7 +81,6 @@ fun AlertStatusPanel(
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val colors = MaterialTheme.extendedColors
     val panelHasAlert = alertsState.hasAnyAlert
     val activeAlertRows = buildList {
         if (alertsState.tornadoWatch != null || alertsState.tornadoWarning != null) {
@@ -152,7 +151,7 @@ fun AlertStatusPanel(
             ) {
                 Icon(
                     painter = if (panelHasAlert) painterResource(id = R.drawable.thick_error) else painterResource(id = R.drawable.check_thick),
-                    tint = MaterialTheme.extendedColors.weatherTemperatureChartLine,
+                    tint = MaterialTheme.extendedColors.weather.temperatureChartLine,
                     contentDescription = "Alert Status",
                     modifier = Modifier.size(28.dp)
                 )
@@ -281,23 +280,23 @@ private fun AlertStatusRow(
     val isWarning = state.level == AlertLevel.Warning
     val containerTarget = when (state.level) {
         AlertLevel.Clear -> clearContainerColor
-        AlertLevel.Watch -> colors.alertWatchContainer.copy(alpha = 0.5f)
-        AlertLevel.Warning -> colors.alertWarningContainer.copy(alpha = 0.7f)
+        AlertLevel.Watch -> colors.alerts.watchContainer.copy(alpha = 0.5f)
+        AlertLevel.Warning -> colors.alerts.warningContainer.copy(alpha = 0.7f)
     }
     val contentTarget = when (state.level) {
         AlertLevel.Clear -> MaterialTheme.colorScheme.onSurfaceVariant
-        AlertLevel.Watch -> colors.alertWatchContent
-        AlertLevel.Warning -> colors.moderateOutlookContent
+        AlertLevel.Watch -> colors.alerts.watchContent
+        AlertLevel.Warning -> colors.alerts.warningSupportingContent
     }
     val titleTarget = when (state.level) {
-        AlertLevel.Clear -> colors.alertClearContent
-        AlertLevel.Watch -> colors.alertWatchContent
-        AlertLevel.Warning -> colors.alertWarningContent
+        AlertLevel.Clear -> colors.alerts.clearContent
+        AlertLevel.Watch -> colors.alerts.watchContent
+        AlertLevel.Warning -> colors.alerts.warningContent
     }
     val iconTarget = when (state.level) {
-        AlertLevel.Clear -> colors.alertClearContentAlternate
-        AlertLevel.Watch -> colors.alertWatchContent
-        AlertLevel.Warning -> colors.alertWarningContent
+        AlertLevel.Clear -> colors.alerts.clearEmphasisContent
+        AlertLevel.Watch -> colors.alerts.watchContent
+        AlertLevel.Warning -> colors.alerts.warningContent
     }
     val containerColor by animateColorAsState(
         targetValue = containerTarget,
@@ -357,10 +356,6 @@ private fun AlertStatusRow(
             },
         shape = RoundedCornerShape(18.dp),
         color = containerColor,
-//        border = BorderStroke(
-//            width = 1.dp,
-//            color = contentColor.copy(alpha = if (state.level == AlertLevel.Clear) 0.08f else 0.22f),
-//        ),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),

@@ -43,8 +43,8 @@ fun StormAiSearchCard(
     val colors = MaterialTheme.extendedColors
     val gradientBrush = Brush.horizontalGradient(
         colors = listOf(
-            Color(0xFF7173FF).copy(alpha = 0.25f),
-            Color(0xFF9D2CFF).copy(alpha = 0.25f),
+            colors.search.stormAiGradientStart.copy(alpha = 0.25f),
+            colors.search.stormAiGradientEnd.copy(alpha = 0.25f),
         )
     )
     Box(
@@ -55,7 +55,7 @@ fun StormAiSearchCard(
             .border(
                 width = 1.dp,
                 shape = RoundedCornerShape(16.dp),
-                color = colors.stormAIOutline
+                color = colors.search.stormAiOutline
             )
             .clickable(onClick = onClick),
     ) {
@@ -102,9 +102,9 @@ fun GasSearchCard(
     PlaceSearchCard(
         label = "Gas",
         icon = Icons.Rounded.LocalGasStation,
-        containerColor = colors.gasBox,
-        outlineColor = colors.gasOutline,
-        contentColor = colors.gasContent,
+        containerColor = colors.search.gasContainer,
+        outlineColor = colors.search.gasOutline,
+        contentColor = colors.search.gasContent,
         onClick = onClick,
         modifier = modifier,
     )
@@ -119,9 +119,9 @@ fun HotelSearchCard(
     PlaceSearchCard(
         label = "Hotel",
         icon = Icons.Rounded.Hotel,
-        containerColor = colors.hotelBox,
-        outlineColor = colors.hotelOutline,
-        contentColor = colors.hotelContent,
+        containerColor = colors.search.hotelContainer,
+        outlineColor = colors.search.hotelOutline,
+        contentColor = colors.search.hotelContent,
         onClick = onClick,
         modifier = modifier,
     )
@@ -136,9 +136,9 @@ fun GrocerySearchCard(
     PlaceSearchCard(
         label = "Grocery",
         icon = Icons.Rounded.LocalGroceryStore,
-        containerColor = colors.groceryBox,
-        outlineColor = colors.groceryOutline,
-        contentColor = colors.groceryContent,
+        containerColor = colors.search.groceryContainer,
+        outlineColor = colors.search.groceryOutline,
+        contentColor = colors.search.groceryContent,
         onClick = onClick,
         modifier = modifier,
     )

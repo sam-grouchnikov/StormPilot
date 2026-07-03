@@ -5,6 +5,7 @@ import android.os.Build
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.graphics.Color
+import com.example.stormpilot.ui.theme.stormPilotExtendedColors
 import org.maplibre.android.maps.MapView as AndroidMapView
 
 internal fun disableMapLibreFocusOverlay(root: View): Boolean {
@@ -39,4 +40,4 @@ private fun View.forEachViewInTree(action: (View) -> Unit) {
 }
 
 internal fun searchSurfaceColor(isDarkMode: Boolean): Color =
-    if (isDarkMode) Color(0xFF131618) else Color(0xFFFFFFFF)
+    stormPilotExtendedColors(isDarkMode).navigation.floatingControlContainer

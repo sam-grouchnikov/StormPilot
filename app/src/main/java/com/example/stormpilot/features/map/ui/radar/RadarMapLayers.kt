@@ -7,8 +7,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import org.maplibre.compose.expressions.dsl.const
@@ -104,14 +104,15 @@ internal fun RadarSiteLayers(
     val radarSitesFeatureCollection = remember {
         GeoJsonData.JsonString(nexradSitesGeoJson(NexradSites))
     }
+    val colors = MaterialTheme.extendedColors
     val radarSitesSource = rememberGeoJsonSource(data = radarSitesFeatureCollection)
     CircleLayer(
         id = "radar-site-markers",
         source = radarSitesSource,
         minZoom = 2.0f,
-        color = const(Color(0xFFCCCCCC)),
+        color = const(colors.map.radarSiteFill),
         radius = const(7.dp),
-        strokeColor = const(Color(0xFF868686)),
+        strokeColor = const(colors.map.radarSiteStroke),
         strokeWidth = const(3.5.dp),
         onClick = { features ->
             val siteId = features.firstOrNull()
@@ -147,9 +148,9 @@ internal fun RadarSiteLayers(
             id = "selected-radar-site-marker",
             source = selectedRadarSiteSource,
             minZoom = 2.0f,
-            color = const(Color(0xFF54AD44)),
+            color = const(colors.map.selectedRadarSiteFill),
             radius = const(8.dp),
-            strokeColor = const(Color(0xFF606060)),
+            strokeColor = const(colors.map.selectedRadarSiteStroke),
             strokeWidth = const(3.5.dp),
         )
     }

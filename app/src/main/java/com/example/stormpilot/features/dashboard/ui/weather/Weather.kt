@@ -357,11 +357,8 @@ private fun HourlyMetricToggleOption(
     modifier: Modifier = Modifier,
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val activeColor = if (metric == HourlyForecastMetric.Temperature) {
-        metric.chartLineColor(MaterialTheme.extendedColors)
-    } else {
-        colorScheme.primary
-    }
+    val activeColor = metric.chartLineColor(MaterialTheme.extendedColors)
+
     val activeContainerColor = if (metric == HourlyForecastMetric.Temperature) activeColor.copy(alpha = 0.24f) else colorScheme.secondaryContainer
 
     Row(
@@ -541,10 +538,7 @@ private enum class HourlyForecastMetric(
         }
 
     fun chartLineColor(colors: ExtendedColors): Color =
-        when (this) {
-            Temperature -> colors.weatherTemperatureChartLine
-            PrecipitationChance -> colors.weatherPrecipitationChartLine
-        }
+        colors.weather.temperatureChartLine
 
     fun rangeProvider(points: List<HourlyForecastChartPoint>): CartesianLayerRangeProvider {
         val values = points.map { it.value }
@@ -598,7 +592,6 @@ fun FiveDayOutlook(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         color = containerColor,
-//        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(modifier = Modifier.padding(vertical = 5.dp)) {
             daily.forEachIndexed { index, outlook ->
@@ -620,20 +613,14 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
             .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-//        Surface(
-//            shape = CircleShape,
-//            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-//            modifier = Modifier.size(38.dp),
-//        ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = getWeatherIconForCondition(outlook.conditions),
                     contentDescription = null,
-                    tint = MaterialTheme.extendedColors.weatherTemperatureChartLine,
+                    tint = MaterialTheme.extendedColors.weather.temperatureChartLine,
                     modifier = Modifier.size(30.dp),
                 )
             }
-//        }
         Spacer(modifier = Modifier.width(20.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -649,21 +636,13 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
                 fontSize = 13.sp,
             )
         }
-//        Text(
-//            text = "${outlook.high?.toString() ?: "--"}°/${outlook.low?.toString() ?: "--"}°",
-//            color = MaterialTheme.colorScheme.onSurfaceVariant,
-//            fontWeight = FontWeight.Black,
-//            fontSize = 17.sp,
-//            modifier = Modifier.padding(horizontal = 12.dp),
-//        )
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
-//            border = BorderStroke(1.dp, badgeContent.copy(alpha = 0.18f)),
         ) {
             Text(
                 text = outlookSPC,
-                color = badgeContent,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 lineHeight = 14.sp,
@@ -679,12 +658,12 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
 private fun outlookRiskContainer(outlook: String): Color {
     val colors = MaterialTheme.extendedColors
     return when {
-        outlook.contains("High", ignoreCase = true) -> colors.highOutlookContainer.copy(alpha = 0.6f)
-        outlook.contains("Moderate", ignoreCase = true) -> colors.moderateOutlookContainer.copy(alpha = 0.6f)
-        outlook.contains("Enhanced", ignoreCase = true) -> if (AppSettings.isDarkMode) colors.enhancedOutlookContainer.copy(alpha = 0.8f) else colors.enhancedOutlookContainer.copy(alpha = 0.6f)
-        outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContainer.copy(alpha = 0.6f)
-        outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContainer.copy(alpha = 0.5f)
-        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContainer.copy(alpha = 0.55f)
+        outlook.contains("High", ignoreCase = true) -> colors.weather.outlookHighContainer.copy(alpha = 0.6f)
+        outlook.contains("Moderate", ignoreCase = true) -> colors.weather.outlookModerateContainer.copy(alpha = 0.6f)
+        outlook.contains("Enhanced", ignoreCase = true) -> if (AppSettings.isDarkMode) colors.weather.outlookEnhancedContainer.copy(alpha = 0.8f) else colors.weather.outlookEnhancedContainer.copy(alpha = 0.6f)
+        outlook.contains("Slight", ignoreCase = true) -> colors.weather.outlookSlightContainer.copy(alpha = 0.6f)
+        outlook.contains("Marginal", ignoreCase = true) -> colors.weather.outlookMarginalContainer.copy(alpha = 0.5f)
+        outlook.contains("TSTM", ignoreCase = true) -> colors.weather.outlookThunderstormContainer.copy(alpha = 0.55f)
         else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
 }
@@ -693,12 +672,12 @@ private fun outlookRiskContainer(outlook: String): Color {
 private fun outlookRiskContent(outlook: String): Color {
     val colors = MaterialTheme.extendedColors
     return when {
-        outlook.contains("High", ignoreCase = true) -> colors.highOutlookContent
-        outlook.contains("Moderate", ignoreCase = true) -> colors.moderateOutlookContent
-        outlook.contains("Enhanced", ignoreCase = true) -> colors.enhancedOutlookContent
-        outlook.contains("Slight", ignoreCase = true) -> colors.slightOutlookContent
-        outlook.contains("Marginal", ignoreCase = true) -> colors.marginalOutlookContent
-        outlook.contains("TSTM", ignoreCase = true) -> colors.tstmOutlookContent
+        outlook.contains("High", ignoreCase = true) -> colors.weather.outlookHighContent
+        outlook.contains("Moderate", ignoreCase = true) -> colors.weather.outlookModerateContent
+        outlook.contains("Enhanced", ignoreCase = true) -> colors.weather.outlookEnhancedContent
+        outlook.contains("Slight", ignoreCase = true) -> colors.weather.outlookSlightContent
+        outlook.contains("Marginal", ignoreCase = true) -> colors.weather.outlookMarginalContent
+        outlook.contains("TSTM", ignoreCase = true) -> colors.weather.outlookThunderstormContent
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 }

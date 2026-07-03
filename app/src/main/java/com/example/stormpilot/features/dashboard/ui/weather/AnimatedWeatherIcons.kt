@@ -25,8 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun AnimatedWeatherIcon(condition: String, modifier: Modifier = Modifier) {
@@ -43,6 +43,7 @@ fun AnimatedWeatherIcon(condition: String, modifier: Modifier = Modifier) {
 
 @Composable
 fun AnimatedSunnyIcon(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.extendedColors.weather
     val infiniteTransition = rememberInfiniteTransition(label = "sunny_transition")
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -67,7 +68,7 @@ fun AnimatedSunnyIcon(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Outlined.WbSunny,
             contentDescription = "Sunny",
-            tint = Color(0xFFFFB300), // Amber color for sun
+            tint = colors.sunIcon,
             modifier = Modifier
                 .size(64.dp)
                 .rotate(rotation)
@@ -111,6 +112,7 @@ fun AnimatedCloudyIcon(modifier: Modifier = Modifier) {
 
 @Composable
 fun AnimatedRainyIcon(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.extendedColors.weather
     val infiniteTransition = rememberInfiniteTransition(label = "rainy_transition")
     
     // Rain drop animations
@@ -147,7 +149,7 @@ fun AnimatedRainyIcon(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Outlined.WaterDrop,
             contentDescription = null,
-            tint = Color(0xFF64B5F6), // Blue color for rain
+            tint = colors.rainIcon,
             modifier = Modifier
                 .size(20.dp)
                 .offset(x = (-12).dp, y = (20 + drop1Y).dp)
@@ -156,7 +158,7 @@ fun AnimatedRainyIcon(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Outlined.WaterDrop,
             contentDescription = null,
-            tint = Color(0xFF64B5F6),
+            tint = colors.rainIcon,
             modifier = Modifier
                 .size(20.dp)
                 .offset(x = 0.dp, y = (25 + drop2Y).dp)
@@ -165,7 +167,7 @@ fun AnimatedRainyIcon(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Outlined.WaterDrop,
             contentDescription = null,
-            tint = Color(0xFF64B5F6),
+            tint = colors.rainIcon,
             modifier = Modifier
                 .size(20.dp)
                 .offset(x = 12.dp, y = (20 + drop3Y).dp)
@@ -184,6 +186,7 @@ fun AnimatedRainyIcon(modifier: Modifier = Modifier) {
 
 @Composable
 fun AnimatedSnowyIcon(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.extendedColors.weather
     val infiniteTransition = rememberInfiniteTransition(label = "snowy_transition")
     
     // Snow flake animations (spin + fall)
@@ -230,7 +233,7 @@ fun AnimatedSnowyIcon(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Outlined.AcUnit,
             contentDescription = null,
-            tint = Color(0xFF90CAF9),
+            tint = colors.snowIcon,
             modifier = Modifier
                 .size(18.dp)
                 .offset(x = (-10).dp, y = (20 + fall1Y).dp)
@@ -240,7 +243,7 @@ fun AnimatedSnowyIcon(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Outlined.AcUnit,
             contentDescription = null,
-            tint = Color(0xFF90CAF9),
+            tint = colors.snowIcon,
             modifier = Modifier
                 .size(18.dp)
                 .offset(x = 10.dp, y = (25 + fall2Y).dp)
@@ -260,6 +263,7 @@ fun AnimatedSnowyIcon(modifier: Modifier = Modifier) {
 
 @Composable
 fun AnimatedStormyIcon(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.extendedColors.weather
     val infiniteTransition = rememberInfiniteTransition(label = "stormy_transition")
     
     // Lightning flash
@@ -276,9 +280,9 @@ fun AnimatedStormyIcon(modifier: Modifier = Modifier) {
     Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         // Lightning bolt
         Icon(
-            imageVector = Icons.Outlined.Thunderstorm, // The thunderstorm icon has both cloud and lightning
+            imageVector = Icons.Outlined.Thunderstorm,
             contentDescription = "Stormy",
-            tint = Color(0xFFFFC107).copy(alpha = if (flashAlpha > 0.5f) 1f else 0.4f), // Flash effect on tint
+            tint = colors.lightningIcon.copy(alpha = if (flashAlpha > 0.5f) 1f else 0.4f),
             modifier = Modifier.size(64.dp)
         )
     }

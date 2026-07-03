@@ -11,19 +11,19 @@ class ExtendedColorsTest : StormPilotUnitTest() {
         val darkColors = stormPilotExtendedColors(darkTheme = true)
         val lightColors = stormPilotExtendedColors(darkTheme = false)
 
-        assertNotEquals(darkColors.exitContainer, lightColors.exitContainer)
-        assertNotEquals(darkColors.routingLine, lightColors.routingLine)
-        assertEquals(androidx.compose.ui.graphics.Color(0xFFFFDAD7), lightColors.exitContainer)
-        assertEquals(androidx.compose.ui.graphics.Color(0xFF81C3FF), darkColors.routingLine)
+        assertNotEquals(darkColors.navigation.exitButtonContainer, lightColors.navigation.exitButtonContainer)
+        assertNotEquals(darkColors.navigation.routeLine, lightColors.navigation.routeLine)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFFFDAD7), lightColors.navigation.exitButtonContainer)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF81C3FF), darkColors.navigation.routeLine)
     }
 
     @Test
     fun riskColorsReuseAndDifferentiateAlertPalette() {
         val colors = stormPilotExtendedColors(darkTheme = false)
 
-        assertEquals(colors.alertClearContent, colors.lowRisk)
-        assertNotEquals(colors.lowRisk, colors.moderateRisk)
-        assertNotEquals(colors.moderateRisk, colors.highRisk)
-        assertNotEquals(colors.highRisk, colors.extremeRisk)
+        assertEquals(colors.alerts.clearContent, colors.weather.stormRiskLow)
+        assertNotEquals(colors.weather.stormRiskLow, colors.weather.stormRiskModerate)
+        assertNotEquals(colors.weather.stormRiskModerate, colors.weather.stormRiskHigh)
+        assertNotEquals(colors.weather.stormRiskHigh, colors.weather.stormRiskExtreme)
     }
 }

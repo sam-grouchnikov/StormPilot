@@ -8,30 +8,19 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlin.math.min
-
-internal val StormAiShadowColorInts = intArrayOf(
-    android.graphics.Color.parseColor("#4A90E2"), // blue
-    android.graphics.Color.parseColor("#7B4FD6"), // purple
-    android.graphics.Color.parseColor("#E040C8"), // magenta
-    android.graphics.Color.parseColor("#4A90E2"), // blue
-)
-
-internal val StormAiShadowColors = listOf(
-    Color(0xFF4A90E2), // blue
-    Color(0xFF7B4FD6), // purple
-    Color(0xFFE040C8), // magenta
-)
 
 @Composable
 @Suppress("DEPRECATION")
@@ -43,6 +32,8 @@ fun AnimatedStormAiShadowContainer(
     drawBorder: Boolean = false,
     content: @Composable BoxScope.() -> Unit,
 ) {
+    val stormAiColors = MaterialTheme.extendedColors.stormAi
+    val glowColorInts = remember(stormAiColors) { stormAiColors.glowColorInts() }
     val infiniteTransition = rememberInfiniteTransition(label = "stormAiAnimatedShadow")
     val angle by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -78,7 +69,7 @@ fun AnimatedStormAiShadowContainer(
                         val shader = android.graphics.SweepGradient(
                             size.width / 2f,
                             size.height / 2f,
-                            StormAiShadowColorInts,
+                            glowColorInts,
                             null,
                         )
                         val matrix = android.graphics.Matrix()

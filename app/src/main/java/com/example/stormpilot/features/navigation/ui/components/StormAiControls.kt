@@ -112,7 +112,7 @@ fun StormAiVoiceButton(
                 .padding(horizontal = 9.dp, vertical = 9.dp)
                 .size(44.dp),
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = colors.purpleSurfaceContainer,
+                containerColor = colors.navigation.barSurface,
                 contentColor = MaterialTheme.colorScheme.onSurface,
             ),
         ) {

@@ -1,6 +1,5 @@
 package com.example.stormpilot.features.dashboard.ui.alerts.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -16,9 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Thunderstorm
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -28,8 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.features.shared.data.weather.StormSpec
@@ -72,10 +66,9 @@ fun StormSpecsPanel(
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                     } else {
-                        stormSpecs.forEachIndexed { index, spec ->
+                        stormSpecs.forEach { spec ->
                             StormSpecCard(
                                 spec = spec,
-                                index = index,
                                 containerColor = containerColor,
                             )
                         }
@@ -146,31 +139,16 @@ private fun specToRisk(spec: StormSpec): String {
 @Composable
 private fun StormSpecCard(
     spec: StormSpec,
-    index: Int,
     containerColor: Color,
 ) {
     val colors = MaterialTheme.extendedColors
     val risk = specToRisk(spec)
-    val riskColor = when (risk) {
-        "Low" -> colors.lowRisk
-        "Moderate" -> colors.moderateRisk
-        "Medium" -> colors.moderateRisk
-        "High" -> colors.highRisk
-        "Extreme" -> colors.extremeRisk
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-
-    val contentAlign = when (index) {
-        0 -> TextAlign.Start
-        1 -> TextAlign.Center
-        else -> TextAlign.End
-    }
+    val riskColor = colors.weather.temperatureChartLine
 
     Surface(
         modifier = Modifier.width(115.dp),
         shape = RoundedCornerShape(18.dp),
         color = containerColor,
-//        border = BorderStroke(1.dp, riskColor.copy(alpha = 0.18f)),
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
@@ -185,15 +163,6 @@ private fun StormSpecCard(
                     maxLines = 1,
                     modifier = Modifier.weight(1f),
                 )
-//                Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-//                    Text(
-//                        text = risk,
-//                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                        fontWeight = FontWeight.Medium,
-//                        fontSize = 11.sp,
-//                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
-//                    )
-//                }
             }
             Text(
                 text = spec.value,
@@ -203,15 +172,6 @@ private fun StormSpecCard(
                 maxLines = 1,
             )
             RiskMeter(risk = risk, color = riskColor)
-//            Text(
-//                text = spec.detail,
-//                color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                fontWeight = FontWeight.Medium,
-//                fontSize = 11.sp,
-//                lineHeight = 13.sp,
-//                maxLines = 2,
-//                overflow = TextOverflow.Ellipsis,
-//            )
         }
     }
 }
@@ -233,13 +193,12 @@ private fun RiskMeter(risk: String, color: Color) {
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         repeat(activeDots) { index ->
-            val isActive = index < activeDots
             val transparency = (index) * 0.15f + 0.40f
             Box(
                 modifier = Modifier
                     .size(9.dp)
                     .background(
-                        color = if (isActive) MaterialTheme.extendedColors.weatherTemperatureChartLine.copy(transparency) else MaterialTheme.colorScheme.surfaceContainerHighest,
+                        color = color.copy(transparency),
                         shape = CircleShape
                     )
             )

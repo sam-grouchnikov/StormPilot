@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +48,7 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = colors.welcomeNavyStart,
+            color = colors.auth.backgroundStart,
         ) {
             Box(
                 modifier = Modifier
@@ -57,8 +56,8 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                colors.welcomeNavyStart,
-                                colors.welcomeNavyEnd,
+                                colors.auth.backgroundStart,
+                                colors.auth.backgroundEnd,
                             ),
                         ),
                     )
@@ -87,7 +86,7 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                             lineHeight = 10.sp,
                             fontSize = 50.sp
                         ),
-                        color = Color.White,
+                        color = colors.auth.primaryContent,
                     )
 
                     Spacer(modifier = Modifier.height(5.dp))
@@ -100,7 +99,7 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                             lineHeight = 25.sp,
                             fontWeight = FontWeight.Medium,
                         ),
-                        color = Color.White.copy(alpha = 0.74f),
+                        color = colors.auth.supportingContent,
                     )
 
                     Spacer(modifier = Modifier.height(94.dp))
@@ -112,8 +111,8 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                             .height(58.dp),
                         shape = RoundedCornerShape(18.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = colors.welcomeNavyStart,
+                            containerColor = colors.auth.primaryButtonContainer,
+                            contentColor = colors.auth.backgroundStart,
                         ),
                     ) {
                         Text(
@@ -135,10 +134,10 @@ fun WelcomePage(onSignInClick: () -> Unit, onSignUpClick: () -> Unit) {
                         shape = RoundedCornerShape(18.dp),
                         border = BorderStroke(
                             width = 1.dp,
-                            color = Color.White.copy(alpha = 0.44f),
+                            color = colors.auth.outlineButtonBorder,
                         ),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color.White,
+                            contentColor = colors.auth.primaryContent,
                         ),
                     ) {
                         Text(

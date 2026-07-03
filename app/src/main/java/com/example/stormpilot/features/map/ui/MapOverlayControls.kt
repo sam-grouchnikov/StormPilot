@@ -39,11 +39,11 @@ internal fun MapOverlayControls(
                 containerColor = if (showRadarOverlay) {
                     MaterialTheme.colorScheme.surfaceContainerLowest
                 } else {
-                    colors.iconButtonColor
+                    colors.navigation.floatingControlButtonContainer
                 },
             ),
             modifier = Modifier.coloredShadow(
-                color = colors.purpleShadow,
+                color = colors.navigation.floatingControlShadow,
                 blurRadius = 2.dp,
             ),
         ) {
@@ -64,11 +64,11 @@ internal fun MapOverlayControls(
                 containerColor = if (showSevereAlertsOverlay) {
                     MaterialTheme.colorScheme.surfaceContainerLowest
                 } else {
-                    colors.iconButtonColor
+                    colors.navigation.floatingControlButtonContainer
                 },
             ),
             modifier = Modifier.coloredShadow(
-                color = colors.purpleShadow,
+                color = colors.navigation.floatingControlShadow,
                 blurRadius = 2.dp,
             ),
         ) {
@@ -87,10 +87,10 @@ internal fun MapOverlayControls(
             FilledIconButton(
                 onClick = onNavViewToggleClick,
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = colors.searchBarColor,
+                    containerColor = colors.navigation.floatingControlContainer,
                 ),
                 modifier = Modifier.coloredShadow(
-                    color = colors.purpleShadow,
+                    color = colors.navigation.floatingControlShadow,
                     blurRadius = 2.dp,
                 ),
             ) {

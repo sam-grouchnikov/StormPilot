@@ -73,18 +73,18 @@ fun FloatingNavBar(
         Layout(
             modifier = Modifier
                 .coloredShadow(
-                    color = colors.purpleShadow,
+                    color = colors.navigation.floatingControlShadow,
                     blurRadius = 6.dp,
                     spread = 1.dp,
                 )
                 .clip(CircleShape)
-                .background(colors.purpleSurfaceContainer)
+                .background(colors.navigation.barSurface)
                 .padding(horizontal = 6.dp, vertical = 6.dp),
             content = {
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(colors.purplePrimaryContainer),
+                        .background(colors.navigation.selectedPillContainer),
                 )
 
                 tabs.forEachIndexed { index, tab ->

@@ -10,6 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.dp
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.max
@@ -37,6 +39,9 @@ fun AnimatedStormAiChatBackdrop(
     visible: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val stormAiColors = MaterialTheme.extendedColors.stormAi
+    val glowColors = remember(stormAiColors) { stormAiColors.glowColors() }
+    val glowColorInts = remember(stormAiColors) { stormAiColors.glowColorInts() }
     val animationSpeed = 0.60f
     val enterDurationMillis = (880 * animationSpeed).toInt()
 
@@ -115,13 +120,13 @@ fun AnimatedStormAiChatBackdrop(
 
         if (ambient > 0.01f) {
             clipRect(left = 0f, top = revealTop, right = size.width, bottom = size.height) {
-                drawRect(color = Color.Black.copy(alpha = 0.06f * ambient))
+                drawRect(color = stormAiColors.backdropScrim.copy(alpha = 0.06f * ambient))
 
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            StormAiShadowColors[0].copy(alpha = 0.36f * ambient),
-                            StormAiShadowColors[0].copy(alpha = 0.12f * ambient),
+                            glowColors[0].copy(alpha = 0.36f * ambient),
+                            glowColors[0].copy(alpha = 0.12f * ambient),
                             Color.Transparent,
                         ),
                         center = Offset(
@@ -139,8 +144,8 @@ fun AnimatedStormAiChatBackdrop(
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            StormAiShadowColors[1].copy(alpha = 0.40f * ambient),
-                            StormAiShadowColors[1].copy(alpha = 0.15f * ambient),
+                            glowColors[1].copy(alpha = 0.40f * ambient),
+                            glowColors[1].copy(alpha = 0.15f * ambient),
                             Color.Transparent,
                         ),
                         center = Offset(
@@ -158,8 +163,8 @@ fun AnimatedStormAiChatBackdrop(
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            StormAiShadowColors[2].copy(alpha = 0.36f * ambient),
-                            StormAiShadowColors[2].copy(alpha = 0.14f * ambient),
+                            glowColors[2].copy(alpha = 0.36f * ambient),
+                            glowColors[2].copy(alpha = 0.14f * ambient),
                             Color.Transparent,
                         ),
                         center = Offset(
@@ -190,8 +195,8 @@ fun AnimatedStormAiChatBackdrop(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            StormAiShadowColors[0].copy(alpha = 0.18f * edgeAlpha),
-                            StormAiShadowColors[2].copy(alpha = 0.12f * edgeAlpha),
+                            glowColors[0].copy(alpha = 0.18f * edgeAlpha),
+                            glowColors[2].copy(alpha = 0.12f * edgeAlpha),
                             Color.Transparent,
                         ),
                         startY = bandTop,
@@ -204,8 +209,8 @@ fun AnimatedStormAiChatBackdrop(
                     brush = Brush.horizontalGradient(
                         colors = listOf(
                             Color.Transparent,
-                            StormAiShadowColors[0].copy(alpha = 0.46f * edgeAlpha),
-                            StormAiShadowColors[2].copy(alpha = 0.32f * edgeAlpha),
+                            glowColors[0].copy(alpha = 0.46f * edgeAlpha),
+                            glowColors[2].copy(alpha = 0.32f * edgeAlpha),
                             Color.Transparent,
                         ),
                         startX = 0f,
@@ -226,7 +231,7 @@ fun AnimatedStormAiChatBackdrop(
             val shader = android.graphics.SweepGradient(
                 size.width / 2f,
                 size.height / 2f,
-                StormAiShadowColorInts,
+                glowColorInts,
                 null,
             )
             val matrix = android.graphics.Matrix()
@@ -269,7 +274,7 @@ fun AnimatedStormAiChatBackdrop(
             }
             val hotCorePaint = Paint().apply {
                 isAntiAlias = true
-                color = Color.White
+                color = stormAiColors.iconContent
             }.apply {
                 asFrameworkPaint().style = android.graphics.Paint.Style.STROKE
                 asFrameworkPaint().strokeWidth = 3.5.dp.toPx()

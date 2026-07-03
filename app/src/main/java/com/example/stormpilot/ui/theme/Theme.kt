@@ -24,11 +24,6 @@ import com.google.android.material.color.utilities.Hct
 import com.google.android.material.color.utilities.MaterialDynamicColors
 import com.google.android.material.color.utilities.SchemeTonalSpot
 
-/**
- * Change this seed to recolor the whole app with the Material 3 expressive palette.
- */
-val StormPilotColorSeed = Color(0xFF2C8BB0)
-
 @SuppressLint("RestrictedApi")
 private val expressiveColors = MaterialDynamicColors()
 

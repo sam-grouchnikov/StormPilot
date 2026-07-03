@@ -51,6 +51,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun AuthModeSwitchRow(
@@ -58,6 +59,7 @@ fun AuthModeSwitchRow(
     actionLabel: String,
     onClick: () -> Unit,
 ) {
+    val authColors = MaterialTheme.extendedColors.auth
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -69,7 +71,7 @@ fun AuthModeSwitchRow(
                 fontSize = 16.sp,
                 lineHeight = 22.sp,
             ),
-            color = Color.White.copy(alpha = 0.68f),
+            color = authColors.promptContent,
         )
 
         TextButton(onClick = onClick) {
@@ -101,42 +103,43 @@ fun ExpressiveInputField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
+    val authColors = MaterialTheme.extendedColors.auth
     var isFocused by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val containerColor by animateColorAsState(
         targetValue = if (isFocused) {
-            Color.White.copy(alpha = 0.18f)
+            authColors.focusedInputContainer
         } else {
-            Color.White.copy(alpha = 0.10f)
+            authColors.unfocusedInputContainer
         },
         animationSpec = tween(durationMillis = 100, easing = FastOutSlowInEasing),
         label = "input_container_color",
     )
     val borderColor by animateColorAsState(
         targetValue = if (isFocused) {
-            Color.White.copy(alpha = 0.76f)
+            authColors.focusedInputBorder
         } else {
-            Color.White.copy(alpha = 0.24f)
+            authColors.unfocusedInputBorder
         },
         animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
         label = "input_border_color",
     )
     val labelColor by animateColorAsState(
-        targetValue = if (isFocused) Color.White else Color.White.copy(alpha = 0.74f),
+        targetValue = if (isFocused) authColors.focusedInputContent else authColors.unfocusedInputLabel,
         animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
         label = "input_label_color",
     )
     val iconBackgroundColor by animateColorAsState(
         targetValue = if (isFocused) {
-            Color.White.copy(alpha = 0.22f)
+            authColors.focusedInputIconContainer
         } else {
-            Color.White.copy(alpha = 0.12f)
+            authColors.unfocusedInputIconContainer
         },
         animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
         label = "input_icon_background_color",
     )
     val iconTint by animateColorAsState(
-        targetValue = if (isFocused) Color.White else Color.White.copy(alpha = 0.72f),
+        targetValue = if (isFocused) authColors.focusedInputContent else authColors.unfocusedInputIcon,
         animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
         label = "input_icon_tint",
     )
@@ -215,11 +218,11 @@ fun ExpressiveInputField(
                         keyboardOptions = keyboardOptions,
                         visualTransformation = visualTransformation,
                         textStyle = TextStyle(
-                            color = Color.White,
+                            color = authColors.primaryContent,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                         ),
-                        cursorBrush = SolidColor(Color.White),
+                        cursorBrush = SolidColor(authColors.primaryContent),
                         decorationBox = { innerTextField ->
                             Box(
                                 modifier = Modifier.fillMaxWidth(),
@@ -230,7 +233,7 @@ fun ExpressiveInputField(
                                         text = placeholder,
                                         style = TextStyle(
                                             fontSize = 16.sp,
-                                            color = Color.White.copy(alpha = 0.46f),
+                                            color = authColors.inputPlaceholder,
                                         ),
                                     )
                                 }

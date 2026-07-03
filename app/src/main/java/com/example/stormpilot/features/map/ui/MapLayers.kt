@@ -55,7 +55,7 @@ internal fun UserLocationLayer(origin: Position?) {
     CircleLayer(
         id = "user-location-shadow",
         source = userLocationSource,
-        color = const(Color.Black.copy(alpha = 0.65f)),
+        color = const(colors.map.userLocationShadow),
         radius = const(12.5.dp),
         blur = const(0.85f),
         translate = const(DpOffset(0.dp, 1.dp)),
@@ -63,9 +63,9 @@ internal fun UserLocationLayer(origin: Position?) {
     CircleLayer(
         id = "user-location",
         source = userLocationSource,
-        color = const(colors.locationCircle),
+        color = const(colors.map.userLocationFill),
         radius = const(6.5.dp),
-        strokeColor = const(Color.White),
+        strokeColor = const(colors.map.userLocationStroke),
         strokeWidth = const(2.5.dp),
     )
 }
@@ -117,7 +117,7 @@ internal fun RouteLayer(
     LineLayer(
         id = "route-line",
         source = routeSource,
-        color = const(colors.routingLine),
+        color = const(colors.navigation.routeLine),
         width = const(if (isNavigationMode) 12.dp else 5.dp),
     )
 }
@@ -138,6 +138,7 @@ internal fun SevereAlertsLayers(
         return
     }
 
+    val colors = MaterialTheme.extendedColors
     val alertEventType = Feature[const("prod_type")].asString(
         Feature[const("event")],
         Feature[const("headline")],
@@ -150,15 +151,15 @@ internal fun SevereAlertsLayers(
         color = switch(
             condition(
                 alertEventType.contains("Tornado Warning"),
-                const(Color(0x1AFF0000)),
+                const(colors.alerts.mapTornadoFill),
             ),
             condition(
                 alertEventType.contains("Severe Thunderstorm Warning"),
-                const(Color(0x1AFF9F15)),
+                const(colors.alerts.mapSevereThunderstormFill),
             ),
             condition(
                 alertEventType.contains("Flash Flood Warning"),
-                const(Color(0x1A00BB00)),
+                const(colors.alerts.mapFlashFloodFill),
             ),
             fallback = const(Color.Transparent),
         ),
@@ -170,8 +171,8 @@ internal fun SevereAlertsLayers(
     LineLayer(
         id = "alerts-outline-border",
         source = alertsSource,
-        color = const(Color.Black),
-        width = const(4.dp), // 2dp line + 1dp border on each side
+        color = const(colors.alerts.mapOutlineBorder),
+        width = const(4.dp),
         onClick = { features ->
             handleAlertLayerClick(features, lastMapTapPosition, onAlertTapped)
         },
@@ -183,15 +184,15 @@ internal fun SevereAlertsLayers(
         color = switch(
             condition(
                 alertEventType.contains("Tornado Warning"),
-                const(Color(0x80FF0000)),
+                const(colors.alerts.mapTornadoOutline),
             ),
             condition(
                 alertEventType.contains("Severe Thunderstorm Warning"),
-                const(Color(0xFFD26D03)),
+                const(colors.alerts.mapSevereThunderstormOutline),
             ),
             condition(
                 alertEventType.contains("Flash Flood Warning"),
-                const(Color(0x8000FF00)),
+                const(colors.alerts.mapFlashFloodOutline),
             ),
             fallback = const(Color.Transparent),
         ),

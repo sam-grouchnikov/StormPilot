@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -72,7 +71,7 @@ fun AuthExperienceScreen(
 
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = colors.welcomeNavyStart,
+            color = colors.auth.backgroundStart,
         ) {
             Box(
                 modifier = Modifier
@@ -80,8 +79,8 @@ fun AuthExperienceScreen(
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(
-                                colors.welcomeNavyStart,
-                                colors.welcomeNavyEnd,
+                                colors.auth.backgroundStart,
+                                colors.auth.backgroundEnd,
                             ),
                         ),
                     )
@@ -111,7 +110,7 @@ fun AuthExperienceScreen(
                             fontWeight = FontWeight.SemiBold,
                             lineHeight = 42.sp,
                         ),
-                        color = Color.White,
+                        color = colors.auth.primaryContent,
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -123,7 +122,7 @@ fun AuthExperienceScreen(
                             fontSize = 17.sp,
                             lineHeight = 26.sp,
                         ),
-                        color = Color.White.copy(alpha = 0.74f),
+                        color = colors.auth.supportingContent,
                     )
 
                     Spacer(modifier = Modifier.height(34.dp))
@@ -158,8 +157,8 @@ fun AuthExperienceScreen(
                             .height(58.dp),
                         shape = RoundedCornerShape(18.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,
-                            contentColor = colors.welcomeNavyStart,
+                            containerColor = colors.auth.primaryButtonContainer,
+                            contentColor = colors.auth.backgroundStart,
                         ),
                     ) {
                         Text(

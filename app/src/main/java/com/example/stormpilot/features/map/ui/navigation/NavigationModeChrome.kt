@@ -31,7 +31,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,7 +59,7 @@ fun NavigationModeHeader(
             .fillMaxWidth()
             .padding(start = 2.dp, end = 2.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.routingHeader),
+        colors = CardDefaults.cardColors(containerColor = colors.navigation.instructionContainer),
     ) {
         Row(
             modifier = Modifier
@@ -71,7 +70,7 @@ fun NavigationModeHeader(
             Icon(
                 imageVector = directionIcon,
                 contentDescription = null,
-                tint = Color.White,
+                tint = colors.navigation.instructionContent,
                 modifier = Modifier
                     .size(40.dp)
                     .padding(end = 6.dp, bottom = 4.dp),
@@ -81,7 +80,7 @@ fun NavigationModeHeader(
                 modifier = Modifier.weight(1f),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 21.sp,
-                color = Color.White,
+                color = colors.navigation.instructionContent,
             )
         }
     }
@@ -159,8 +158,8 @@ fun NavigationModeFooter(
                 onClick = onExitNavigation,
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = colors.exitContainer,
-                    contentColor = colors.exitText,
+                    containerColor = colors.navigation.exitButtonContainer,
+                    contentColor = colors.navigation.exitButtonContent,
                 ),
             ) {
                 Text(
@@ -183,13 +182,13 @@ fun NavigationRecenterButton(
     Button(
         onClick = onClick,
         modifier = modifier.coloredShadow(
-            color = colors.purpleShadow,
+            color = colors.navigation.floatingControlShadow,
             blurRadius = 2.dp,
         ),
         shape = RoundedCornerShape(22.dp),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = colors.searchBarColor,
+            containerColor = colors.navigation.floatingControlContainer,
             contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
