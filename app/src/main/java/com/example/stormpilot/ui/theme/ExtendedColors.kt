@@ -16,6 +16,8 @@ public val StormPilotColorSeed: Color = Color(0xFF2C8BB0)
 
 @Immutable
 public data class ExtendedColors(
+    /** Main theme color palette */
+    public val theme: ThemePalette,
     /** Navigation bars, route guidance, and floating controls. */
     public val navigation: ExtendedNavigationColors,
     /** Weather alerts, warning rows, and alert polygons. */
@@ -32,6 +34,12 @@ public data class ExtendedColors(
     public val stormAi: ExtendedStormAiColors,
     /** Account avatar colors. */
     public val profile: ExtendedProfileColors,
+)
+
+@Immutable
+public data class ThemePalette(
+    /** Purple used for dashboard icons, charts, and accent marks. */
+    public val vibrantPrimary: Color,
 )
 
 @Immutable
@@ -104,8 +112,6 @@ public data class ExtendedAlertColors(
 
 @Immutable
 public data class ExtendedWeatherColors(
-    /** Temperature chart line and selected weather accent. */
-    public val temperatureChartLine: Color,
     /** Precipitation chart line. */
     public val precipitationChartLine: Color,
     /** Sunny animated weather icon tint. */
@@ -265,6 +271,9 @@ public data class ExtendedProfileColors(
 )
 
 private val LightExtendedColors = ExtendedColors(
+    theme = ThemePalette(
+        vibrantPrimary = Color(0xFF7C4FD9),
+    ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFFF8F8F8),
         selectedPillContainer = Color(0xFFDCBCEA),
@@ -300,7 +309,6 @@ private val LightExtendedColors = ExtendedColors(
         dashboardMapFlashFloodOutline = Color(0xC800E676),
     ),
     weather = ExtendedWeatherColors(
-        temperatureChartLine = Color(0xFF7C4FD9),
         precipitationChartLine = Color(0xFF087EA4),
         sunIcon = Color(0xFFFFB300),
         rainIcon = Color(0xFF64B5F6),
@@ -380,6 +388,9 @@ private val LightExtendedColors = ExtendedColors(
 )
 
 private val DarkExtendedColors = ExtendedColors(
+    theme = ThemePalette(
+        vibrantPrimary = Color(0xFF5DABCB),
+    ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFF151115),
         selectedPillContainer = Color(0xFF5A396E),
@@ -415,7 +426,6 @@ private val DarkExtendedColors = ExtendedColors(
         dashboardMapFlashFloodOutline = Color(0xC800E676),
     ),
     weather = ExtendedWeatherColors(
-        temperatureChartLine = Color(0xFFB291F3),
         precipitationChartLine = Color(0xFF7DDCFF),
         sunIcon = Color(0xFFFFB300),
         rainIcon = Color(0xFF64B5F6),

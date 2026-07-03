@@ -13,8 +13,11 @@ class ExtendedColorsTest : StormPilotUnitTest() {
 
         assertNotEquals(darkColors.navigation.exitButtonContainer, lightColors.navigation.exitButtonContainer)
         assertNotEquals(darkColors.navigation.routeLine, lightColors.navigation.routeLine)
+        assertNotEquals(darkColors.theme.vibrantPrimary, lightColors.theme.vibrantPrimary)
         assertEquals(androidx.compose.ui.graphics.Color(0xFFFFDAD7), lightColors.navigation.exitButtonContainer)
         assertEquals(androidx.compose.ui.graphics.Color(0xFF81C3FF), darkColors.navigation.routeLine)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFF7C4FD9), lightColors.theme.vibrantPrimary)
+        assertEquals(androidx.compose.ui.graphics.Color(0xFFB291F3), darkColors.theme.vibrantPrimary)
     }
 
     @Test

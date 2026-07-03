@@ -67,6 +67,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -257,7 +258,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                                         focusedBorderColor = Color.Transparent,
                                         unfocusedBorderColor = Color.Transparent,
                                         disabledBorderColor = Color.Transparent,
-                                        cursorColor = MaterialTheme.colorScheme.primary,
+                                        cursorColor = MaterialTheme.extendedColors.theme.vibrantPrimary,
                                         focusedContainerColor = Color.Transparent,
                                         unfocusedContainerColor = Color.Transparent
                                     ),
@@ -275,7 +276,7 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
                                         .padding(bottom = 4.dp)
                                         .scale(sendButtonScale),
                                     colors = androidx.compose.material3.IconButtonDefaults.filledIconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        containerColor = MaterialTheme.extendedColors.theme.vibrantPrimary,
                                         contentColor = MaterialTheme.colorScheme.onPrimary,
                                         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                                         disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
@@ -329,12 +330,12 @@ private fun ChatPopupHeader(onDismiss: () -> Unit) {
     ) {
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+            color = MaterialTheme.extendedColors.theme.vibrantPrimary.copy(alpha = 0.12f)
         ) {
             Icon(
                 imageVector = Icons.Rounded.AutoAwesome,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
                 modifier = Modifier.padding(10.dp)
             )
         }
@@ -441,7 +442,7 @@ private fun ContextualPromptChip(
             Icon(
                 imageVector = prompt.icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
                 modifier = Modifier.size(17.dp),
             )
             Text(

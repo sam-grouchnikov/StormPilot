@@ -8,7 +8,7 @@ import androidx.compose.ui.text.googlefonts.Font
 import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 
-private val RobotoMono = GoogleFont("Manrope")
+private val RobotoMono = GoogleFont("Google Sans")
 
 private val RobotoMonoFamily = FontFamily(
     Font(googleFont = RobotoMono, weight = FontWeight.Normal),

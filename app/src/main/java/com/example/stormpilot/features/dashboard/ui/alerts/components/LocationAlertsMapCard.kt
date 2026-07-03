@@ -104,7 +104,7 @@ fun LocationAlertsMapCard(
                                 Icon(
                                     imageVector = Icons.Outlined.LocationOn,
                                     contentDescription = null,
-                                    tint = colorScheme.primary,
+                                    tint = colors.theme.vibrantPrimary,
                                     modifier = Modifier.size(17.dp),
                                 )
                                 Text(
@@ -129,10 +129,10 @@ fun LocationAlertsMapCard(
                     }
                     Surface(
                         shape = CircleShape,
-                        color = if (showAlerts) colorScheme.primary else colorScheme.surface.copy(alpha = 0.60f),
+                        color = if (showAlerts) colors.theme.vibrantPrimary else colorScheme.surface.copy(alpha = 0.60f),
                         border = BorderStroke(
                             1.dp,
-                            if (showAlerts) colorScheme.primary else colorScheme.outlineVariant,
+                            if (showAlerts) colors.theme.vibrantPrimary else colorScheme.outlineVariant,
                         ),
                     ) {
                         IconButton(
@@ -142,7 +142,7 @@ fun LocationAlertsMapCard(
                             Icon(
                                 imageVector = if (showAlerts) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
                                 contentDescription = if (showAlerts) "Hide alerts" else "Show alerts",
-                                tint = if (showAlerts) colorScheme.onPrimary else colorScheme.primary,
+                                tint = if (showAlerts) colorScheme.onPrimary else colors.theme.vibrantPrimary,
                             )
                         }
                     }
@@ -316,7 +316,7 @@ private fun LocationAlertsMap(
             source = locationSource,
             color = const(MaterialTheme.colorScheme.onPrimary),
             radius = const(5.dp),
-            strokeColor = const(MaterialTheme.colorScheme.primary),
+            strokeColor = const(MaterialTheme.extendedColors.theme.vibrantPrimary),
             strokeWidth = const(3.dp),
         )
     }

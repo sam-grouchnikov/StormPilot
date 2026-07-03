@@ -61,7 +61,7 @@ fun StormSpecsPanel(
                             modifier = Modifier
                                 .width(250.dp)
                                 .padding(top = 10.dp, bottom = 5.dp),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.extendedColors.theme.vibrantPrimary,
                             trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -143,7 +143,7 @@ private fun StormSpecCard(
 ) {
     val colors = MaterialTheme.extendedColors
     val risk = specToRisk(spec)
-    val riskColor = colors.weather.temperatureChartLine
+    val riskColor = colors.theme.vibrantPrimary
 
     Surface(
         modifier = Modifier.width(115.dp),

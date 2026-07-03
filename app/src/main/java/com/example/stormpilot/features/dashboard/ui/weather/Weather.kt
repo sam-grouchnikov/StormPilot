@@ -455,7 +455,7 @@ private fun HourlyForecastGraphEmpty(metric: HourlyForecastMetric) {
             Icon(
                 imageVector = metric.icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
                 modifier = Modifier.size(18.dp),
             )
             Text(
@@ -538,7 +538,7 @@ private enum class HourlyForecastMetric(
         }
 
     fun chartLineColor(colors: ExtendedColors): Color =
-        colors.weather.temperatureChartLine
+        colors.theme.vibrantPrimary
 
     fun rangeProvider(points: List<HourlyForecastChartPoint>): CartesianLayerRangeProvider {
         val values = points.map { it.value }
@@ -617,7 +617,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
                 Icon(
                     imageVector = getWeatherIconForCondition(outlook.conditions),
                     contentDescription = null,
-                    tint = MaterialTheme.extendedColors.weather.temperatureChartLine,
+                    tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
                     modifier = Modifier.size(30.dp),
                 )
             }
@@ -638,7 +638,11 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
         }
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            color = if (AppSettings.isDarkMode) {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            } else {
+                MaterialTheme.colorScheme.surfaceContainer
+            },
         ) {
             Text(
                 text = outlookSPC,

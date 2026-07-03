@@ -102,7 +102,7 @@ fun AnimatedCloudyIcon(modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Outlined.Cloud,
             contentDescription = "Cloudy",
-            tint = MaterialTheme.colorScheme.primary,
+            tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
             modifier = Modifier
                 .size(64.dp)
                 .offset(x = offsetX.dp)

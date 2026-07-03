@@ -133,7 +133,7 @@ fun TopIconRow(
                 ) {
                     VerticalDivider(
                         thickness = 6.dp,
-                        color = MaterialTheme.extendedColors.weather.temperatureChartLine,
+                        color = MaterialTheme.extendedColors.theme.vibrantPrimary,
                         modifier = Modifier
                             .height(28.dp)
                             .clip(CircleShape)

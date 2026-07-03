@@ -151,7 +151,7 @@ fun AlertStatusPanel(
             ) {
                 Icon(
                     painter = if (panelHasAlert) painterResource(id = R.drawable.thick_error) else painterResource(id = R.drawable.check_thick),
-                    tint = MaterialTheme.extendedColors.weather.temperatureChartLine,
+                    tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
                     contentDescription = "Alert Status",
                     modifier = Modifier.size(28.dp)
                 )

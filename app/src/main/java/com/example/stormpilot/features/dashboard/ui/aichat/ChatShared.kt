@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.stormpilot.ui.theme.extendedColors
 import kotlinx.coroutines.delay
 
 data class ChatMessage(
@@ -108,7 +109,7 @@ fun ChatBubble(
                     Text(
                         text = if (message.isLoading) "StormPilot AI is thinking" else "StormPilot AI",
                         style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MaterialTheme.extendedColors.theme.vibrantPrimary,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
@@ -199,8 +200,8 @@ fun ThinkingIndicator() {
 
     val shimmerBrush = Brush.linearGradient(
         colors = listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.10f),
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.30f),
+            MaterialTheme.extendedColors.theme.vibrantPrimary.copy(alpha = 0.10f),
+            MaterialTheme.extendedColors.theme.vibrantPrimary.copy(alpha = 0.30f),
             MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f)
         ),
         start = androidx.compose.ui.geometry.Offset.Zero,
