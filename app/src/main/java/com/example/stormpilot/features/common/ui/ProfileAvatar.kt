@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,14 +35,14 @@ fun ProfileAvatar(
             .size(circleSize.dp)
             .clip(CircleShape)
             .border(2.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-            .background(colors.profile.avatarContainer)
+            .background(colors.theme.vibrantAccent)
             .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = avatarLetter,
             fontSize = textSize.sp,
-            color = colors.profile.avatarContent,
+            color = Color.White,
             fontWeight = FontWeight.SemiBold,
         )
     }

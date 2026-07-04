@@ -40,6 +40,8 @@ public data class ExtendedColors(
 public data class ThemePalette(
     /** Purple used for dashboard icons, charts, and accent marks. */
     public val vibrantPrimary: Color,
+    public val vibrantSecondary: Color,
+    public val vibrantAccent: Color,
 )
 
 @Immutable
@@ -245,21 +247,21 @@ public data class ExtendedAuthColors(
 @Immutable
 public data class ExtendedStormAiColors(
     /** Blue stop in StormPilot AI glow gradients. */
-    public val glowBlue: Color,
+    public val glowStop1: Color,
     /** Purple stop in StormPilot AI glow gradients. */
-    public val glowPurple: Color,
+    public val glowStop2: Color,
     /** Magenta stop in StormPilot AI glow gradients. */
-    public val glowMagenta: Color,
+    public val glowStop3: Color,
     /** White core used for StormPilot AI icons and glow strokes. */
     public val iconContent: Color,
     /** Dark scrim color behind the animated chat backdrop. */
     public val backdropScrim: Color,
 ) {
     public fun glowColors(): List<Color> =
-        listOf(glowBlue, glowPurple, glowMagenta)
+        listOf(glowStop1, glowStop2, glowStop3)
 
     public fun glowColorInts(): IntArray =
-        intArrayOf(glowBlue.toArgb(), glowPurple.toArgb(), glowMagenta.toArgb(), glowBlue.toArgb())
+        intArrayOf(glowStop1.toArgb(), glowStop2.toArgb(), glowStop3.toArgb(), glowStop1.toArgb())
 }
 
 @Immutable
@@ -272,7 +274,9 @@ public data class ExtendedProfileColors(
 
 private val LightExtendedColors = ExtendedColors(
     theme = ThemePalette(
-        vibrantPrimary = Color(0xFF7C4FD9),
+        vibrantPrimary = Color(0xFF8259D9),
+        vibrantSecondary = Color(0xFF8259D9),
+        vibrantAccent = Color(0xFF679F38),
     ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFFF8F8F8),
@@ -375,9 +379,9 @@ private val LightExtendedColors = ExtendedColors(
         inputPlaceholder = Color(0x75FFFFFF),
     ),
     stormAi = ExtendedStormAiColors(
-        glowBlue = Color(0xFF4A90E2),
-        glowPurple = Color(0xFF7B4FD6),
-        glowMagenta = Color(0xFFE040C8),
+        glowStop1 = Color(0xFF4A90E2),
+        glowStop2 = Color(0xFF7B4FD6),
+        glowStop3 = Color(0xFFE040C8),
         iconContent = Color(0xFFFFFFFF),
         backdropScrim = Color(0xFF000000),
     ),
@@ -389,11 +393,13 @@ private val LightExtendedColors = ExtendedColors(
 
 private val DarkExtendedColors = ExtendedColors(
     theme = ThemePalette(
-        vibrantPrimary = Color(0xFF5DABCB),
-    ),
+        vibrantPrimary = Color(0xFF91A6F3),
+        vibrantSecondary = Color(0xFF8259D9),
+        vibrantAccent = Color(0xFF5D8F33),
+        ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFF151115),
-        selectedPillContainer = Color(0xFF5A396E),
+        selectedPillContainer = Color(0xFF5D8F33),
         floatingControlContainer = Color(0xFF131618),
         floatingControlButtonContainer = Color(0xFF131618),
         floatingControlShadow = Color(0xFF1D1A20),
@@ -492,9 +498,9 @@ private val DarkExtendedColors = ExtendedColors(
         inputPlaceholder = Color(0x75FFFFFF),
     ),
     stormAi = ExtendedStormAiColors(
-        glowBlue = Color(0xFF4A90E2),
-        glowPurple = Color(0xFF7B4FD6),
-        glowMagenta = Color(0xFFE040C8),
+        glowStop1 = Color(0xFF4A90E2),
+        glowStop2 = Color(0xFF7B4FD6),
+        glowStop3 = Color(0xFFE040C8),
         iconContent = Color(0xFFFFFFFF),
         backdropScrim = Color(0xFF000000),
     ),

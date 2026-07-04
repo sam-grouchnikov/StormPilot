@@ -646,7 +646,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
         ) {
             Text(
                 text = outlookSPC,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = badgeContent.copy(alpha = 0.8f),
                 fontWeight = FontWeight.Bold,
                 fontSize = 15.sp,
                 lineHeight = 14.sp,

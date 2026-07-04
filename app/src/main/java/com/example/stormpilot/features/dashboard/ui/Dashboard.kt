@@ -202,7 +202,7 @@ private fun ShimmeringStormAiChatIcon() {
                 val shimmerTravel = size.width * 2.4f
                 val startX = -shimmerTravel + shimmerProgress * shimmerTravel * 2f
                 val shimmerBrush = Brush.linearGradient(
-                    colors = stormAiColors.glowColors() + stormAiColors.glowBlue,
+                    colors = stormAiColors.glowColors() + stormAiColors.glowStop1,
                     start = Offset(startX, 0f),
                     end = Offset(startX + shimmerTravel, size.height),
                 )

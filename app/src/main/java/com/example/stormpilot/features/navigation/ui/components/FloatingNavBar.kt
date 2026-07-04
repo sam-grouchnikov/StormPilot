@@ -84,7 +84,7 @@ fun FloatingNavBar(
                 Box(
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(colors.navigation.selectedPillContainer),
+                        .background(colors.theme.vibrantSecondary.copy(alpha = 0.5f)),
                 )
 
                 tabs.forEachIndexed { index, tab ->
