@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.toArgb
 /**
  * Seed used to generate the Material 3 expressive color scheme.
  */
-public val StormPilotColorSeed: Color = Color(0xFF2C8BB0)
+public val StormPilotColorSeed: Color = Color(0xFF8B51AB)
 
 @Immutable
 public data class ExtendedColors(
@@ -252,10 +252,13 @@ public data class ExtendedStormAiColors(
     public val glowStop2: Color,
     /** Magenta stop in StormPilot AI glow gradients. */
     public val glowStop3: Color,
+    public val menu1: Color,
+    public val menu2: Color,
     /** White core used for StormPilot AI icons and glow strokes. */
     public val iconContent: Color,
     /** Dark scrim color behind the animated chat backdrop. */
     public val backdropScrim: Color,
+    public val dimmedBackground: Color,
 ) {
     public fun glowColors(): List<Color> =
         listOf(glowStop1, glowStop2, glowStop3)
@@ -382,8 +385,11 @@ private val LightExtendedColors = ExtendedColors(
         glowStop1 = Color(0xFF4A90E2),
         glowStop2 = Color(0xFF7B4FD6),
         glowStop3 = Color(0xFFE040C8),
+        menu1 = Color(0xFFFFFFFF),
+        menu2 = Color(0xFFFFFFFF),
         iconContent = Color(0xFFFFFFFF),
         backdropScrim = Color(0xFF000000),
+        dimmedBackground = Color(0xFFFFFFFF)
     ),
     profile = ExtendedProfileColors(
         avatarContainer = Color(0xFF679F38),
@@ -393,7 +399,7 @@ private val LightExtendedColors = ExtendedColors(
 
 private val DarkExtendedColors = ExtendedColors(
     theme = ThemePalette(
-        vibrantPrimary = Color(0xFF91A6F3),
+        vibrantPrimary = Color(0xFF76ADC9),
         vibrantSecondary = Color(0xFF8259D9),
         vibrantAccent = Color(0xFF5D8F33),
         ),
@@ -501,8 +507,12 @@ private val DarkExtendedColors = ExtendedColors(
         glowStop1 = Color(0xFF4A90E2),
         glowStop2 = Color(0xFF7B4FD6),
         glowStop3 = Color(0xFFE040C8),
+        menu1 = Color(0xFF752D2D),
+        menu2 = Color(0xFFF18C8C),
         iconContent = Color(0xFFFFFFFF),
         backdropScrim = Color(0xFF000000),
+        dimmedBackground = Color(0xFF242137)
+
     ),
     profile = ExtendedProfileColors(
         avatarContainer = Color(0xFF5D8F33),

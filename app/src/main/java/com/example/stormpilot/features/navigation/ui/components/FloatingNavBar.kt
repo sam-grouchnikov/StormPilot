@@ -67,7 +67,7 @@ fun FloatingNavBar(
     val colors = MaterialTheme.extendedColors
 
     Box(
-        modifier = modifier,
+        modifier = modifier.padding(bottom = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Layout(
@@ -79,7 +79,7 @@ fun FloatingNavBar(
                 )
                 .clip(CircleShape)
                 .background(colors.navigation.barSurface)
-                .padding(horizontal = 6.dp, vertical = 6.dp),
+                .padding(horizontal = 7.dp, vertical = 7.dp),
             content = {
                 Box(
                     modifier = Modifier

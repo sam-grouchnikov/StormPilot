@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stormpilot.core.StormAiRepository
-import com.example.stormpilot.features.dashboard.ui.aichat.ChatMessage
+import com.example.stormpilot.features.ai.ui.chat.ChatMessage
 import com.example.stormpilot.features.shared.data.location.LocationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale

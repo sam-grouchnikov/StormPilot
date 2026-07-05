@@ -7,20 +7,31 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -28,6 +39,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.automirrored.rounded.Send
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MicOff
@@ -35,6 +49,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -45,23 +61,37 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.lerp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
 import com.example.stormpilot.ui.theme.extendedColors
@@ -71,17 +101,20 @@ enum class StormAiSheetMode {
     Chat,
     Voice,
 }
-
 @Composable
-fun StormAiVoiceButton(
+fun StormAiLauncherMenu(
+    extended: Boolean,
+    onExtendedChange: (Boolean) -> Unit,
     onOpenVoiceRequest: () -> Unit,
-    modifier: Modifier = Modifier,
+    onOpenTextRequest: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
     var showAudioPermissionDialog by remember { mutableStateOf(false) }
 
     val audioPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
+        contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             onOpenVoiceRequest()
@@ -89,12 +122,13 @@ fun StormAiVoiceButton(
             showAudioPermissionDialog = true
         }
     }
+    BackHandler(extended) { onExtendedChange(false) }
 
     fun openVoiceSheet() {
-        if (
-            ContextCompat.checkSelfPermission(
+        onExtendedChange(false)
+        if (ContextCompat.checkSelfPermission(
                 context,
-                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.RECORD_AUDIO
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             onOpenVoiceRequest()
@@ -103,40 +137,145 @@ fun StormAiVoiceButton(
         }
     }
 
-    val colors = MaterialTheme.extendedColors
 
-    AnimatedStormAiShadowContainer(modifier = modifier) {
-        FilledIconButton(
-            onClick = { openVoiceSheet() },
-            modifier = Modifier
-                .padding(horizontal = 9.dp, vertical = 9.dp)
-                .size(44.dp),
-            colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = colors.navigation.barSurface,
-                contentColor = MaterialTheme.colorScheme.onSurface,
-            ),
+    val fabNonSelectedColor = MaterialTheme.extendedColors.navigation.barSurface
+    val fabSelectedColor   = MaterialTheme.colorScheme.primary
+
+    val fabNonSelectedIconTint = MaterialTheme.colorScheme.onSurface
+    val fabSelectedIconTint = MaterialTheme.colorScheme.onError
+
+
+    FloatingActionButtonMenu(
+            modifier = modifier
+                .offset(y = 8.dp)
+                .padding(horizontal = 0.dp)
+                .zIndex(2f),
+            expanded = extended,
+            button = {
+                AnimatedStormAiShadowContainer(
+                    visible = !extended,
+                    modifier = Modifier.size(66.dp)
+                ) {
+                    ToggleFloatingActionButton(
+                        modifier = Modifier.offset(9.dp, 9.dp),
+                        checked = extended,
+                        containerColor = { progress ->
+                            lerp(fabNonSelectedColor, fabSelectedColor, progress)
+                        },
+                        containerCornerRadius = { progress ->
+                            lerp(28.dp, 28.dp, progress)
+                        },
+                        containerSize = { 47.dp },
+                        onCheckedChange = onExtendedChange
+                    ) {
+                        val imageVector by remember { derivedStateOf {
+                            if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.AutoAwesome
+                        } }
+                        val iconSize = if (checkedProgress > 0.5f) 27 else 23
+
+                        AnimatedContent(
+                            targetState = imageVector,
+                            label = "fabIcon",
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(150)) togetherWith
+                                        fadeOut(animationSpec = tween(150))
+                            }
+                        ) { icon ->
+                            Icon(
+                                painter = rememberVectorPainter(icon),
+                                contentDescription = null,
+                                modifier = Modifier.size(iconSize.dp),
+                                tint = lerp(fabNonSelectedIconTint, fabSelectedIconTint, checkedProgress)
+                            )
+                        }
+                    }
+                }
+
+            },
         ) {
-            Icon(
-                imageVector = Icons.Rounded.Mic,
-                contentDescription = "Open StormAI voice request",
-                modifier = Modifier.size(20.dp),
-            )
-        }
+//
+//                FloatingActionButtonMenuItem(
+//                    onClick = { openVoiceSheet() },
+//                    icon = {
+//                        Icon(
+//                            Icons.Rounded.Mic,
+//                            contentDescription = null
+//                        )
+//                    },
+//                    text = { Text("Voice") },
+//                    containerColor = MaterialTheme.extendedColors.navigation.barSurface,
+//                    contentColor = MaterialTheme.colorScheme.onSurface
+//                )
+//
+//
+//                FloatingActionButtonMenuItem(
+//                    onClick = {
+//                        onExtendedChange(false)
+//                        onOpenTextRequest()
+//                    },
+//                    icon = {
+//                        Icon(
+//                            Icons.AutoMirrored.Rounded.Chat,
+//                            contentDescription = null,
+//                        )
+//                    },
+//                    text = {
+//                        Text(
+//                            "Chat",
+//                        )
+//                    },
+//                    containerColor = MaterialTheme.extendedColors.navigation.barSurface,
+//                    contentColor = MaterialTheme.colorScheme.onSurface
+//                )
+
+
+        FloatingActionButtonMenuItem(
+            onClick = { openVoiceSheet() },
+            icon = {
+                Icon(
+                    Icons.Rounded.Mic,
+                    contentDescription = null
+                )
+            },
+            text = { Text("Voice") },
+        )
+
+
+        FloatingActionButtonMenuItem(
+            onClick = {
+                onExtendedChange(false)
+                onOpenTextRequest()
+            },
+            icon = {
+                Icon(
+                    Icons.AutoMirrored.Rounded.Chat,
+                    contentDescription = null,
+                )
+            },
+            text = {
+                Text(
+                    "Chat",
+                )
+            },
+        )
+
+
     }
 
     if (showAudioPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showAudioPermissionDialog = false },
-            title = { Text(text = "Microphone unavailable") },
-            text = { Text(text = "Enable microphone permission to use voice requests.") },
+            title = { Text("Microphone unavailable") },
+            text = { Text("Enable microphone permission to use voice requests.") },
             confirmButton = {
                 TextButton(onClick = { showAudioPermissionDialog = false }) {
-                    Text(text = "OK")
+                    Text("OK")
                 }
-            },
+            }
         )
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

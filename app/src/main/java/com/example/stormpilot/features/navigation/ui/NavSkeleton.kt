@@ -11,16 +11,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -30,11 +29,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Radar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.MaterialTheme
@@ -53,16 +52,21 @@ import androidx.navigation.compose.rememberNavController
 import com.example.stormpilot.core.StormAiAction
 import com.example.stormpilot.core.StormAiViewModel
 import com.example.stormpilot.features.common.ui.AnimatedStormAiChatBackdrop
+import com.example.stormpilot.features.ai.ui.chat.ChatPopup
 import com.example.stormpilot.features.dashboard.ui.RadarPage
 import com.example.stormpilot.features.map.ui.MapsPage
 import com.example.stormpilot.features.navigation.ui.components.FloatingNavBar
+import com.example.stormpilot.features.navigation.ui.components.StormAiLauncherMenu
 import com.example.stormpilot.features.navigation.ui.components.StormAiRequestSheet
 import com.example.stormpilot.features.navigation.ui.components.StormAiSheetMode
-import com.example.stormpilot.features.navigation.ui.components.StormAiVoiceButton
+import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.features.settings.ui.SettingsPage
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.zIndex
+import com.example.stormpilot.features.common.ui.DimmedBackdrop
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -80,7 +84,9 @@ sealed class TabDest(val route: String, val title: String, val icon: ImageVector
 fun NavSkeleton() {
     val isMapDestinationSelected = remember { mutableStateOf(false) }
     val showSettings = remember { mutableStateOf(false) }
+    var showStormAiChat by remember { mutableStateOf(false) }
     var activeStormAiSheet by remember { mutableStateOf<StormAiSheetMode?>(null) }
+    var showBackdrop by remember { mutableStateOf(false) }
     var isStormAiSubmitting by remember { mutableStateOf(false) }
     var assistantMessage by remember { mutableStateOf<String?>(null) }
     var confirmationMessage by remember { mutableStateOf<String?>(null) }
@@ -88,10 +94,15 @@ fun NavSkeleton() {
     var confirmationConfirmLabel by remember { mutableStateOf("Confirm") }
     var confirmationCancelLabel by remember { mutableStateOf("Cancel") }
     var pendingConfirmationActions by remember { mutableStateOf<List<StormAiAction>>(emptyList()) }
+    var isStormAiLauncherExpanded by remember { mutableStateOf(false) }
     val mapsViewModel: MapsViewModel = hiltViewModel()
     val stormAiViewModel: StormAiViewModel = hiltViewModel()
+    val genAIViewModel: GenAIViewModel = hiltViewModel()
     val mapsUiState by mapsViewModel.uiState.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
+
+    val onOpenVoiceRequest = { activeStormAiSheet = StormAiSheetMode.Voice }
+    val onOpenTextRequest = { showStormAiChat = true }
 
     StormPilotTheme(dynamicColor = false) {
         val navController = rememberNavController()
@@ -101,6 +112,19 @@ fun NavSkeleton() {
 
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = backStackEntry?.destination?.route
+        val isStormAiLauncherRoute = currentRoute in setOf(TabDest.Nav.route, TabDest.Radar.route)
+        val showStormAiLauncher =
+            isStormAiLauncherRoute &&
+                !showSettings.value &&
+                activeStormAiSheet == null &&
+                !showStormAiChat
+
+        LaunchedEffect(showStormAiLauncher) {
+            if (!showStormAiLauncher) {
+                isStormAiLauncherExpanded = false
+                showBackdrop = false
+            }
+        }
 
         fun showConfirmation(
             message: String,
@@ -175,7 +199,6 @@ fun NavSkeleton() {
                         StormPilotBottomBar(
                             tabs = tabs,
                             currentRoute = currentRoute,
-                            onOpenVoiceRequest = { activeStormAiSheet = StormAiSheetMode.Voice },
                             onTabSelected = { tab ->
                                 navController.navigate(tab.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
@@ -237,7 +260,7 @@ fun NavSkeleton() {
                                     isMapDestinationSelected.value = isSelected
                                 },
                                 onOpenSettings = { showSettings.value = true },
-                                onOpenStormAiChat = { activeStormAiSheet = StormAiSheetMode.Chat },
+                                onOpenStormAiChat = { showStormAiChat = true },
                             )
                         }
                         composable(TabDest.Radar.route) {
@@ -245,6 +268,47 @@ fun NavSkeleton() {
                         }
                     }
                 }
+            }
+
+            AnimatedStormAiChatBackdrop(
+                visible = activeStormAiSheet != null || showStormAiChat,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(1f),
+            )
+
+            DimmedBackdrop(
+                visible = showBackdrop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(2f),
+            )
+
+            AnimatedVisibility(
+                visible = showStormAiLauncher,
+                enter = fadeIn(animationSpec = tween(160)),
+                exit = fadeOut(animationSpec = tween(120)),
+                modifier = Modifier
+                    .align(alignment = Alignment.BottomEnd)
+                    .padding(bottom = 28.dp)
+                    .zIndex(3f),
+            ) {
+                StormAiLauncherMenu(
+                    extended = isStormAiLauncherExpanded,
+                    onExtendedChange = { expanded ->
+                        isStormAiLauncherExpanded = expanded
+                        showBackdrop = expanded
+                    },
+                    onOpenVoiceRequest = onOpenVoiceRequest,
+                    onOpenTextRequest = onOpenTextRequest,
+                )
+            }
+
+            if (showStormAiChat) {
+                ChatPopup(
+                    onDismiss = { showStormAiChat = false },
+                    viewModel = genAIViewModel,
+                )
             }
 
             AnimatedVisibility(
@@ -257,15 +321,12 @@ fun NavSkeleton() {
                     targetOffsetY = { it },
                     animationSpec = tween(320),
                 ) + fadeOut(animationSpec = tween(140)),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(4f),
             ) {
                 SettingsPage(onDismiss = { showSettings.value = false })
             }
-
-            AnimatedStormAiChatBackdrop(
-                visible = activeStormAiSheet != null,
-                modifier = Modifier.fillMaxSize(),
-            )
 
             activeStormAiSheet?.let { sheetMode ->
                 StormAiRequestSheet(
@@ -375,29 +436,28 @@ private fun org.maplibre.spatialk.geojson.Position.toAssistantLocationParam(): S
 private fun StormPilotBottomBar(
     tabs: List<TabDest>,
     currentRoute: String?,
-    onOpenVoiceRequest: () -> Unit,
     onTabSelected: (TabDest) -> Unit,
 ) {
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
+            .padding(start = 8.dp, end = 0.dp, bottom = 8.dp)
             .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         val showNavLabels = maxWidth >= 420.dp
 
-        Row(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .offset(maxWidth / 15)
         ) {
             FloatingNavBar(
                 tabs = tabs,
                 currentRoute = currentRoute,
                 onTabSelected = onTabSelected,
-                showLabels = showNavLabels,
+                showLabels = showNavLabels
             )
-            StormAiVoiceButton(onOpenVoiceRequest = onOpenVoiceRequest)
         }
     }
 }

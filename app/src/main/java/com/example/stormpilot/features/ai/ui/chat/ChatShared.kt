@@ -1,4 +1,4 @@
-package com.example.stormpilot.features.dashboard.ui.aichat
+package com.example.stormpilot.features.ai.ui.chat
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
