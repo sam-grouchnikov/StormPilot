@@ -13,6 +13,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.displayCutout
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
@@ -179,38 +182,6 @@ fun NavSkeleton() {
                 modifier = Modifier.fillMaxSize(),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                bottomBar = {
-                    AnimatedVisibility(
-                        visible = !isMapDestinationSelected.value,
-                        enter = fadeIn(animationSpec = tween(300)) +
-                            slideInVertically(
-                                initialOffsetY = { it },
-                                animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessMedium,
-                                ),
-                            ),
-                        exit = fadeOut(animationSpec = tween(180)) +
-                            slideOutVertically(
-                                targetOffsetY = { it },
-                                animationSpec = tween(200),
-                            ),
-                    ) {
-                        StormPilotBottomBar(
-                            tabs = tabs,
-                            currentRoute = currentRoute,
-                            onTabSelected = { tab ->
-                                navController.navigate(tab.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                        )
-                    }
-                },
             ) {
                 val contentModifier = when (currentRoute) {
                     TabDest.Nav.route,
@@ -277,32 +248,32 @@ fun NavSkeleton() {
                     .zIndex(1f),
             )
 
-            DimmedBackdrop(
-                visible = showBackdrop,
+            StormPilotBottomControls(
+                tabs = tabs,
+                currentRoute = currentRoute,
+                showNavBar = !isMapDestinationSelected.value,
+                showStormAiLauncher = showStormAiLauncher,
+                stormAiLauncherExpanded = isStormAiLauncherExpanded,
+                onTabSelected = { tab ->
+                    navController.navigate(tab.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onStormAiLauncherExpandedChange = { expanded ->
+                    isStormAiLauncherExpanded = expanded
+                    showBackdrop = expanded
+                },
+                onOpenVoiceRequest = onOpenVoiceRequest,
+                onOpenTextRequest = onOpenTextRequest,
+                showBackdrop = showBackdrop,
                 modifier = Modifier
                     .fillMaxSize()
-                    .zIndex(2f),
+                    .zIndex(if (showBackdrop) 2f else 0f),
             )
-
-            AnimatedVisibility(
-                visible = showStormAiLauncher,
-                enter = fadeIn(animationSpec = tween(160)),
-                exit = fadeOut(animationSpec = tween(120)),
-                modifier = Modifier
-                    .align(alignment = Alignment.BottomEnd)
-                    .padding(bottom = 28.dp)
-                    .zIndex(3f),
-            ) {
-                StormAiLauncherMenu(
-                    extended = isStormAiLauncherExpanded,
-                    onExtendedChange = { expanded ->
-                        isStormAiLauncherExpanded = expanded
-                        showBackdrop = expanded
-                    },
-                    onOpenVoiceRequest = onOpenVoiceRequest,
-                    onOpenTextRequest = onOpenTextRequest,
-                )
-            }
 
             if (showStormAiChat) {
                 ChatPopup(
@@ -433,31 +404,101 @@ private fun org.maplibre.spatialk.geojson.Position.toAssistantLocationParam(): S
     String.format(Locale.US, "%.6f,%.6f", latitude, longitude)
 
 @Composable
-private fun StormPilotBottomBar(
+private fun StormPilotBottomControls(
     tabs: List<TabDest>,
     currentRoute: String?,
+    showNavBar: Boolean,
+    showStormAiLauncher: Boolean,
+    stormAiLauncherExpanded: Boolean,
     onTabSelected: (TabDest) -> Unit,
+    onStormAiLauncherExpandedChange: (Boolean) -> Unit,
+    onOpenVoiceRequest: () -> Unit,
+    onOpenTextRequest: () -> Unit,
+    showBackdrop: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 8.dp, end = 0.dp, bottom = 8.dp)
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier = modifier,
     ) {
         val showNavLabels = maxWidth >= 420.dp
+        val navBarOffset = maxWidth / 15
 
-        Box(
+        AnimatedVisibility(
+            visible = showNavBar,
+            enter = fadeIn(animationSpec = tween(300)) +
+                slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium,
+                    ),
+                ),
+            exit = fadeOut(animationSpec = tween(180)) +
+                slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(200),
+                ),
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth()
-                .offset(maxWidth / 15)
+                .align(Alignment.BottomCenter)
+                .zIndex(0f),
         ) {
-            FloatingNavBar(
-                tabs = tabs,
-                currentRoute = currentRoute,
-                onTabSelected = onTabSelected,
-                showLabels = showNavLabels
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(start = 0.dp, end = 16.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.BottomStart,
+                ) {
+                    FloatingNavBar(
+                        tabs = tabs,
+                        currentRoute = currentRoute,
+                        onTabSelected = onTabSelected,
+                        modifier = Modifier.offset(navBarOffset),
+                        showLabels = showNavLabels,
+                    )
+                }
+
+                if (showStormAiLauncher) {
+                    Spacer(modifier = Modifier.width(82.dp))
+                }
+            }
+        }
+
+        DimmedBackdrop(
+            visible = showBackdrop,
+            modifier = Modifier
+                .fillMaxSize()
+                .zIndex(1f),
+        )
+
+        AnimatedVisibility(
+            visible = showStormAiLauncher,
+            enter = fadeIn(animationSpec = tween(160)),
+            exit = fadeOut(animationSpec = tween(120)),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .zIndex(2f),
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(start = 0.dp, end = 0.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                StormAiLauncherMenu(
+                    extended = stormAiLauncherExpanded,
+                    onExtendedChange = onStormAiLauncherExpandedChange,
+                    onOpenVoiceRequest = onOpenVoiceRequest,
+                    onOpenTextRequest = onOpenTextRequest,
+                    modifier = Modifier.padding(start = 4.dp),
+                )
+            }
         }
     }
 }
