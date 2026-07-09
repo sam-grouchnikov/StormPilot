@@ -278,7 +278,7 @@ public data class ExtendedProfileColors(
 private val LightExtendedColors = ExtendedColors(
     theme = ThemePalette(
         vibrantPrimary = Color(0xFF8259D9),
-        vibrantSecondary = Color(0xFF8259D9),
+        vibrantSecondary = Color(0xFFAD8FF1),
         vibrantAccent = Color(0xFF679F38),
     ),
     navigation = ExtendedNavigationColors(
@@ -383,8 +383,8 @@ private val LightExtendedColors = ExtendedColors(
     ),
     stormAi = ExtendedStormAiColors(
         glowStop1 = Color(0xFF4A90E2),
-        glowStop2 = Color(0xFF7B4FD6),
-        glowStop3 = Color(0xFFE040C8),
+        glowStop2 = Color(0xFF9272D6),
+        glowStop3 = Color(0xFFE064CD),
         menu1 = Color(0xFFFFFFFF),
         menu2 = Color(0xFFFFFFFF),
         iconContent = Color(0xFFFFFFFF),

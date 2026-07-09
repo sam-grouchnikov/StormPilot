@@ -56,8 +56,8 @@ internal fun UserLocationLayer(origin: Position?) {
         id = "user-location-shadow",
         source = userLocationSource,
         color = const(colors.map.userLocationShadow),
-        radius = const(12.5.dp),
-        blur = const(0.85f),
+        radius = const(14.dp),
+        blur = const(0.7f),
         translate = const(DpOffset(0.dp, 1.dp)),
     )
     CircleLayer(
@@ -93,7 +93,16 @@ internal fun DestinationLayer(destination: Position?) {
         GeoJsonData.JsonString(json)
     }
 
+    val colors = MaterialTheme.extendedColors
     val destinationSource = rememberGeoJsonSource(data = destinationFeatureCollection)
+    CircleLayer(
+        id = "destination-location-shadow",
+        source = destinationSource,
+        color = const(colors.map.userLocationShadow),
+        radius = const(10.dp),
+        blur = const(0.5f),
+        translate = const(DpOffset(0.dp, 1.dp)),
+    )
     CircleLayer(
         id = "destination-location",
         source = destinationSource,
@@ -119,6 +128,45 @@ internal fun RouteLayer(
         source = routeSource,
         color = const(colors.navigation.routeLine),
         width = const(if (isNavigationMode) 12.dp else 5.dp),
+    )
+}
+
+@Composable
+internal fun PendingRouteLayer(
+    origin: Position?,
+    destination: Position?,
+    visible: Boolean,
+    colors: ExtendedColors,
+) {
+    if (!visible || origin == null || destination == null) return
+
+    val pendingRouteFeatureCollection = remember(origin, destination) {
+        GeoJsonData.JsonString(
+            """
+            {
+              "type": "FeatureCollection",
+              "features": [{
+                "type": "Feature",
+                "geometry": {
+                  "type": "LineString",
+                  "coordinates": [
+                    [${origin.longitude}, ${origin.latitude}],
+                    [${destination.longitude}, ${destination.latitude}]
+                  ]
+                },
+                "properties": {}
+              }]
+            }
+            """.trimIndent(),
+        )
+    }
+    val pendingRouteSource = rememberGeoJsonSource(data = pendingRouteFeatureCollection)
+
+    LineLayer(
+        id = "pending-route-line",
+        source = pendingRouteSource,
+        color = const(colors.navigation.routeLine.copy(alpha = 0.45f)),
+        width = const(3.dp),
     )
 }
 
@@ -236,6 +284,15 @@ internal fun SearchResultLayers(
     }
     val focusedSearchResultSource = rememberGeoJsonSource(
         data = focusedSearchResultFeatureCollection,
+    )
+    val colors = MaterialTheme.extendedColors
+    CircleLayer(
+        id = "focused-search-result-marker-shadow",
+        source = focusedSearchResultSource,
+        color = const(colors.map.userLocationShadow),
+        radius = const(12.dp),
+        blur = const(0.5f),
+        translate = const(DpOffset(0.dp, 1.dp)),
     )
     CircleLayer(
         id = "focused-search-result-marker",

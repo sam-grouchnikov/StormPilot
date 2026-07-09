@@ -105,14 +105,14 @@ fun ChatBubble(
                     .background(bubbleBrush)
                     .padding(horizontal = 16.dp, vertical = 13.dp)
             ) {
-                if (!isUser) {
-                    Text(
-                        text = if (message.isLoading) "StormPilot AI is thinking" else "StormPilot AI",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.extendedColors.theme.vibrantPrimary,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                }
+//                if (!isUser) {
+//                    Text(
+//                        text = if (message.isLoading) "StormPilot AI is thinking" else "StormPilot AI",
+//                        style = MaterialTheme.typography.labelMedium,
+//                        color = MaterialTheme.extendedColors.theme.vibrantPrimary,
+//                        modifier = Modifier.padding(bottom = 8.dp)
+//                    )
+//                }
 
                 Crossfade(
                     targetState = message.isLoading,

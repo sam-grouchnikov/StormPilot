@@ -112,6 +112,7 @@ import kotlin.time.Duration.Companion.seconds
 fun MapsPage(
     viewModel: MapsViewModel = hiltViewModel(),
     onDestinationSelectedStateChanged: (Boolean) -> Unit = {},
+    onStormAiLauncherSuppressedChange: (Boolean) -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onOpenStormAiChat: () -> Unit = {},
 ) {
@@ -328,6 +329,16 @@ fun MapsPage(
     var showRadarOverlay by remember { mutableStateOf(false) }
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
 
+    LaunchedEffect(navMode, active) {
+        onStormAiLauncherSuppressedChange(navMode || active)
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            onStormAiLauncherSuppressedChange(false)
+        }
+    }
+
     val selectedRadarKey = selectedRadarSite
         ?.takeIf { showRadarOverlay }
         ?.let { site ->
@@ -481,11 +492,11 @@ fun MapsPage(
             val nextMetadata = radarTileMetadataByKey[nextKey]
             if (currentMetadata?.tilesReady == true && nextMetadata?.tilesReady == true) {
                 val delayBeforeNextFrame = RADAR_PLAYBACK_FRAME_DELAY_MS +
-                    if (nextChangesAgo == radarPlaybackFrameCount) {
-                        RADAR_PLAYBACK_RESTART_PAUSE_MS
-                    } else {
-                        0L
-                    }
+                        if (nextChangesAgo == radarPlaybackFrameCount) {
+                            RADAR_PLAYBACK_RESTART_PAUSE_MS
+                        } else {
+                            0L
+                        }
                 delay(delayBeforeNextFrame)
                 radarPlaybackChangesAgo = nextChangesAgo
             } else {

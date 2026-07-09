@@ -98,6 +98,7 @@ fun NavSkeleton() {
     var confirmationCancelLabel by remember { mutableStateOf("Cancel") }
     var pendingConfirmationActions by remember { mutableStateOf<List<StormAiAction>>(emptyList()) }
     var isStormAiLauncherExpanded by remember { mutableStateOf(false) }
+    var isMapStormAiLauncherSuppressed by remember { mutableStateOf(false) }
     val mapsViewModel: MapsViewModel = hiltViewModel()
     val stormAiViewModel: StormAiViewModel = hiltViewModel()
     val genAIViewModel: GenAIViewModel = hiltViewModel()
@@ -120,7 +121,14 @@ fun NavSkeleton() {
             isStormAiLauncherRoute &&
                 !showSettings.value &&
                 activeStormAiSheet == null &&
-                !showStormAiChat
+                !showStormAiChat &&
+                !(currentRoute == TabDest.Nav.route && isMapStormAiLauncherSuppressed)
+
+        LaunchedEffect(currentRoute) {
+            if (currentRoute != TabDest.Nav.route) {
+                isMapStormAiLauncherSuppressed = false
+            }
+        }
 
         LaunchedEffect(showStormAiLauncher) {
             if (!showStormAiLauncher) {
@@ -229,6 +237,9 @@ fun NavSkeleton() {
                                 viewModel = mapsViewModel,
                                 onDestinationSelectedStateChanged = { isSelected ->
                                     isMapDestinationSelected.value = isSelected
+                                },
+                                onStormAiLauncherSuppressedChange = { suppressed ->
+                                    isMapStormAiLauncherSuppressed = suppressed
                                 },
                                 onOpenSettings = { showSettings.value = true },
                                 onOpenStormAiChat = { showStormAiChat = true },
