@@ -64,7 +64,7 @@ internal fun UserLocationLayer(origin: Position?) {
         id = "user-location",
         source = userLocationSource,
         color = const(colors.map.userLocationFill),
-        radius = const(6.5.dp),
+        radius = const(6.6.dp),
         strokeColor = const(colors.map.userLocationStroke),
         strokeWidth = const(2.5.dp),
     )
