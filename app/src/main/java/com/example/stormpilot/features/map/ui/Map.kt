@@ -798,9 +798,9 @@ fun MapsPage(
                         start = 12.dp,
                         end = 12.dp,
                         bottom = when (footerState) {
-                            MapsFooterState.Navigation -> 117.dp
-                            MapsFooterState.Summary -> 167.dp
-                            MapsFooterState.Hidden -> 77.dp
+                            MapsFooterState.Navigation -> 129.dp
+                            MapsFooterState.Summary -> 179.dp
+                            MapsFooterState.Hidden -> 89.dp
                         },
                     ),
             ) {

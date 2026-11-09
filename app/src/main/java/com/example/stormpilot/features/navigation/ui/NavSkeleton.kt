@@ -290,6 +290,12 @@ fun NavSkeleton() {
                 ChatPopup(
                     onDismiss = { showStormAiChat = false },
                     viewModel = genAIViewModel,
+                    onActions = { actions ->
+                        dispatchStormAiActions(actions)
+                        if (actions.any { it !is StormAiAction.AnswerOnly && it !is StormAiAction.AskClarification }) {
+                            showStormAiChat = false
+                        }
+                    },
                 )
             }
 

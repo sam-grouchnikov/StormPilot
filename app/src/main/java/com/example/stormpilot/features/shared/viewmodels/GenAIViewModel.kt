@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stormpilot.core.StormAiAction
 import com.example.stormpilot.core.StormAiRepository
 import com.example.stormpilot.features.ai.ui.chat.ChatMessage
 import com.example.stormpilot.features.shared.data.location.LocationRepository
@@ -32,7 +33,11 @@ class GenAIViewModel @Inject constructor(
      * @param prompt The string request from the user.
      * @param loadingMessageId The unique id of the placeholder message already present in the UI.
      */
-    suspend fun promptTestStream(prompt: String, loadingMessageId: Long) {
+    suspend fun promptTestStream(
+        prompt: String,
+        loadingMessageId: Long,
+        onActions: (List<StormAiAction>) -> Unit = {},
+    ) {
         try {
             val location = resolveAssistantLocationParam()
             stormAiRepository.submitRequest(input = prompt, location = location)
@@ -44,6 +49,11 @@ class GenAIViewModel @Inject constructor(
                         },
                         isLoading = false,
                     )
+                    if (response.actions.isNotEmpty()) {
+                        withContext(Dispatchers.Main.immediate) {
+                            onActions(response.actions)
+                        }
+                    }
                 }
                 .onFailure { error ->
                     updateAssistantMessage(
@@ -88,7 +98,10 @@ class GenAIViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(prompt: String) {
+    fun sendMessage(
+        prompt: String,
+        onActions: (List<StormAiAction>) -> Unit = {},
+    ) {
         val loadingMessage = ChatMessage(
             text = null,
             isUser = false,
@@ -99,7 +112,11 @@ class GenAIViewModel @Inject constructor(
         chatMessages.add(loadingMessage)
 
         viewModelScope.launch {
-            promptTestStream(prompt, loadingMessage.id)
+            promptTestStream(
+                prompt = prompt,
+                loadingMessageId = loadingMessage.id,
+                onActions = onActions,
+            )
         }
     }
 

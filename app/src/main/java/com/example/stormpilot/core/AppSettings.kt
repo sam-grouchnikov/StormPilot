@@ -17,7 +17,7 @@ object AppSettings {
         "dashboard_weather_placeholder.json",
         "dashboard_weather_placeholder.txt",
     )
-    var useDashboardPlaceholderData by mutableStateOf(true)
+    var useDashboardPlaceholderData by mutableStateOf(false)
     var dashboardPlaceholderWeatherAssetName by mutableStateOf(dashboardPlaceholderWeatherFiles.first())
 
     fun cycleDashboardPlaceholderWeatherFile() {

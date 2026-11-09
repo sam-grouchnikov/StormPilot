@@ -65,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.stormpilot.core.StormAiAction
 import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.ui.theme.extendedColors
@@ -79,7 +80,11 @@ private data class ContextualChatPrompt(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
+fun ChatPopup(
+    onDismiss: () -> Unit,
+    viewModel: GenAIViewModel,
+    onActions: (List<StormAiAction>) -> Unit = {},
+) {
     val coroutineScope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     var inputText by remember { mutableStateOf("") }
@@ -109,13 +114,13 @@ fun ChatPopup(onDismiss: () -> Unit, viewModel: GenAIViewModel) {
 
         inputText = ""
         focusManager.clearFocus()
-        viewModel.sendMessage(prompt)
+        viewModel.sendMessage(prompt, onActions)
     }
 
     fun sendPromptSuggestion(prompt: String) {
         inputText = ""
         focusManager.clearFocus()
-        viewModel.sendMessage(prompt)
+        viewModel.sendMessage(prompt, onActions)
     }
 
     LaunchedEffect(Unit) {
