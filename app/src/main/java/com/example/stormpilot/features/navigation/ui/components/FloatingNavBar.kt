@@ -12,10 +12,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,7 +40,6 @@ fun FloatingNavBar(
     currentRoute: String?,
     onTabSelected: (TabDest) -> Unit,
     modifier: Modifier = Modifier,
-    showLabels: Boolean = true,
 ) {
     val selectedIndex = tabs.indexOfFirst { it.route == currentRoute }.coerceAtLeast(0)
     val itemOffsets = remember { mutableStateOf(IntArray(tabs.size)) }
@@ -93,14 +91,18 @@ fun FloatingNavBar(
                         index = index,
                         selectionTransition = selectionTransition,
                         onClick = { onTabSelected(tab) },
-                        showLabel = showLabels,
                     )
                 }
             },
         ) { measurables, constraints ->
             val itemMeasurables = measurables.drop(1)
             val pillMeasurable = measurables[0]
-            val itemPlaceables = itemMeasurables.map { it.measure(constraints.copy(minWidth = 0)) }
+            val preferredWidths = itemMeasurables.map { it.maxIntrinsicWidth(Constraints.Infinity) }
+            val preferredTotalWidth = preferredWidths.sum()
+            val widthScale = minOf(1f, constraints.maxWidth.toFloat() / preferredTotalWidth)
+            val itemPlaceables = itemMeasurables.zip(preferredWidths) { item, preferredWidth ->
+                item.measure(constraints.copy(minWidth = 0, maxWidth = (preferredWidth * widthScale).toInt()))
+            }
             val totalWidth = itemPlaceables.sumOf { it.width }
             val height = itemPlaceables.maxOf { it.height }
 
@@ -121,7 +123,7 @@ fun FloatingNavBar(
                 pillPlaceable.placeRelative(animatedPillX, 0)
                 var x = 0
                 itemPlaceables.forEach { placeable ->
-                    placeable.placeRelative(x, 0)
+                    placeable.placeRelative(x, (height - placeable.height) / 2)
                     x += placeable.width
                 }
             }
@@ -136,7 +138,6 @@ private fun FloatingNavItem(
     selectionTransition: Transition<Int>,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    showLabel: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val selectedColor = MaterialTheme.colorScheme.onSurface
@@ -156,31 +157,26 @@ private fun FloatingNavItem(
                 indication = null,
                 onClick = onClick,
             )
-            .padding(vertical = 6.dp, horizontal = 15.dp),
+            .padding(vertical = 6.dp, horizontal = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
         ) {
             Icon(
                 imageVector = tab.icon,
-                contentDescription = if (showLabel) null else tab.title,
+                contentDescription = null,
                 tint = contentColor,
-                modifier = Modifier
-                    .padding(end = if (showLabel) 4.dp else 0.dp)
-                    .size(19.dp),
+                modifier = Modifier.size(19.dp),
             )
-            if (showLabel) {
-                Spacer(modifier = Modifier.width(5.dp))
-                Text(
-                    text = tab.title,
-                    color = contentColor,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                )
-            }
+            Text(
+                text = tab.title,
+                color = contentColor,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

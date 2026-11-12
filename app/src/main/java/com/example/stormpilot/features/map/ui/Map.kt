@@ -112,7 +112,6 @@ import kotlin.time.Duration.Companion.seconds
 fun MapsPage(
     viewModel: MapsViewModel = hiltViewModel(),
     onDestinationSelectedStateChanged: (Boolean) -> Unit = {},
-    onStormAiLauncherSuppressedChange: (Boolean) -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onOpenStormAiChat: () -> Unit = {},
 ) {
@@ -328,16 +327,6 @@ fun MapsPage(
     var showTripSummary by remember { mutableStateOf(false) }
     var showRadarOverlay by remember { mutableStateOf(false) }
     var showSevereAlertsOverlay by remember { mutableStateOf(false) }
-
-    LaunchedEffect(navMode, active) {
-        onStormAiLauncherSuppressedChange(navMode || active)
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            onStormAiLauncherSuppressedChange(false)
-        }
-    }
 
     val selectedRadarKey = selectedRadarSite
         ?.takeIf { showRadarOverlay }
