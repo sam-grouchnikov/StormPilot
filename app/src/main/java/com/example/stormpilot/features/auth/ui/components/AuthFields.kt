@@ -27,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,45 +47,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stormpilot.ui.theme.extendedColors
-
-@Composable
-fun AuthModeSwitchRow(
-    prompt: String,
-    actionLabel: String,
-    onClick: () -> Unit,
-) {
-    val authColors = MaterialTheme.extendedColors.auth
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
-    ) {
-        Text(
-            text = prompt,
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontSize = 16.sp,
-                lineHeight = 22.sp,
-            ),
-            color = authColors.promptContent,
-        )
-
-        TextButton(onClick = onClick) {
-            Text(
-                text = actionLabel,
-                textAlign = TextAlign.End,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                ),
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
 
 /**
  * Shared field styling keeps auth inputs consistent across sign-in and sign-up
@@ -103,7 +66,8 @@ fun ExpressiveInputField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
-    val authColors = MaterialTheme.extendedColors.auth
+    val colors = MaterialTheme.extendedColors
+    val authColors = colors.auth
     var isFocused by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     val containerColor by animateColorAsState(
@@ -151,22 +115,14 @@ fun ExpressiveInputField(
     val shadowElevation = 0.dp
 
     Column(modifier = modifier.fillMaxWidth()) {
-        if (label.isNotEmpty()) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                color = labelColor,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
 
         Surface(
             modifier = Modifier
+                .fillMaxWidth()
                 .border(
                     width = 1.dp,
                     color = borderColor,
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(20.dp),
                 )
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
@@ -174,37 +130,18 @@ fun ExpressiveInputField(
                 ) {
                     focusRequester.requestFocus()
                 },
-            shape = RoundedCornerShape(18.dp),
+            shape = RoundedCornerShape(20.dp),
             color = containerColor,
             shadowElevation = shadowElevation,
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-
-            ) {
+            Box {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .heightIn(min = 54.dp),
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .heightIn(min = 40.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .scale(iconScale)
-                            .background(iconBackgroundColor, CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = iconTint,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
 
                     BasicTextField(
                         value = value,
@@ -233,7 +170,7 @@ fun ExpressiveInputField(
                                         text = placeholder,
                                         style = TextStyle(
                                             fontSize = 16.sp,
-                                            color = authColors.inputPlaceholder,
+                                            color = colors.theme.tonalOutlineVariant,
                                         ),
                                     )
                                 }
@@ -247,24 +184,3 @@ fun ExpressiveInputField(
     }
 }
 
-@Composable
-fun LinedIconInputField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    icon: ImageVector,
-    modifier: Modifier = Modifier,
-    placeholder: String? = null,
-    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-) {
-    ExpressiveInputField(
-        value = value,
-        onValueChange = onValueChange,
-        icon = icon,
-        label = "",
-        modifier = modifier,
-        placeholder = placeholder,
-        keyboardOptions = keyboardOptions,
-        visualTransformation = visualTransformation,
-    )
-}

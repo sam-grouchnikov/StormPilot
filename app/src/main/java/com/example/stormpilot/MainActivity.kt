@@ -18,9 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.stormpilot.ui.theme.StormPilotTheme
 import com.example.stormpilot.core.AppSettings
 import com.example.stormpilot.core.updateAppCompatNightMode
-import com.example.stormpilot.features.auth.ui.SignIn
-import com.example.stormpilot.features.auth.ui.SignUp
-import com.example.stormpilot.features.auth.ui.WelcomePage
+import com.example.stormpilot.features.auth.ui.components.AuthExperienceScreen
 import com.example.stormpilot.features.navigation.ui.NavSkeleton
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -59,7 +57,7 @@ fun AppCenter() {
 
     NavHost(
         navController = navController,
-        startDestination = "welcome",
+        startDestination = "auth",
         enterTransition = {
             slideInHorizontally(
                 initialOffsetX = { it / 5 },
@@ -85,33 +83,8 @@ fun AppCenter() {
             ) + fadeOut(animationSpec = tween(durationMillis = 280))
         }
     ) {
-        composable("welcome") {
-            WelcomePage(
-                onSignInClick = { navController.navigate("signin") },
-                onSignUpClick = { navController.navigate("signup") }
-            )
-        }
-
-        composable("signin") {
-            SignIn(
-                onLogin = { navController.navigate("skeleton") },
-                onSwitchToSignUp = {
-                    navController.navigate("signup") {
-                        launchSingleTop = true
-                    }
-                }
-            )
-        }
-
-        composable("signup") {
-            SignUp(
-                onLogin = { navController.navigate("skeleton") },
-                onSwitchToSignIn = {
-                    navController.navigate("signin") {
-                        launchSingleTop = true
-                    }
-                }
-            )
+        composable("auth") {
+            AuthExperienceScreen(onLogin = { navController.navigate("skeleton") })
         }
 
         composable("skeleton") {

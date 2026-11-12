@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -29,6 +28,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.StickyNote2
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Radar
 import androidx.compose.runtime.Composable
@@ -62,6 +62,7 @@ import com.example.stormpilot.features.navigation.ui.components.FloatingNavBar
 import com.example.stormpilot.features.navigation.ui.components.StormAiLauncherMenu
 import com.example.stormpilot.features.navigation.ui.components.StormAiRequestSheet
 import com.example.stormpilot.features.navigation.ui.components.StormAiSheetMode
+import com.example.stormpilot.features.notes.FieldNotesPage
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.features.settings.ui.SettingsPage
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
@@ -76,10 +77,11 @@ import kotlinx.coroutines.launch
 sealed class TabDest(val route: String, val title: String, val icon: ImageVector) {
     data object Radar : TabDest("dashboard", "Dashboard", Icons.Outlined.Radar)
     data object Nav : TabDest("navigation", "Navigation", Icons.Outlined.LocationOn)
+    data object Notes : TabDest("notes", "Notes", Icons.AutoMirrored.Outlined.StickyNote2)
 }
 
 /**
- * Hosts the two top-level destinations and the shared floating tab bar, while
+ * Hosts the top-level destinations and the shared floating tab bar, while
  * letting map-specific overlays temporarily take over the full screen.
  */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -110,7 +112,7 @@ fun NavSkeleton() {
 
     StormPilotTheme(dynamicColor = false) {
         val navController = rememberNavController()
-        val tabs = listOf(TabDest.Radar, TabDest.Nav)
+        val tabs = listOf(TabDest.Radar, TabDest.Nav, TabDest.Notes)
         val mapContentInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
         val standardContentInsets = WindowInsets.safeDrawing.union(WindowInsets.displayCutout)
 
@@ -248,6 +250,9 @@ fun NavSkeleton() {
                         composable(TabDest.Radar.route) {
                             RadarPage(onOpenSettings = { showSettings.value = true })
                         }
+                        composable(TabDest.Notes.route) {
+                            FieldNotesPage()
+                        }
                     }
                 }
             }
@@ -262,7 +267,7 @@ fun NavSkeleton() {
             StormPilotBottomControls(
                 tabs = tabs,
                 currentRoute = currentRoute,
-                showNavBar = !isMapDestinationSelected.value,
+                showNavBar = currentRoute != TabDest.Nav.route || !isMapDestinationSelected.value,
                 showStormAiLauncher = showStormAiLauncher,
                 stormAiLauncherExpanded = isStormAiLauncherExpanded,
                 onTabSelected = { tab ->
@@ -437,8 +442,9 @@ private fun StormPilotBottomControls(
     BoxWithConstraints(
         modifier = modifier,
     ) {
-        val showNavLabels = maxWidth >= 420.dp
-        val navBarOffset = maxWidth / 15
+        val navBarStartPadding = maxWidth / 15
+        val launcherSpace = if (showStormAiLauncher) 82.dp else 0.dp
+        val showNavLabels = maxWidth - navBarStartPadding - 16.dp - launcherSpace >= 400.dp
 
         AnimatedVisibility(
             visible = showNavBar,
@@ -463,7 +469,7 @@ private fun StormPilotBottomControls(
                 modifier = Modifier
                     .fillMaxWidth()
                     .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(start = 0.dp, end = 16.dp, bottom = 8.dp),
+                    .padding(start = navBarStartPadding, end = 16.dp, bottom = 8.dp),
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Box(
@@ -474,13 +480,12 @@ private fun StormPilotBottomControls(
                         tabs = tabs,
                         currentRoute = currentRoute,
                         onTabSelected = onTabSelected,
-                        modifier = Modifier.offset(navBarOffset),
                         showLabels = showNavLabels,
                     )
                 }
 
                 if (showStormAiLauncher) {
-                    Spacer(modifier = Modifier.width(82.dp))
+                    Spacer(modifier = Modifier.width(launcherSpace))
                 }
             }
         }

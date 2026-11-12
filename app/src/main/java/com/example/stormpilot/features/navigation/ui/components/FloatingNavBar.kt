@@ -165,14 +165,14 @@ private fun FloatingNavItem(
         ) {
             Icon(
                 imageVector = tab.icon,
-                contentDescription = null,
+                contentDescription = if (showLabel) null else tab.title,
                 tint = contentColor,
                 modifier = Modifier
                     .padding(end = if (showLabel) 4.dp else 0.dp)
                     .size(19.dp),
             )
-            Spacer(modifier = Modifier.width(5.dp))
-            if (true) {
+            if (showLabel) {
+                Spacer(modifier = Modifier.width(5.dp))
                 Text(
                     text = tab.title,
                     color = contentColor,

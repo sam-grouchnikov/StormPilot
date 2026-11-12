@@ -42,6 +42,7 @@ public data class ThemePalette(
     public val vibrantPrimary: Color,
     public val vibrantSecondary: Color,
     public val vibrantAccent: Color,
+    public val tonalOutlineVariant: Color,
 )
 
 @Immutable
@@ -220,6 +221,7 @@ public data class ExtendedAuthColors(
     public val promptContent: Color,
     /** Auth primary button background. */
     public val primaryButtonContainer: Color,
+    public val onPrimaryButtonContainer: Color,
     /** Auth outlined button border. */
     public val outlineButtonBorder: Color,
     /** Focused auth input background. */
@@ -280,6 +282,7 @@ private val LightExtendedColors = ExtendedColors(
         vibrantPrimary = Color(0xFF8259D9),
         vibrantSecondary = Color(0xFFAD8FF1),
         vibrantAccent = Color(0xFF679F38),
+        tonalOutlineVariant = Color(0xFFAFA6CA),
     ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFFF8F8F8),
@@ -369,11 +372,12 @@ private val LightExtendedColors = ExtendedColors(
         supportingContent = Color(0xBDFFFFFF),
         promptContent = Color(0xADFFFFFF),
         primaryButtonContainer = Color(0xFFFFFFFF),
+        onPrimaryButtonContainer = Color(0xFF151115),
         outlineButtonBorder = Color(0x70FFFFFF),
         focusedInputContainer = Color(0x2EFFFFFF),
-        unfocusedInputContainer = Color(0x1AFFFFFF),
+        unfocusedInputContainer = Color(0xFF2E2748),
         focusedInputBorder = Color(0xC2FFFFFF),
-        unfocusedInputBorder = Color(0x3DFFFFFF),
+        unfocusedInputBorder = Color(0xFF796F9B),
         focusedInputContent = Color(0xFFFFFFFF),
         unfocusedInputLabel = Color(0xBDFFFFFF),
         focusedInputIconContainer = Color(0x38FFFFFF),
@@ -399,9 +403,10 @@ private val LightExtendedColors = ExtendedColors(
 
 private val DarkExtendedColors = ExtendedColors(
     theme = ThemePalette(
-        vibrantPrimary = Color(0xFF76ADC9),
+        vibrantPrimary = Color(0xFFA5A5FF),
         vibrantSecondary = Color(0xFF8259D9),
         vibrantAccent = Color(0xFF5D8F33),
+        tonalOutlineVariant = Color(0xFFAFA6CA),
         ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFF151115),
@@ -485,15 +490,16 @@ private val DarkExtendedColors = ExtendedColors(
         selectedRadarSiteStroke = Color(0xFF606060),
     ),
     auth = ExtendedAuthColors(
-        backgroundStart = Color(0xFF10151D),
-        backgroundEnd = Color(0xFF121821),
+        backgroundStart = Color(0xFF303167),
+        backgroundEnd = Color(0xFF1B162C),
         primaryContent = Color(0xFFFFFFFF),
         supportingContent = Color(0xBDFFFFFF),
         promptContent = Color(0xADFFFFFF),
-        primaryButtonContainer = Color(0xFFFFFFFF),
+        primaryButtonContainer = Color(0xFFA5A5FF),
+        onPrimaryButtonContainer = Color(0xFF1500A2),
         outlineButtonBorder = Color(0x70FFFFFF),
         focusedInputContainer = Color(0x2EFFFFFF),
-        unfocusedInputContainer = Color(0x1AFFFFFF),
+        unfocusedInputContainer = Color(0xFF2E2748),
         focusedInputBorder = Color(0xC2FFFFFF),
         unfocusedInputBorder = Color(0x3DFFFFFF),
         focusedInputContent = Color(0xFFFFFFFF),
