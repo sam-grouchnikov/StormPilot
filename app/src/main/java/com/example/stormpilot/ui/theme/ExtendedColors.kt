@@ -10,9 +10,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 
 /**
- * Seed used to generate the Material 3 expressive color scheme.
+ * Seed used to generate the Material 3 Tonal Spot color scheme.
  */
-public val StormPilotColorSeed: Color = Color(0xFF8B51AB)
+public val StormPilotColorSeed: Color = Color(0xFF8B8CFF)
 
 @Immutable
 public data class ExtendedColors(
@@ -254,6 +254,8 @@ public data class ExtendedStormAiColors(
     public val glowStop2: Color,
     /** Magenta stop in StormPilot AI glow gradients. */
     public val glowStop3: Color,
+    public val aiOutlineBlue: Color,
+    public val aiOutlinePink: Color,
     public val menu1: Color,
     public val menu2: Color,
     /** White core used for StormPilot AI icons and glow strokes. */
@@ -389,6 +391,8 @@ private val LightExtendedColors = ExtendedColors(
         glowStop1 = Color(0xFF4A90E2),
         glowStop2 = Color(0xFF9272D6),
         glowStop3 = Color(0xFFE064CD),
+        aiOutlineBlue = Color(0xFFFFFFFF),
+        aiOutlinePink = Color(0xFFFFFFFF),
         menu1 = Color(0xFFFFFFFF),
         menu2 = Color(0xFFFFFFFF),
         iconContent = Color(0xFFFFFFFF),
@@ -409,7 +413,7 @@ private val DarkExtendedColors = ExtendedColors(
         tonalOutlineVariant = Color(0xFFAFA6CA),
         ),
     navigation = ExtendedNavigationColors(
-        barSurface = Color(0xFF151115),
+        barSurface = Color(0xFF000000),
         selectedPillContainer = Color(0xFF5D8F33),
         floatingControlContainer = Color(0xFF131618),
         floatingControlButtonContainer = Color(0xFF131618),
@@ -513,6 +517,8 @@ private val DarkExtendedColors = ExtendedColors(
         glowStop1 = Color(0xFF4A90E2),
         glowStop2 = Color(0xFF7B4FD6),
         glowStop3 = Color(0xFFE040C8),
+        aiOutlineBlue = Color(0xFF3DB8FF),
+        aiOutlinePink = Color(0xFFEA87FF),
         menu1 = Color(0xFF752D2D),
         menu2 = Color(0xFFF18C8C),
         iconContent = Color(0xFFFFFFFF),

@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -91,11 +90,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
 import com.example.stormpilot.ui.theme.extendedColors
 import java.util.Locale
+
+internal val StormAiLauncherButtonSize = 48.dp
 
 enum class StormAiSheetMode {
     Chat,
@@ -146,51 +146,41 @@ fun StormAiLauncherMenu(
 
 
     FloatingActionButtonMenu(
-            modifier = modifier
-                .offset(y = 8.dp)
-                .padding(horizontal = 0.dp)
-                .zIndex(2f),
+            modifier = modifier,
             expanded = extended,
             button = {
-                AnimatedStormAiShadowContainer(
-                    visible = !extended,
-                    modifier = Modifier.size(66.dp)
+                ToggleFloatingActionButton(
+                    checked = extended,
+                    containerColor = { progress ->
+                        lerp(fabNonSelectedColor, fabSelectedColor, progress)
+                    },
+                    containerCornerRadius = { progress ->
+                        lerp(28.dp, 28.dp, progress)
+                    },
+                    containerSize = { StormAiLauncherButtonSize },
+                    onCheckedChange = onExtendedChange
                 ) {
-                    ToggleFloatingActionButton(
-                        modifier = Modifier.offset(9.dp, 9.dp),
-                        checked = extended,
-                        containerColor = { progress ->
-                            lerp(fabNonSelectedColor, fabSelectedColor, progress)
-                        },
-                        containerCornerRadius = { progress ->
-                            lerp(28.dp, 28.dp, progress)
-                        },
-                        containerSize = { 47.dp },
-                        onCheckedChange = onExtendedChange
-                    ) {
-                        val imageVector by remember { derivedStateOf {
-                            if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.AutoAwesome
-                        } }
-                        val iconSize = if (checkedProgress > 0.5f) 27 else 23
+                    val imageVector by remember { derivedStateOf {
+                        if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.AutoAwesome
+                    } }
+                    val iconSize = if (checkedProgress > 0.5f) 27 else 23
 
-                        AnimatedContent(
-                            targetState = imageVector,
-                            label = "fabIcon",
-                            transitionSpec = {
-                                fadeIn(animationSpec = tween(150)) togetherWith
-                                        fadeOut(animationSpec = tween(150))
-                            }
-                        ) { icon ->
-                            Icon(
-                                painter = rememberVectorPainter(icon),
-                                contentDescription = null,
-                                modifier = Modifier.size(iconSize.dp),
-                                tint = lerp(fabNonSelectedIconTint, fabSelectedIconTint, checkedProgress)
-                            )
+                    AnimatedContent(
+                        targetState = imageVector,
+                        label = "fabIcon",
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(150)) togetherWith
+                                    fadeOut(animationSpec = tween(150))
                         }
+                    ) { icon ->
+                        Icon(
+                            painter = rememberVectorPainter(icon),
+                            contentDescription = if (extended) "Close StormAI" else "StormAI",
+                            modifier = Modifier.size(iconSize.dp),
+                            tint = lerp(fabNonSelectedIconTint, fabSelectedIconTint, checkedProgress)
+                        )
                     }
                 }
-
             },
         ) {
 //

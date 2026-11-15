@@ -77,7 +77,7 @@ fun FloatingNavBar(
                 )
                 .clip(CircleShape)
                 .background(colors.navigation.barSurface)
-                .padding(horizontal = 7.dp, vertical = 7.dp),
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             content = {
                 Box(
                     modifier = Modifier
@@ -148,6 +148,7 @@ private fun FloatingNavItem(
     ) { selectedIndex ->
         if (selectedIndex == index) selectedColor else unselectedColor
     }
+    val fontWeight = if (selectionTransition.targetState == index) FontWeight.Medium else FontWeight.Medium
 
     Box(
         modifier = modifier
@@ -157,24 +158,24 @@ private fun FloatingNavItem(
                 indication = null,
                 onClick = onClick,
             )
-            .padding(vertical = 6.dp, horizontal = 12.dp),
+            .padding(vertical = 8.dp, horizontal = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = tab.icon,
                 contentDescription = null,
                 tint = contentColor,
-                modifier = Modifier.size(19.dp),
+                modifier = Modifier.size(20.dp),
             )
             Text(
                 text = tab.title,
                 color = contentColor,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                fontWeight = fontWeight,
                 textAlign = TextAlign.Center,
             )
         }

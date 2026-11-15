@@ -99,26 +99,26 @@ fun DashboardOverviewScreen(
                 .padding(bottom = dashboardBottomContentPadding()),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            AlertStatusPanel(
-                alertsState = alertsState,
-                onAlertClick = mapsViewModel::showAlertDetail,
-                containerColor = widgetContainerColor,
-            )
-            StormSpecsPanel(
-                stormSpecs = weatherState.stormSpecs,
-                containerColor = widgetContainerColor,
-            )
-
-            FiveDayOutlook(
-                daily = weatherState.daily,
-                containerColor = widgetContainerColor,
-            )
-
-            val hourly = weatherState.hourly
-            HourlyForecastRow(
-                hourly = hourly,
-                containerColor = widgetContainerColor,
-            )
+//            AlertStatusPanel(
+//                alertsState = alertsState,
+//                onAlertClick = mapsViewModel::showAlertDetail,
+//                containerColor = widgetContainerColor,
+//            )
+//            StormSpecsPanel(
+//                stormSpecs = weatherState.stormSpecs,
+//                containerColor = widgetContainerColor,
+//            )
+//
+//            FiveDayOutlook(
+//                daily = weatherState.daily,
+//                containerColor = widgetContainerColor,
+//            )
+//
+//            val hourly = weatherState.hourly
+//            HourlyForecastRow(
+//                hourly = hourly,
+//                containerColor = widgetContainerColor,
+//            )
         }
 
         AlertDetailBottomSheet(

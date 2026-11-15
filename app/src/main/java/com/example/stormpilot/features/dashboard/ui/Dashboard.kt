@@ -9,8 +9,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Text
@@ -83,17 +87,16 @@ fun TopIconRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            VerticalDivider(
-                thickness = 6.dp,
-                color = MaterialTheme.extendedColors.theme.vibrantPrimary,
-                modifier = Modifier
-                    .height(28.dp)
-                    .clip(CircleShape),
+            Icon(
+                imageVector = Icons.Outlined.LocationOn,
+                contentDescription = "Location Icon",
+                tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
+                modifier = Modifier.size(28.dp)
             )
             Text(
                 text = displayCityName,
                 color = colorScheme.onSurface,
-                fontWeight = FontWeight.W700,
+                fontWeight = FontWeight.Medium,
                 fontSize = 21.sp,
                 modifier = Modifier
                     .padding(start = 6.dp)
