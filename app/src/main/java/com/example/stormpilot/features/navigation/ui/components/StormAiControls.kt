@@ -7,18 +7,13 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,17 +34,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Chat
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MicOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FloatingActionButtonMenu
-import androidx.compose.material3.FloatingActionButtonMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -60,12 +53,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.ToggleFloatingActionButton
-import androidx.compose.material3.ToggleFloatingActionButtonDefaults.animateIcon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,8 +66,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -88,14 +76,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.example.stormpilot.features.common.ui.AnimatedStormAiShadowContainer
 import com.example.stormpilot.ui.theme.extendedColors
 import java.util.Locale
-
-internal val StormAiLauncherButtonSize = 48.dp
 
 enum class StormAiSheetMode {
     Chat,
@@ -103,13 +88,12 @@ enum class StormAiSheetMode {
 }
 @Composable
 fun StormAiLauncherMenu(
-    extended: Boolean,
-    onExtendedChange: (Boolean) -> Unit,
     onOpenVoiceRequest: () -> Unit,
     onOpenTextRequest: () -> Unit,
-    modifier: Modifier = Modifier
+    anchor: @Composable (openMenu: () -> Unit) -> Unit,
 ) {
     val context = LocalContext.current
+    var expanded by remember { mutableStateOf(false) }
 
     var showAudioPermissionDialog by remember { mutableStateOf(false) }
 
@@ -122,10 +106,9 @@ fun StormAiLauncherMenu(
             showAudioPermissionDialog = true
         }
     }
-    BackHandler(extended) { onExtendedChange(false) }
 
     fun openVoiceSheet() {
-        onExtendedChange(false)
+        expanded = false
         if (ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.RECORD_AUDIO
@@ -138,118 +121,26 @@ fun StormAiLauncherMenu(
     }
 
 
-    val fabNonSelectedColor = MaterialTheme.extendedColors.navigation.barSurface
-    val fabSelectedColor   = MaterialTheme.colorScheme.primary
-
-    val fabNonSelectedIconTint = MaterialTheme.colorScheme.onSurface
-    val fabSelectedIconTint = MaterialTheme.colorScheme.onError
-
-
-    FloatingActionButtonMenu(
-            modifier = modifier,
-            expanded = extended,
-            button = {
-                ToggleFloatingActionButton(
-                    checked = extended,
-                    containerColor = { progress ->
-                        lerp(fabNonSelectedColor, fabSelectedColor, progress)
-                    },
-                    containerCornerRadius = { progress ->
-                        lerp(28.dp, 28.dp, progress)
-                    },
-                    containerSize = { StormAiLauncherButtonSize },
-                    onCheckedChange = onExtendedChange
-                ) {
-                    val imageVector by remember { derivedStateOf {
-                        if (checkedProgress > 0.5f) Icons.Filled.Close else Icons.Filled.AutoAwesome
-                    } }
-                    val iconSize = if (checkedProgress > 0.5f) 27 else 23
-
-                    AnimatedContent(
-                        targetState = imageVector,
-                        label = "fabIcon",
-                        transitionSpec = {
-                            fadeIn(animationSpec = tween(150)) togetherWith
-                                    fadeOut(animationSpec = tween(150))
-                        }
-                    ) { icon ->
-                        Icon(
-                            painter = rememberVectorPainter(icon),
-                            contentDescription = if (extended) "Close StormAI" else "StormAI",
-                            modifier = Modifier.size(iconSize.dp),
-                            tint = lerp(fabNonSelectedIconTint, fabSelectedIconTint, checkedProgress)
-                        )
-                    }
-                }
-            },
+    Box {
+        anchor { expanded = true }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
         ) {
-//
-//                FloatingActionButtonMenuItem(
-//                    onClick = { openVoiceSheet() },
-//                    icon = {
-//                        Icon(
-//                            Icons.Rounded.Mic,
-//                            contentDescription = null
-//                        )
-//                    },
-//                    text = { Text("Voice") },
-//                    containerColor = MaterialTheme.extendedColors.navigation.barSurface,
-//                    contentColor = MaterialTheme.colorScheme.onSurface
-//                )
-//
-//
-//                FloatingActionButtonMenuItem(
-//                    onClick = {
-//                        onExtendedChange(false)
-//                        onOpenTextRequest()
-//                    },
-//                    icon = {
-//                        Icon(
-//                            Icons.AutoMirrored.Rounded.Chat,
-//                            contentDescription = null,
-//                        )
-//                    },
-//                    text = {
-//                        Text(
-//                            "Chat",
-//                        )
-//                    },
-//                    containerColor = MaterialTheme.extendedColors.navigation.barSurface,
-//                    contentColor = MaterialTheme.colorScheme.onSurface
-//                )
-
-
-        FloatingActionButtonMenuItem(
-            onClick = { openVoiceSheet() },
-            icon = {
-                Icon(
-                    Icons.Rounded.Mic,
-                    contentDescription = null
-                )
-            },
-            text = { Text("Voice") },
-        )
-
-
-        FloatingActionButtonMenuItem(
-            onClick = {
-                onExtendedChange(false)
-                onOpenTextRequest()
-            },
-            icon = {
-                Icon(
-                    Icons.AutoMirrored.Rounded.Chat,
-                    contentDescription = null,
-                )
-            },
-            text = {
-                Text(
-                    "Chat",
-                )
-            },
-        )
-
-
+            DropdownMenuItem(
+                text = { Text("Voice") },
+                onClick = { openVoiceSheet() },
+                leadingIcon = { Icon(Icons.Rounded.Mic, contentDescription = null) },
+            )
+            DropdownMenuItem(
+                text = { Text("Chat") },
+                onClick = {
+                    expanded = false
+                    onOpenTextRequest()
+                },
+                leadingIcon = { Icon(Icons.AutoMirrored.Rounded.Chat, contentDescription = null) },
+            )
+        }
     }
 
     if (showAudioPermissionDialog) {

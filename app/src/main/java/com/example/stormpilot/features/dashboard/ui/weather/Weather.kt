@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,18 +19,17 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AcUnit
-import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Thunderstorm
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -39,6 +39,7 @@ import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,8 +52,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -61,7 +64,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.stormpilot.core.AppSettings
+import com.example.stormpilot.R
 import com.example.stormpilot.features.shared.data.weather.CurrentWeather
 import com.example.stormpilot.features.shared.data.weather.DailyWeatherOutlook
 import com.example.stormpilot.features.shared.data.weather.HourlyForecast
@@ -87,6 +90,7 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvi
 import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
 
 
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -590,12 +594,15 @@ fun FiveDayOutlook(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(18.dp),
         color = containerColor,
     ) {
-        Column(modifier = Modifier.padding(vertical = 5.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 28.dp)) {
             daily.forEachIndexed { index, outlook ->
-                DailyOutlookRow(outlook = outlook)
+                if (index > 0) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+                DailyOutlookRow(outlook)
             }
         }
     }
@@ -603,86 +610,111 @@ fun FiveDayOutlook(
 
 @Composable
 private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
-    val outlookSPC = if (outlook.spcOutlook.startsWith("General")) "TSTMs" else outlook.spcOutlook
-    val badgeColor = outlookRiskContainer(outlookSPC)
-    val badgeContent = outlookRiskContent(outlookSPC)
+    val colorScheme = MaterialTheme.colorScheme
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .heightIn(min = 75.dp)
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = getWeatherIconForCondition(outlook.conditions),
-                    contentDescription = null,
-                    tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
-                    modifier = Modifier.size(30.dp),
-                )
-            }
-        Spacer(modifier = Modifier.width(20.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = outlook.day,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 16.sp,
-            )
-            Text(
-                text = outlook.conditions,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
-            )
-        }
-        Surface(
-            shape = CircleShape,
-            color = if (AppSettings.isDarkMode) {
-                MaterialTheme.colorScheme.surfaceContainerHigh
+        Text(
+            text = outlook.day,
+            color = if (outlook.day.equals("Today", ignoreCase = true)) {
+                MaterialTheme.extendedColors.theme.vibrantPrimary
             } else {
-                MaterialTheme.colorScheme.surfaceContainer
+                colorScheme.onSurface
             },
-        ) {
-            Text(
-                text = outlookSPC,
-                color = badgeContent.copy(alpha = 0.8f),
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp,
-                lineHeight = 14.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(horizontal = 15.dp, vertical = 7.dp),
-            )
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(0.85f),
+        )
+        Image(
+            painter = painterResource(outlookWeatherDrawable(outlook.conditions)),
+            contentDescription = outlook.conditions,
+            modifier = Modifier.size(28.dp),
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        VerticalDivider(
+            modifier = Modifier.height(28.dp),
+            color = colorScheme.outline,
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        OutlookMetric(label = "STP", value = outlook.stp)
+        Spacer(modifier = Modifier.width(8.dp))
+        OutlookMetric(label = "VTP", value = outlook.vtp)
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(modifier = Modifier.weight(1.15f), contentAlignment = Alignment.CenterEnd) {
+            OutlookRiskPill(outlook.spcOutlook)
         }
     }
 }
 
 @Composable
-private fun outlookRiskContainer(outlook: String): Color {
-    val colors = MaterialTheme.extendedColors
-    return when {
-        outlook.contains("High", ignoreCase = true) -> colors.weather.outlookHighContainer.copy(alpha = 0.6f)
-        outlook.contains("Moderate", ignoreCase = true) -> colors.weather.outlookModerateContainer.copy(alpha = 0.6f)
-        outlook.contains("Enhanced", ignoreCase = true) -> if (AppSettings.isDarkMode) colors.weather.outlookEnhancedContainer.copy(alpha = 0.8f) else colors.weather.outlookEnhancedContainer.copy(alpha = 0.6f)
-        outlook.contains("Slight", ignoreCase = true) -> colors.weather.outlookSlightContainer.copy(alpha = 0.6f)
-        outlook.contains("Marginal", ignoreCase = true) -> colors.weather.outlookMarginalContainer.copy(alpha = 0.5f)
-        outlook.contains("TSTM", ignoreCase = true) -> colors.weather.outlookThunderstormContainer.copy(alpha = 0.55f)
-        else -> MaterialTheme.colorScheme.surfaceContainerHigh
+private fun OutlookMetric(label: String, value: Double?) {
+    Column(modifier = Modifier.widthIn(min = 36.dp)) {
+        Text(
+            text = value?.let { String.format(Locale.getDefault(), "%.1f", it) } ?: "—",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            lineHeight = 18.sp,
+        )
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall,
+            lineHeight = 12.sp,
+        )
     }
 }
 
 @Composable
-private fun outlookRiskContent(outlook: String): Color {
-    val colors = MaterialTheme.extendedColors
+private fun OutlookRiskPill(outlook: String) {
+    val colors = MaterialTheme.extendedColors.weather
+    val scheme = MaterialTheme.colorScheme
+    val risk = outlook.trim()
+    val neutralContainer = scheme.surfaceContainerHigh
+    val neutralContent = scheme.onSurfaceVariant
+    val (label, containerColor, contentColor) = when (risk.lowercase().substringBefore(' ')) {
+        "high" -> Triple("High", colors.outlookHighContainer, colors.outlookHighContent)
+        "mdt", "moderate" -> Triple("Moderate", colors.outlookModerateContainer, colors.outlookModerateContent)
+        "enh", "enhanced" -> Triple("Enhanced", colors.outlookEnhancedContainer, colors.outlookEnhancedContent)
+        "slgt", "slight" -> Triple("Slight", colors.outlookSlightContainer, colors.outlookSlightContent)
+        "mrgl", "marginal" -> Triple("Marginal", colors.outlookMarginalContainer, colors.outlookMarginalContent)
+        "tstm", "tstms", "general", "thunderstorm", "thunderstorms" ->
+            Triple("TSTMs", colors.outlookThunderstormContainer, colors.outlookThunderstormContent)
+        "", "none" -> Triple("None", neutralContainer, neutralContent)
+        else -> Triple(
+            if (risk.equals("No risk", ignoreCase = true)) "None" else risk,
+            neutralContainer,
+            neutralContent,
+        )
+    }
+
+    Surface(shape = CircleShape, color = containerColor, contentColor = contentColor) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .widthIn(min = 62.dp)
+                .padding(horizontal = 9.dp, vertical = 4.dp),
+        )
+    }
+}
+
+private fun outlookWeatherDrawable(condition: String): Int {
+    val weather = condition.trim().lowercase()
     return when {
-        outlook.contains("High", ignoreCase = true) -> colors.weather.outlookHighContent
-        outlook.contains("Moderate", ignoreCase = true) -> colors.weather.outlookModerateContent
-        outlook.contains("Enhanced", ignoreCase = true) -> colors.weather.outlookEnhancedContent
-        outlook.contains("Slight", ignoreCase = true) -> colors.weather.outlookSlightContent
-        outlook.contains("Marginal", ignoreCase = true) -> colors.weather.outlookMarginalContent
-        outlook.contains("TSTM", ignoreCase = true) -> colors.weather.outlookThunderstormContent
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+        "thunder" in weather || "storm" in weather -> R.drawable.rainy
+        "snow" in weather || "sleet" in weather -> R.drawable.cloud_new
+        "partly" in weather && ("rain" in weather || "shower" in weather) -> R.drawable.partly_rainy
+        "shower" in weather -> R.drawable.partly_rainy
+        "rain" in weather || "drizzle" in weather -> R.drawable.rainy
+        "sunny" in weather || "clear" in weather || "hot and humid" == weather -> R.drawable.sunny
+        else -> R.drawable.cloud_new
     }
 }
 
@@ -709,16 +741,5 @@ private fun EmptyWeatherCard(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-    }
-}
-
-private fun getWeatherIconForCondition(condition: String): ImageVector {
-    return when (condition) {
-        "Clear", "Mainly clear" -> Icons.Outlined.WbSunny
-        "Partly cloudy", "Overcast", "Fog" -> Icons.Outlined.Cloud
-        "Drizzle", "Freezing drizzle", "Rain", "Freezing rain", "Rain showers" -> Icons.Outlined.WaterDrop
-        "Snow", "Snow grains", "Snow showers" -> Icons.Outlined.AcUnit
-        "Thunderstorms", "Severe storms" -> Icons.Outlined.Thunderstorm
-        else -> Icons.Outlined.WbSunny
     }
 }

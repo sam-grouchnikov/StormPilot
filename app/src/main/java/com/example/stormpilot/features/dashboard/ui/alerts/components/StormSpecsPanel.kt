@@ -1,7 +1,6 @@
 package com.example.stormpilot.features.dashboard.ui.alerts.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,11 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material.icons.outlined.DeviceThermostat
+import androidx.compose.material.icons.outlined.Thermostat
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -23,185 +23,110 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.stormpilot.R
+import com.example.stormpilot.features.shared.data.weather.CurrentWeather
 import com.example.stormpilot.features.shared.data.weather.StormSpec
 import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun StormSpecsPanel(
     stormSpecs: List<StormSpec>,
+    current: CurrentWeather?,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(15.dp),
-        color = Color.Transparent
+    val colors = MaterialTheme.extendedColors.weather
+    val cape = stormSpecs.firstOrNull { it.label.trim().equals("CAPE", ignoreCase = true) }?.value
+    val srh = stormSpecs.firstOrNull {
+        it.label.trim().equals("SRH", ignoreCase = true) ||
+            it.label.trim().replace(" ", "").replace("–", "-").equals("0-1kmSRH", ignoreCase = true)
+    }?.value?.replace("m2/s2", "m²/s²")
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box {
-            Column(
-                modifier = Modifier.padding(vertical = 0.dp).fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-
-                Row(
-                    modifier = Modifier
-                        .horizontalScroll(rememberScrollState())
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    if (stormSpecs.isEmpty()) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        LinearWavyProgressIndicator(
-                            waveSpeed = 1.dp,
-                            wavelength = 50.dp,
-                            gapSize = 5.dp,
-                            modifier = Modifier
-                                .width(250.dp)
-                                .padding(top = 10.dp, bottom = 5.dp),
-                            color = MaterialTheme.extendedColors.theme.vibrantPrimary,
-                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                    } else {
-                        stormSpecs.forEach { spec ->
-                            StormSpecCard(
-                                spec = spec,
-                                containerColor = containerColor,
-                            )
-                        }
-                    }
-                }
-            }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StormSpecPill(
+                label = "Temperature",
+                value = current?.temperature?.let { "$it° F" },
+                icon = rememberVectorPainter(Icons.Outlined.DeviceThermostat),
+                iconColor = colors.temperatureIcon,
+                iconContainer = colors.temperatureIconContainer,
+                containerColor = containerColor,
+                modifier = Modifier.weight(1f),
+            )
+            StormSpecPill(
+                label = "Cape",
+                value = cape,
+                icon = rememberVectorPainter(Icons.Outlined.Thermostat),
+                iconColor = colors.capeIcon,
+                iconContainer = colors.capeIconContainer,
+                containerColor = containerColor,
+                modifier = Modifier.weight(1f),
+            )
         }
-    }
-}
-
-private fun specToRisk(spec: StormSpec): String {
-    val numericString = spec.value.replace(Regex("[^0-9.-]"), "")
-    val value = numericString.toDoubleOrNull() ?: return "Unknown"
-
-    return when (spec.label) {
-        "CAPE" -> when {
-            value < 1000 -> "Low"
-            value in 1000.0..2500.0 -> "Medium"
-            value in 2501.0..4000.0 -> "High"
-            else -> "Extreme"
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StormSpecPill(
+                label = "0-1km SRH",
+                value = srh,
+                icon = rememberVectorPainter(Icons.Outlined.Air),
+                iconColor = colors.srhIcon,
+                iconContainer = colors.srhIconContainer,
+                containerColor = containerColor,
+                modifier = Modifier.weight(1f),
+            )
+            StormSpecPill(
+                label = "Dew Point",
+                value = current?.dewPoint?.let { "$it° F" },
+                icon = painterResource(R.drawable.dew_point_24dp_32fc96_fill0_wght400_grad0_opsz24),
+                iconColor = colors.dewPointIcon,
+                iconContainer = colors.dewPointIconContainer,
+                containerColor = containerColor,
+                modifier = Modifier.weight(1f),
+            )
         }
-        "CIN" -> when {
-            value > 100 -> "Low"
-            value in 25.0..100.0 -> "Medium"
-            value in 1.0..24.0 -> "High"
-            else -> "Extreme"
-        }
-        "SRH" -> when {
-            value < 100 -> "Low"
-            value in 100.0..250.0 -> "Medium"
-            value in 251.0..400.0 -> "High"
-            else -> "Extreme"
-        }
-        "Lifted" -> when {
-            value >= 0 -> "Low"
-            value in -4.0..-1.0 -> "Medium"
-            value in -7.0..-5.0 -> "High"
-            else -> "Extreme"
-        }
-        "LL Shear" -> when {
-            value < 15 -> "Low"
-            value in 15.0..25.0 -> "Medium"
-            value in 26.0..40.0 -> "High"
-            else -> "Extreme"
-        }
-        "Dew Pt" -> when {
-            value < 55 -> "Low"
-            value in 55.0..64.0 -> "Medium"
-            value in 65.0..72.0 -> "High"
-            else -> "Extreme"
-        }
-        "RH" -> when {
-            value < 50 -> "Low"
-            value in 50.0..70.0 -> "Medium"
-            value in 71.0..85.0 -> "High"
-            else -> "Extreme"
-        }
-        "Gust" -> when {
-            value < 40 -> "Low"
-            value in 40.0..57.0 -> "Medium"
-            value in 58.0..74.0 -> "High"
-            else -> "Extreme"
-        }
-        else -> "Unknown"
     }
 }
 
 @Composable
-private fun StormSpecCard(
-    spec: StormSpec,
+private fun StormSpecPill(
+    label: String,
+    value: String?,
+    icon: Painter,
+    iconColor: Color,
+    iconContainer: Color,
     containerColor: Color,
+    modifier: Modifier = Modifier,
 ) {
-    val colors = MaterialTheme.extendedColors
-    val risk = specToRisk(spec)
-    val riskColor = colors.theme.vibrantPrimary
-
-    Surface(
-        modifier = Modifier.width(115.dp),
-        shape = RoundedCornerShape(18.dp),
-        color = containerColor,
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 11.dp),
-            verticalArrangement = Arrangement.spacedBy(9.dp),
+    Surface(modifier = modifier, shape = CircleShape, color = containerColor) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier.size(44.dp).background(iconContainer, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(painter = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
+            }
+            Column {
+                Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium)
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = spec.label,
+                    value?.takeIf { it.isNotBlank() } ?: "—",
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 15.sp,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 20.sp,
                 )
             }
-            Text(
-                text = spec.value,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 1.0f),
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                maxLines = 1,
-            )
-            RiskMeter(risk = risk, color = riskColor)
-        }
-    }
-}
-
-@Composable
-private fun RiskMeter(risk: String, color: Color) {
-    val activeDots = when (risk) {
-        "Low" -> 1
-        "Moderate", "Medium" -> 2
-        "High" -> 4
-        "Extreme" -> 5
-        else -> 1
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 5.dp, top = 3.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        repeat(activeDots) { index ->
-            val transparency = (index) * 0.15f + 0.40f
-            Box(
-                modifier = Modifier
-                    .size(9.dp)
-                    .background(
-                        color = color.copy(transparency),
-                        shape = CircleShape
-                    )
-            )
         }
     }
 }

@@ -73,6 +73,7 @@ import com.example.stormpilot.R
 import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import com.example.stormpilot.features.shared.viewmodels.AlertsUiState
 import com.example.stormpilot.ui.theme.extendedColors
+import org.maplibre.compose.expressions.dsl.image
 
 @Composable
 fun AlertStatusPanel(
@@ -150,8 +151,8 @@ fun AlertStatusPanel(
                     .fillMaxWidth()
             ) {
                 Icon(
-                    painter = if (panelHasAlert) painterResource(id = R.drawable.thick_error) else painterResource(id = R.drawable.check_thick),
-                    tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
+                    imageVector = if (panelHasAlert) Icons.Outlined.ErrorOutline else Icons.Outlined.Check,
+                    tint = if (panelHasAlert) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(0.95f),
                     contentDescription = "Alert Status",
                     modifier = Modifier.size(28.dp)
                 )

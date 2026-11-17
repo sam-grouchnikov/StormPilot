@@ -43,6 +43,7 @@ public data class ThemePalette(
     public val vibrantSecondary: Color,
     public val vibrantAccent: Color,
     public val tonalOutlineVariant: Color,
+    public val avatarOutline: Color,
 )
 
 @Immutable
@@ -115,6 +116,14 @@ public data class ExtendedAlertColors(
 
 @Immutable
 public data class ExtendedWeatherColors(
+    public val temperatureIcon: Color,
+    public val temperatureIconContainer: Color,
+    public val capeIcon: Color,
+    public val capeIconContainer: Color,
+    public val srhIcon: Color,
+    public val srhIconContainer: Color,
+    public val dewPointIcon: Color,
+    public val dewPointIconContainer: Color,
     /** Precipitation chart line. */
     public val precipitationChartLine: Color,
     /** Sunny animated weather icon tint. */
@@ -285,6 +294,7 @@ private val LightExtendedColors = ExtendedColors(
         vibrantSecondary = Color(0xFFAD8FF1),
         vibrantAccent = Color(0xFF679F38),
         tonalOutlineVariant = Color(0xFFAFA6CA),
+        avatarOutline = Color(0xFF1B6793),
     ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFFF8F8F8),
@@ -321,6 +331,14 @@ private val LightExtendedColors = ExtendedColors(
         dashboardMapFlashFloodOutline = Color(0xC800E676),
     ),
     weather = ExtendedWeatherColors(
+        temperatureIcon = Color(0xFFF19DD0),
+        temperatureIconContainer = Color(0xFF39243C),
+        capeIcon = Color(0xFFA3ECFD),
+        capeIconContainer = Color(0xFF11303B),
+        srhIcon = Color(0xFF9EA8F9),
+        srhIconContainer = Color(0xFF28235C),
+        dewPointIcon = Color(0xFF7AF79F),
+        dewPointIconContainer = Color(0xFF153224),
         precipitationChartLine = Color(0xFF087EA4),
         sunIcon = Color(0xFFFFB300),
         rainIcon = Color(0xFF64B5F6),
@@ -411,11 +429,12 @@ private val DarkExtendedColors = ExtendedColors(
         vibrantSecondary = Color(0xFF8259D9),
         vibrantAccent = Color(0xFF5D8F33),
         tonalOutlineVariant = Color(0xFFAFA6CA),
+        avatarOutline = Color(0xFF1E76A8),
         ),
     navigation = ExtendedNavigationColors(
         barSurface = Color(0xFF000000),
         selectedPillContainer = Color(0xFF5D8F33),
-        floatingControlContainer = Color(0xFF131618),
+        floatingControlContainer = Color(0xFF0D0F11),
         floatingControlButtonContainer = Color(0xFF131618),
         floatingControlShadow = Color(0xFF1D1A20),
         routeLine = Color(0xFF81C3FF),
@@ -447,6 +466,14 @@ private val DarkExtendedColors = ExtendedColors(
         dashboardMapFlashFloodOutline = Color(0xC800E676),
     ),
     weather = ExtendedWeatherColors(
+        temperatureIcon = Color(0xFFF19DD0),
+        temperatureIconContainer = Color(0xFF39243C),
+        capeIcon = Color(0xFFA3ECFD),
+        capeIconContainer = Color(0xFF11303B),
+        srhIcon = Color(0xFF9EA8F9),
+        srhIconContainer = Color(0xFF28235C),
+        dewPointIcon = Color(0xFF7AF79F),
+        dewPointIconContainer = Color(0xFF153224),
         precipitationChartLine = Color(0xFF7DDCFF),
         sunIcon = Color(0xFFFFB300),
         rainIcon = Color(0xFF64B5F6),
@@ -460,14 +487,14 @@ private val DarkExtendedColors = ExtendedColors(
         outlookThunderstormContent = Color(0xFF85DCD5),
         outlookMarginalContainer = Color(0xFF2F4C2C),
         outlookMarginalContent = Color(0xFF88CC81),
-        outlookSlightContainer = Color(0xFF5A4C21),
-        outlookSlightContent = Color(0xFFDDD286),
+        outlookSlightContainer = Color(0xFF5B4913),
+        outlookSlightContent = Color(0xFFF1D587),
         outlookEnhancedContainer = Color(0xFF612E0C),
         outlookEnhancedContent = Color(0xFFFFBD9A),
-        outlookModerateContainer = Color(0xFF792A2A),
-        outlookModerateContent = Color(0xFFFD8888),
-        outlookHighContainer = Color(0xFF76306A),
-        outlookHighContent = Color(0xFFE6A5FC),
+        outlookModerateContainer = Color(0xFF721F2F),
+        outlookModerateContent = Color(0xFFF3C2C8),
+        outlookHighContainer = Color(0xFF6B2971),
+        outlookHighContent = Color(0xFFF5BDF3),
     ),
     search = ExtendedSearchColors(
         stormAiGradientStart = Color(0xFF7173FF),
@@ -517,7 +544,7 @@ private val DarkExtendedColors = ExtendedColors(
         glowStop1 = Color(0xFF4A90E2),
         glowStop2 = Color(0xFF7B4FD6),
         glowStop3 = Color(0xFFE040C8),
-        aiOutlineBlue = Color(0xFF3DB8FF),
+        aiOutlineBlue = Color(0xFF279DE0),
         aiOutlinePink = Color(0xFFEA87FF),
         menu1 = Color(0xFF752D2D),
         menu2 = Color(0xFFF18C8C),

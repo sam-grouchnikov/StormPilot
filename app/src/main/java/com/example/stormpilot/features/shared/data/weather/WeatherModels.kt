@@ -29,6 +29,8 @@ data class DailyWeatherOutlook(
     val high: Int?,
     val low: Int?,
     val spcOutlook: String,
+    val stp: Double? = null,
+    val vtp: Double? = null,
 )
 
 data class StormSpec(

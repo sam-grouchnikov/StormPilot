@@ -95,35 +95,45 @@
       "conditions": "Thunderstorms",
       "high": 84,
       "low": 66,
-      "spcOutlook": "High"
+      "spcOutlook": "Moderate",
+      "stp": 5.0,
+      "vtp": 3.0
     },
     {
       "day": "Thu",
       "conditions": "Morning showers",
       "high": 79,
       "low": 62,
-      "spcOutlook": "Moderate"
+      "spcOutlook": "Moderate",
+      "stp": 7.0,
+      "vtp": 4.0
     },
     {
       "day": "Fri",
       "conditions": "Mostly sunny",
       "high": 86,
       "low": 64,
-      "spcOutlook": "Enhanced"
+      "spcOutlook": "Enhanced",
+      "stp": 2.0,
+      "vtp": 1.0
     },
     {
       "day": "Sat",
       "conditions": "Hot and humid",
       "high": 91,
       "low": 70,
-      "spcOutlook": "Slight"
+      "spcOutlook": "Slight",
+      "stp": 7.0,
+      "vtp": 4.0
     },
     {
       "day": "Sun",
       "conditions": "Isolated storms",
       "high": 88,
       "low": 69,
-      "spcOutlook": "TSTM"
+      "spcOutlook": "TSTM",
+      "stp": 7.0,
+      "vtp": 4.0
     }
   ],
   "stormSpecs": [

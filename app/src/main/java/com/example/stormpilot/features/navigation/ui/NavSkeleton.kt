@@ -52,6 +52,8 @@ import com.example.stormpilot.features.ai.ui.chat.ChatPopup
 import com.example.stormpilot.features.dashboard.ui.RadarPage
 import com.example.stormpilot.features.map.ui.MapsPage
 import com.example.stormpilot.features.navigation.ui.components.FloatingNavBar
+import com.example.stormpilot.features.navigation.ui.components.StormAiRequestSheet
+import com.example.stormpilot.features.navigation.ui.components.StormAiSheetMode
 import com.example.stormpilot.features.notes.FieldNotesPage
 import com.example.stormpilot.features.shared.viewmodels.GenAIViewModel
 import com.example.stormpilot.features.settings.ui.SettingsPage
@@ -76,6 +78,7 @@ fun NavSkeleton() {
     val isMapDestinationSelected = remember { mutableStateOf(false) }
     val showSettings = remember { mutableStateOf(false) }
     var showStormAiChat by remember { mutableStateOf(false) }
+    var showStormAiVoice by remember { mutableStateOf(false) }
     var assistantMessage by remember { mutableStateOf<String?>(null) }
     var confirmationMessage by remember { mutableStateOf<String?>(null) }
     var confirmationRiskSummary by remember { mutableStateOf<String?>(null) }
@@ -142,6 +145,13 @@ fun NavSkeleton() {
             }
         }
 
+        fun handleStormAiChatActions(actions: List<StormAiAction>) {
+            dispatchStormAiActions(actions)
+            if (actions.any { it !is StormAiAction.AnswerOnly && it !is StormAiAction.AskClarification }) {
+                showStormAiChat = false
+            }
+        }
+
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
@@ -200,7 +210,11 @@ fun NavSkeleton() {
                             )
                         }
                         composable(TabDest.Radar.route) {
-                            RadarPage(onOpenSettings = { showSettings.value = true })
+                            RadarPage(
+                                onOpenSettings = { showSettings.value = true },
+                                onOpenStormAiChat = { showStormAiChat = true },
+                                onOpenStormAiVoice = { showStormAiVoice = true },
+                            )
                         }
                         composable(TabDest.Notes.route) {
                             FieldNotesPage()
@@ -236,11 +250,18 @@ fun NavSkeleton() {
                 ChatPopup(
                     onDismiss = { showStormAiChat = false },
                     viewModel = genAIViewModel,
-                    onActions = { actions ->
-                        dispatchStormAiActions(actions)
-                        if (actions.any { it !is StormAiAction.AnswerOnly && it !is StormAiAction.AskClarification }) {
-                            showStormAiChat = false
-                        }
+                    onActions = ::handleStormAiChatActions,
+                )
+            }
+
+            if (showStormAiVoice) {
+                StormAiRequestSheet(
+                    mode = StormAiSheetMode.Voice,
+                    onDismiss = { showStormAiVoice = false },
+                    onSubmit = { prompt ->
+                        showStormAiVoice = false
+                        showStormAiChat = true
+                        genAIViewModel.sendMessage(prompt, ::handleStormAiChatActions)
                     },
                 )
             }

@@ -346,6 +346,8 @@ class HttpStormPilotApi @Inject constructor() : StormPilotApi {
             high = json.optNullableInt("high"),
             low = json.optNullableInt("low"),
             spcOutlook = json.optString("spcOutlook").ifBlank { "Not issued" },
+            stp = json.optNullableDouble("stp")?.takeIf(Double::isFinite),
+            vtp = json.optNullableDouble("vtp")?.takeIf(Double::isFinite),
         )
 
     private fun parseStormSpec(json: JSONObject): StormSpec =

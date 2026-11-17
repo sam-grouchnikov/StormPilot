@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +29,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -41,7 +39,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Straight
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -68,12 +65,14 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.stormpilot.features.common.ui.ProfileAvatar
+import com.example.stormpilot.features.common.ui.AccountMenuAnchor
 import com.example.stormpilot.features.shared.data.routing.formatDistance
 import com.example.stormpilot.features.shared.data.routing.formatDuration
 import com.example.stormpilot.features.shared.data.search.PhotonFeature
 
 private const val SearchTransitionDurationMillis = 420
+private val SearchBarHeight = 60.dp
+private val SearchBarTopSpacing = 6.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +90,7 @@ fun SearchScaffold(
     onOpenSettings: () -> Unit = {},
     onOpenStormAiChat: () -> Unit = {},
     containerColor: Color,
+    mapOverlayControls: @Composable () -> Unit,
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
@@ -101,7 +101,7 @@ fun SearchScaffold(
     val remainingSearchResults = if (query.isNotBlank()) searchResults.drop(3) else emptyList()
     val statusBarTopPadding = with(density) { WindowInsets.statusBars.getTop(this).toDp() }
     val surfaceTopPadding by animateDpAsState(
-        targetValue = if (active) 0.dp else statusBarTopPadding + 6.dp,
+        targetValue = if (active) 0.dp else statusBarTopPadding + SearchBarTopSpacing,
         animationSpec = tween(SearchTransitionDurationMillis, easing = FastOutSlowInEasing),
         label = "maps_search_top_padding",
     )
@@ -137,10 +137,31 @@ fun SearchScaffold(
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val surfaceHeight by animateDpAsState(
-            targetValue = if (active) maxHeight else 60.dp,
+            targetValue = if (active) maxHeight else SearchBarHeight,
             animationSpec = tween(SearchTransitionDurationMillis, easing = FastOutSlowInEasing),
             label = "maps_search_height",
         )
+
+        if (!active) {
+            Column(
+                modifier = Modifier
+                    .padding(top = statusBarTopPadding + SearchBarTopSpacing + SearchBarHeight)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.End,
+            ) {
+                SearchShortcutRow(
+                    containerColor = containerColor,
+                    onOpenStormAiChat = onOpenStormAiChat,
+                    onPlaceSearch = { shortcutQuery ->
+                        onQueryChange(shortcutQuery)
+                        onSearchSubmit()
+                    },
+                )
+                Box(modifier = Modifier.padding(end = 12.dp)) {
+                    mapOverlayControls()
+                }
+            }
+        }
 
         Surface(
             modifier = Modifier
@@ -167,7 +188,7 @@ fun SearchScaffold(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(60.dp)
+                        .height(SearchBarHeight)
                         .clickable(enabled = !active) { onActiveChange(true) }
                         .padding(start = 4.dp, end = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -265,10 +286,7 @@ fun SearchScaffold(
                         enter = fadeIn(animationSpec = tween(140, delayMillis = 90)),
                         exit = fadeOut(animationSpec = tween(90)),
                     ) {
-                        ProfileAvatar(
-                            circleSize = 40,
-                            onClick = onOpenSettings,
-                        )
+                        AccountMenuAnchor(onClick = onOpenSettings)
                     }
                 }
 
@@ -309,46 +327,6 @@ fun SearchScaffold(
                                     onResultClick(result)
                                 },
                             )
-                        }
-
-                        item(key = "storm_ai_chat") {
-                            StormAiSearchCard(
-                                onClick = {
-                                    focusManager.clearFocus()
-                                    onActiveChange(false)
-                                    onOpenStormAiChat()
-                                },
-                            )
-                        }
-
-
-                        item(key = "place_shortcuts") {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                            ) {
-                                GasSearchCard(
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        onQueryChange("gas")
-                                        onSearchSubmit()
-                                    },
-                                )
-                                HotelSearchCard(
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        onQueryChange("hotel")
-                                        onSearchSubmit()
-                                    },
-                                )
-                                GrocerySearchCard(
-                                    modifier = Modifier.weight(1f),
-                                    onClick = {
-                                        onQueryChange("grocery")
-                                        onSearchSubmit()
-                                    },
-                                )
-                            }
                         }
 
                         items(remainingSearchResults) { result ->

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -25,18 +26,21 @@ fun ProfileAvatar(
     circleSize: Int,
     textSize: Int = 15,
     userName: String = "Sam",
+    outlineColor: Color? = null,
     onClick: () -> Unit,
 ) {
     val avatarLetter = userName.firstOrNull()?.uppercase() ?: "?"
 
     val colors = MaterialTheme.extendedColors
+    val outlineWidth = if (outlineColor == null) 2.dp else 3.dp
     Box(
         modifier = modifier
             .size(circleSize.dp)
             .clip(CircleShape)
-            .border(2.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-            .background(colors.theme.vibrantAccent)
-            .clickable(role = Role.Button, onClick = onClick),
+            .border(outlineWidth, outlineColor ?: MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(if (outlineColor == null) 0.dp else outlineWidth + 2.5.dp)
+            .background(colors.theme.vibrantAccent, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -52,13 +56,15 @@ fun ProfileAvatar(
 fun AccountMenuAnchor(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
-    circleSize: Int = 32,
+    circleSize: Int = 43,
     textSize: Int = 15,
+    outlineColor: Color? = MaterialTheme.extendedColors.theme.avatarOutline,
 ) {
     ProfileAvatar(
         modifier = modifier,
         circleSize = circleSize,
         textSize = textSize,
+        outlineColor = outlineColor,
         onClick = onClick,
     )
 }

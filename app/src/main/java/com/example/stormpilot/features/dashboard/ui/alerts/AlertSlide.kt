@@ -116,7 +116,7 @@ fun AlertSlide(
                 alertsState = alertsState,
                 onAlertClick = mapsViewModel::showAlertDetail,
             )
-            StormSpecsPanel(stormSpecs = weatherState.stormSpecs)
+            StormSpecsPanel(stormSpecs = weatherState.stormSpecs, current = weatherState.current)
         }
 
         AlertDetailBottomSheet(

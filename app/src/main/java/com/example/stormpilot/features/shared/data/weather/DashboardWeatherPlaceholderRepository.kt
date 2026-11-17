@@ -104,6 +104,8 @@ class DashboardWeatherPlaceholderRepository @Inject constructor(
                         high = row["high"].toNullableInt(),
                         low = row["low"].toNullableInt(),
                         spcOutlook = row["spcOutlook"] ?: "Not issued",
+                        stp = row["stp"]?.toDoubleOrNull()?.takeIf(Double::isFinite),
+                        vtp = row["vtp"]?.toDoubleOrNull()?.takeIf(Double::isFinite),
                     )
                 },
                 stormSpecs = parseTable(sections["stormSpecs"].orEmpty()).map { row ->
@@ -142,6 +144,8 @@ class DashboardWeatherPlaceholderRepository @Inject constructor(
             high = json.optNullableInt("high"),
             low = json.optNullableInt("low"),
             spcOutlook = json.optNullableString("spcOutlook") ?: "Not issued",
+            stp = json.optDouble("stp").takeIf(Double::isFinite),
+            vtp = json.optDouble("vtp").takeIf(Double::isFinite),
         )
 
     private fun parseStormSpec(json: JSONObject): StormSpec =

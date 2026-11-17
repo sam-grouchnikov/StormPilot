@@ -623,6 +623,46 @@ fun MapsPage(
             "asset://map-light.json"
         }
 
+        val scope = rememberCoroutineScope()
+        val overlayControls: @Composable () -> Unit = {
+            MapOverlayControls(
+                showRadarOverlay = showRadarOverlay,
+                onRadarOverlayChange = { enabled ->
+                    showRadarOverlay = enabled
+                    if (!enabled) {
+                        isRadarPlaybackRunning = false
+                        radarPlaybackChangesAgo = null
+                    }
+                    Log.d(RADAR_LOG_TAG, "Radar overlay enabled=$showRadarOverlay")
+                },
+                showSevereAlertsOverlay = showSevereAlertsOverlay,
+                onSevereAlertsOverlayChange = { enabled ->
+                    showSevereAlertsOverlay = enabled
+                },
+                navMode = navMode,
+                is2dNavView = is2dNavView,
+                onNavViewToggleClick = {
+                    is2dNavView = !is2dNavView
+                    if (!navigationCameraTrackingEnabled) {
+                        scope.launch {
+                            try {
+                                isProgrammaticCameraUpdate = true
+                                cameraState.animateTo(
+                                    finalPosition = cameraState.position.copy(
+                                        tilt = if (is2dNavView) 0.0 else 50.0,
+                                    ),
+                                    duration = 1.seconds,
+                                )
+                            } finally {
+                                delay(50)
+                                isProgrammaticCameraUpdate = false
+                            }
+                        }
+                    }
+                },
+                colors = colors,
+            )
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             MaplibreMap(
@@ -709,9 +749,6 @@ fun MapsPage(
                 navigationCameraTrackingEnabled = true
             }
 
-
-
-            val scope = rememberCoroutineScope()
 
             fun onClose() {
                 viewModel.clearRoute()
@@ -831,49 +868,15 @@ fun MapsPage(
                 )
             }
 
-            if (!active) {
-                MapOverlayControls(
-                    showRadarOverlay = showRadarOverlay,
-                    onRadarOverlayClick = {
-                        val willShowRadarOverlay = !showRadarOverlay
-                        showRadarOverlay = willShowRadarOverlay
-                        if (!willShowRadarOverlay) {
-                            isRadarPlaybackRunning = false
-                            radarPlaybackChangesAgo = null
-                        }
-                        Log.d(RADAR_LOG_TAG, "Radar overlay enabled=$showRadarOverlay")
-                    },
-                    showSevereAlertsOverlay = showSevereAlertsOverlay,
-                    onSevereAlertsOverlayClick = {
-                        showSevereAlertsOverlay = !showSevereAlertsOverlay
-                    },
-                    navMode = navMode,
-                    is2dNavView = is2dNavView,
-                    onNavViewToggleClick = {
-                        is2dNavView = !is2dNavView
-                        if (!navigationCameraTrackingEnabled) {
-                            scope.launch {
-                                try {
-                                    isProgrammaticCameraUpdate = true
-                                    cameraState.animateTo(
-                                        finalPosition = cameraState.position.copy(
-                                            tilt = if (is2dNavView) 0.0 else 50.0,
-                                        ),
-                                        duration = 1.seconds,
-                                    )
-                                } finally {
-                                    delay(50)
-                                    isProgrammaticCameraUpdate = false
-                                }
-                            }
-                        }
-                    },
-                    colors = colors,
+            if (navMode && !active) {
+                Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .statusBarsPadding()
-                        .padding(end = 13.dp, top = 74.dp),
-                )
+                        .padding(end = 8.dp, top = 74.dp),
+                ) {
+                    overlayControls()
+                }
             }
 
             AnimatedVisibility(
@@ -924,6 +927,7 @@ fun MapsPage(
                     onOpenSettings = onOpenSettings,
                     onOpenStormAiChat = onOpenStormAiChat,
                     containerColor = searchContainerColor,
+                    mapOverlayControls = overlayControls,
                 )
             }
 
