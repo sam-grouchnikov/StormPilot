@@ -12,7 +12,6 @@ import com.example.stormpilot.features.shared.data.location.LocationLookupReposi
 import com.example.stormpilot.features.shared.data.routing.RouteStep
 import com.example.stormpilot.features.shared.data.routing.RoutingParsing
 import com.example.stormpilot.features.shared.data.routing.RoutingRepository
-import com.example.stormpilot.features.shared.data.search.PhotonApiClient
 import com.example.stormpilot.features.shared.data.search.PhotonFeature
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -25,7 +24,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -71,7 +69,6 @@ data class MapsUiState(
 @OptIn(FlowPreview::class)
 class MapsViewModel @Inject constructor(
     private val routingRepository: RoutingRepository,
-    private val photonApiClient: PhotonApiClient,
     private val alertsRepository: AlertsRepository,
     private val locationLookupRepository: LocationLookupRepository,
 ) : ViewModel() {
@@ -177,7 +174,7 @@ class MapsViewModel @Inject constructor(
         viewModelScope.launch {
             _searchQuery
                 .debounce(500)
-                .collectLatest { query ->
+                .collect { query ->
                     runSearch(query)
             }
         }
@@ -226,16 +223,17 @@ class MapsViewModel @Inject constructor(
         val query = _searchQuery.value.trim()
         if (query.length <= 2) return
 
-        viewModelScope.launch {
-            if (latestSearchResultsQuery != query || _searchResults.value.isEmpty() || _isSearching.value) {
-                runSearch(query)
-            }
+        if (latestSearchResultsQuery != query || _searchResults.value.isEmpty() || _isSearching.value) {
+            runSearch(query)
+        }
 
-            val results = _searchResults.value
-            when {
-                results.isEmpty() -> _mapSearchResults.value = emptyList()
-                results.size == 1 -> onLocationSelected(results.first())
-                else -> showSearchResultsOnMap(results.take(MAX_MAP_SEARCH_RESULTS))
+        val results = _searchResults.value
+        when {
+            results.isEmpty() -> _mapSearchResults.value = emptyList()
+            results.size == 1 -> onLocationSelected(results.first())
+            else -> {
+                rememberSearch(results.first())
+                showSearchResultsOnMap(results.take(MAX_MAP_SEARCH_RESULTS))
             }
         }
     }
@@ -319,7 +317,7 @@ class MapsViewModel @Inject constructor(
         )
     }
 
-    private suspend fun runSearch(query: String) {
+    private fun runSearch(query: String) {
         val trimmedQuery = query.trim()
         if (trimmedQuery.length <= 2) {
             _searchResults.value = emptyList()
@@ -328,13 +326,10 @@ class MapsViewModel @Inject constructor(
             return
         }
 
-        _isSearching.value = true
         val origin = _uiState.value.origin
-        val results = photonApiClient.search(trimmedQuery, origin)
+        _searchResults.value = sampleSearchResults(trimmedQuery)
             .withStraightLineDistances(origin)
             .sortedByClosest()
-        currentCoroutineContext().ensureActive()
-        _searchResults.value = results
         latestSearchResultsQuery = trimmedQuery
 
         _isSearching.value = false
@@ -892,6 +887,30 @@ private fun minDistanceMetersToPolyline(point: Position, polyline: List<Position
     return polyline.windowed(2).minOf { segment ->
         distancePointToSegmentMeters(point, segment[0], segment[1])
     }
+}
+
+private fun sampleSearchResults(query: String): List<PhotonFeature> {
+    val downtown = PhotonFeature(
+        name = "$query · Center City",
+        city = "Philadelphia",
+        state = "Pennsylvania",
+        country = "United States",
+        geometry = Position(longitude = -75.1638, latitude = 39.9524),
+        address = "1400 John F Kennedy Blvd",
+    )
+    return listOf(
+        downtown,
+        downtown.copy(
+            name = "$query · Old City",
+            geometry = Position(longitude = -75.1500, latitude = 39.9496),
+            address = "520 Chestnut St",
+        ),
+        downtown.copy(
+            name = "$query · Fairmount",
+            geometry = Position(longitude = -75.1807, latitude = 39.9656),
+            address = "2600 Benjamin Franklin Pkwy",
+        ),
+    )
 }
 
 private fun List<PhotonFeature>.withStraightLineDistances(origin: Position?): List<PhotonFeature> {
