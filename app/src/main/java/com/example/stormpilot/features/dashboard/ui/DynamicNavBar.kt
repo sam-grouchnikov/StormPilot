@@ -45,7 +45,6 @@ import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertDetai
 import com.example.stormpilot.features.dashboard.ui.alerts.components.AlertStatusPanel
 import com.example.stormpilot.features.dashboard.ui.alerts.components.StormSpecsPanel
 import com.example.stormpilot.features.dashboard.ui.weather.FiveDayOutlook
-import com.example.stormpilot.features.dashboard.ui.weather.HourlyForecastRow
 import com.example.stormpilot.features.shared.viewmodels.AlertsViewModel
 import com.example.stormpilot.features.shared.viewmodels.MapsViewModel
 import com.example.stormpilot.features.shared.viewmodels.WeatherViewModel
@@ -63,6 +62,7 @@ fun DashboardOverviewScreen(
     val alertsState by alertsViewModel.uiState.collectAsStateWithLifecycle()
     val mapsState by mapsViewModel.uiState.collectAsStateWithLifecycle()
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
+    val skeletonShimmer = if (weatherState.isLoading || alertsState.isLoading) rememberSkeletonShimmer() else null
     val useDashboardPlaceholderData = AppSettings.useDashboardPlaceholderData
     val dashboardPlaceholderAssetName = AppSettings.dashboardPlaceholderWeatherAssetName
 
@@ -112,32 +112,44 @@ fun DashboardOverviewScreen(
                 .padding(top = 82.dp, start = 16.dp, end = 16.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = dashboardBottomContentPadding()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SevereOutlookBanner(weatherState.daily.firstOrNull()?.spcOutlook)
+            if (weatherState.isLoading && skeletonShimmer != null) {
+                SevereOutlookSkeleton(skeletonShimmer, widgetContainerColor)
+            } else {
+                SevereOutlookBanner(weatherState.daily.firstOrNull()?.spcOutlook)
+            }
 
-            AlertStatusPanel(
-                alertsState = alertsState,
-                onAlertClick = mapsViewModel::showAlertDetail,
-                containerColor = widgetContainerColor,
-            )
-            AskStormAiButton(onClick = onOpenStormAiChat)
-            StormSpecsPanel(
-                stormSpecs = weatherState.stormSpecs,
-                current = weatherState.current,
-                containerColor = widgetContainerColor,
-            )
-//
-            FiveDayOutlook(
-                daily = weatherState.daily,
-                containerColor = widgetContainerColor,
-            )
-//
-//            val hourly = weatherState.hourly
-//            HourlyForecastRow(
-//                hourly = hourly,
-//                containerColor = widgetContainerColor,
-//            )
+            if (alertsState.isLoading && skeletonShimmer != null) {
+                AlertStatusSkeleton(skeletonShimmer.delayedBy(80), widgetContainerColor)
+            } else {
+                AlertStatusPanel(
+                    alertsState = alertsState,
+                    onAlertClick = mapsViewModel::showAlertDetail,
+                    containerColor = widgetContainerColor,
+                )
+            }
+
+            if (skeletonShimmer != null) {
+                StormAiButtonSkeleton(skeletonShimmer.delayedBy(160), widgetContainerColor)
+            } else {
+                AskStormAiButton(onClick = onOpenStormAiChat)
+            }
+
+            if (weatherState.isLoading && skeletonShimmer != null) {
+                StormSpecsSkeleton(skeletonShimmer.delayedBy(240), widgetContainerColor)
+                FiveDayOutlookSkeleton(skeletonShimmer.delayedBy(320), widgetContainerColor)
+            } else {
+                StormSpecsPanel(
+                    stormSpecs = weatherState.stormSpecs,
+                    current = weatherState.current,
+                    containerColor = widgetContainerColor,
+                )
+                FiveDayOutlook(
+                    daily = weatherState.daily,
+                    containerColor = widgetContainerColor,
+                )
+            }
         }
 
         AlertDetailBottomSheet(

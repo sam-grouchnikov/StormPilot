@@ -79,7 +79,6 @@ fun NavSkeleton() {
     val showSettings = remember { mutableStateOf(false) }
     var showStormAiChat by remember { mutableStateOf(false) }
     var showStormAiVoice by remember { mutableStateOf(false) }
-    var assistantMessage by remember { mutableStateOf<String?>(null) }
     var confirmationMessage by remember { mutableStateOf<String?>(null) }
     var confirmationRiskSummary by remember { mutableStateOf<String?>(null) }
     var confirmationConfirmLabel by remember { mutableStateOf("Confirm") }
@@ -114,8 +113,7 @@ fun NavSkeleton() {
         fun dispatchStormAiActions(actions: List<StormAiAction>) {
             actions.forEach { action ->
                 when (action) {
-                    is StormAiAction.AnswerOnly -> assistantMessage = action.reply
-                    is StormAiAction.AskClarification -> assistantMessage = action.question
+                    is StormAiAction.AnswerOnly, is StormAiAction.AskClarification -> Unit
                     is StormAiAction.RequestConfirmation -> showConfirmation(
                         message = action.message,
                         actions = action.pendingActions,
@@ -281,19 +279,6 @@ fun NavSkeleton() {
                     .zIndex(4f),
             ) {
                 SettingsPage(onDismiss = { showSettings.value = false })
-            }
-
-            assistantMessage?.let { message ->
-                AlertDialog(
-                    onDismissRequest = { assistantMessage = null },
-                    title = { Text(text = "StormAI") },
-                    text = { Text(text = message) },
-                    confirmButton = {
-                        TextButton(onClick = { assistantMessage = null }) {
-                            Text(text = "OK")
-                        }
-                    },
-                )
             }
 
             confirmationMessage?.let { message ->

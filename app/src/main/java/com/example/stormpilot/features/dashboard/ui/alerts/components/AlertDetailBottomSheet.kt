@@ -4,12 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -21,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.stormpilot.features.dashboard.ui.SkeletonBlock
+import com.example.stormpilot.features.dashboard.ui.rememberSkeletonShimmer
 import com.example.stormpilot.features.shared.data.alerts.NwsAlert
 import java.time.OffsetDateTime
 import java.time.ZoneId
@@ -120,27 +122,48 @@ private fun AlertDetailContent(alert: NwsAlert) {
 
 @Composable
 private fun AlertDetailLoadingState() {
-    Surface(
+    val shimmer = rememberSkeletonShimmer()
+    val tagShimmer = shimmer.delayedBy(80)
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+
+    SkeletonBlock(shimmer, Modifier.fillMaxWidth(0.8f).height(26.dp))
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        repeat(2) {
+            Surface(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(16.dp),
+                color = containerColor,
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    SkeletonBlock(tagShimmer, Modifier.fillMaxWidth(0.4f).height(10.dp))
+                    SkeletonBlock(tagShimmer, Modifier.fillMaxWidth(0.72f).height(15.dp))
+                }
+            }
+        }
+    }
+    // Effective time, expiry, areas, zones, description, instructions, and issuer.
+    for ((index, lineCount) in listOf(1, 1, 2, 2, 4, 3, 1).withIndex()) {
+        val sectionShimmer = shimmer.delayedBy(150 + index * 55)
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(18.dp),
+            color = containerColor,
         ) {
-            CircularProgressIndicator(strokeWidth = 2.5.dp)
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = "Loading alert details",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Text(
-                    text = "Fetching the full NWS warning text for this polygon.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                SkeletonBlock(sectionShimmer, Modifier.fillMaxWidth(0.24f).height(12.dp))
+                repeat(lineCount) { line ->
+                    val width = if (line == lineCount - 1) 0.7f else 1f
+                    SkeletonBlock(sectionShimmer, Modifier.fillMaxWidth(width).height(15.dp))
+                }
             }
         }
     }

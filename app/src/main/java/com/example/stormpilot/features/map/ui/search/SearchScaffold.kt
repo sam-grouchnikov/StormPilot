@@ -1,8 +1,13 @@
 package com.example.stormpilot.features.map.ui.search
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -22,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -39,10 +45,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DriveEta
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Straight
+import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
@@ -51,26 +60,40 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.example.stormpilot.features.common.ui.AccountMenuAnchor
+import com.example.stormpilot.features.navigation.ui.components.coloredShadow
 import com.example.stormpilot.features.shared.data.routing.formatDistance
 import com.example.stormpilot.features.shared.data.routing.formatDuration
 import com.example.stormpilot.features.shared.data.search.PhotonFeature
+import com.example.stormpilot.ui.theme.extendedColors
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 
 private const val SearchTransitionDurationMillis = 420
+private const val MapActionsFadeDurationMillis = 145
+private const val MapActionsFadeOutDurationMillis = 218
+private const val MapActionsStaggerMillis = 50
 private val SearchBarHeight = 60.dp
 private val SearchBarTopSpacing = 6.dp
 
@@ -92,6 +115,7 @@ fun SearchScaffold(
     containerColor: Color,
     mapOverlayControls: @Composable () -> Unit,
 ) {
+    var mapActionsExpanded by rememberSaveable { mutableStateOf(true) }
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val density = LocalDensity.current
@@ -143,22 +167,115 @@ fun SearchScaffold(
         )
 
         if (!active) {
+            val overshootPx = with(density) { 4.dp.roundToPx() }
+            val mapActionsLayoutDuration = MapActionsFadeDurationMillis + MapActionsStaggerMillis
+            val chevronAlpha = remember { Animatable(1f) }
+            LaunchedEffect(chevronAlpha) {
+                snapshotFlow { mapActionsExpanded }.drop(1).collectLatest { expanded ->
+                    if (expanded) {
+                        chevronAlpha.animateTo(1f, tween(MapActionsFadeDurationMillis / 2))
+                    } else {
+                        chevronAlpha.animateTo(
+                            targetValue = 1f,
+                            animationSpec = keyframes {
+                                durationMillis = MapActionsFadeOutDurationMillis / 2 +
+                                    (MapActionsFadeDurationMillis + 1) / 2
+                                0f at (MapActionsFadeOutDurationMillis / 2)
+                            },
+                        )
+                    }
+                }
+            }
+            val chevronRotation = animateFloatAsState(
+                targetValue = if (mapActionsExpanded) 0f else 180f,
+                animationSpec = tween(MapActionsFadeDurationMillis, easing = LinearOutSlowInEasing),
+                label = "map_actions_chevron_rotation",
+            )
+            val chevronOffset = animateIntAsState(
+                targetValue = if (mapActionsExpanded) 0 else 16,
+                animationSpec = if (mapActionsExpanded) {
+                    keyframes {
+                        durationMillis = mapActionsLayoutDuration + 90
+                        overshootPx at mapActionsLayoutDuration using FastOutSlowInEasing
+                    }
+                } else {
+                    tween(mapActionsLayoutDuration)
+                },
+                label = "map_actions_chevron_offset",
+            )
+
             Column(
                 modifier = Modifier
                     .padding(top = statusBarTopPadding + SearchBarTopSpacing + SearchBarHeight)
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.End,
             ) {
-                SearchShortcutRow(
-                    containerColor = containerColor,
-                    onOpenStormAiChat = onOpenStormAiChat,
-                    onPlaceSearch = { shortcutQuery ->
-                        onQueryChange(shortcutQuery)
-                        onSearchSubmit()
-                    },
-                )
-                Box(modifier = Modifier.padding(end = 12.dp)) {
-                    mapOverlayControls()
+                AnimatedVisibility(
+                    visible = mapActionsExpanded,
+                    enter = expandVertically(tween(MapActionsFadeDurationMillis), expandFrom = Alignment.Top),
+                    exit = fadeOut(
+                        tween(MapActionsFadeOutDurationMillis, MapActionsStaggerMillis, LinearOutSlowInEasing),
+                    ) +
+                        shrinkVertically(
+                            tween(MapActionsFadeOutDurationMillis, delayMillis = MapActionsStaggerMillis),
+                            shrinkTowards = Alignment.Top,
+                        ),
+                ) {
+                    Box(modifier = Modifier.padding(start = 4.dp, top = 2.dp)) {
+                        SearchShortcutRow(
+                            containerColor = containerColor,
+                            onOpenStormAiChat = onOpenStormAiChat,
+                            onPlaceSearch = { shortcutQuery ->
+                                onQueryChange(shortcutQuery)
+                                onSearchSubmit()
+                            },
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.padding(end = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    AnimatedVisibility(
+                        visible = mapActionsExpanded,
+                        enter = fadeIn(tween(MapActionsFadeDurationMillis, delayMillis = MapActionsStaggerMillis)) +
+                            expandVertically(
+                                tween(MapActionsFadeDurationMillis, delayMillis = MapActionsStaggerMillis),
+                                expandFrom = Alignment.Top,
+                            ) +
+                            slideInVertically(
+                                animationSpec = keyframes {
+                                    durationMillis = 210
+                                    delayMillis = MapActionsStaggerMillis
+                                    IntOffset(0, -2 * overshootPx) at 0 using LinearOutSlowInEasing
+                                    IntOffset(0, overshootPx) at 120 using FastOutSlowInEasing
+                                },
+                                initialOffsetY = { -2 * overshootPx },
+                            ),
+                        exit = fadeOut(tween(MapActionsFadeOutDurationMillis, easing = LinearOutSlowInEasing)) +
+                            shrinkVertically(tween(MapActionsFadeOutDurationMillis), shrinkTowards = Alignment.Top),
+                    ) {
+                        Box(modifier = Modifier.padding(bottom = 6.dp)) {
+                            mapOverlayControls()
+                        }
+                    }
+                    FilledIconButton(
+                        onClick = { mapActionsExpanded = !mapActionsExpanded },
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceDim,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                        ),
+                        modifier = Modifier
+                            .offset { IntOffset(x = 0, y = chevronOffset.value) }
+                            .graphicsLayer { alpha = chevronAlpha.value },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.ExpandLess,
+                            contentDescription = if (mapActionsExpanded) "Hide map shortcuts and layers" else "Show map shortcuts and layers",
+                            modifier = Modifier.rotate(chevronRotation.value),
+                        )
+                    }
                 }
             }
         }

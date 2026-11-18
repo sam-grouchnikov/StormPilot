@@ -395,7 +395,7 @@ private fun AlertStatusRow(
                     Text(
                         text = text,
                         color = contentColor,
-                        fontWeight = FontWeight.Black,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 18.sp,
                     )
                 }

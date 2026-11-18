@@ -15,6 +15,7 @@ import javax.inject.Inject
 import kotlin.math.abs
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -68,9 +69,9 @@ class WeatherViewModel @Inject constructor(
 
         useDashboardPlaceholderData = enabled
         dashboardPlaceholderAssetName = assetName.takeIf { enabled }
+        fetchJob?.cancel()
 
         if (enabled) {
-            fetchJob?.cancel()
             locationRepository.stopTracking()
             loadDashboardPlaceholder(assetName)
         } else {
@@ -124,7 +125,7 @@ class WeatherViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 delay(10 * 60 * 1000L)
-                if (useDashboardPlaceholderData) continue
+                if (useDashboardPlaceholderData || fetchJob?.isActive == true) continue
                 locationRepository.location.value?.let { location ->
                     fetchWeather(location.latitude, location.longitude)
                 }
@@ -137,8 +138,9 @@ class WeatherViewModel @Inject constructor(
 
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            weatherRepository.fetchWeather(latitude, longitude)
+            val result = weatherRepository.fetchWeather(latitude, longitude)
+            ensureActive()
+            result
                 .onSuccess { snapshot ->
                     _uiState.value = WeatherUiState(
                         current = snapshot.current,
@@ -158,10 +160,11 @@ class WeatherViewModel @Inject constructor(
     }
 
     private fun loadDashboardPlaceholder(assetName: String) {
-        fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
             _uiState.value = WeatherUiState(isLoading = true)
-            dashboardWeatherPlaceholderRepository.load(assetName)
+            val result = dashboardWeatherPlaceholderRepository.load(assetName)
+            ensureActive()
+            result
                 .onSuccess { placeholder ->
                     _cityName.value = placeholder.cityName
                     _uiState.value = WeatherUiState(

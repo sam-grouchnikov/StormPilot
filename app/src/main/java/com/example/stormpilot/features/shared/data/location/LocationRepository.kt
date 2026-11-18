@@ -3,6 +3,7 @@ package com.example.stormpilot.features.shared.data.location
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -12,11 +13,14 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -77,6 +81,24 @@ class LocationRepository @Inject constructor(
         } catch (_: SecurityException) {
             null
         }
+    }
+
+    @Suppress("DEPRECATION")
+    suspend fun lookupCityAndState(location: LocationData): String? = withContext(Dispatchers.IO) {
+        if (!Geocoder.isPresent()) return@withContext null
+
+        val address = try {
+            Geocoder(context).getFromLocation(location.latitude, location.longitude, 1)?.firstOrNull()
+        } catch (_: IOException) {
+            null
+        }
+
+        listOfNotNull(address?.locality, address?.adminArea)
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .distinct()
+            .joinToString(", ")
+            .ifEmpty { null }
     }
 
     fun stopTracking() {

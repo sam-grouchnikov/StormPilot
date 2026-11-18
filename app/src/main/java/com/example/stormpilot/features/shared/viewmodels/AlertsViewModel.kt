@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -70,10 +71,18 @@ class AlertsViewModel @Inject constructor(
     private val dashboardWeatherPlaceholderRepository: DashboardWeatherPlaceholderRepository,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AlertsUiState())
+    private val _uiState = MutableStateFlow(AlertsUiState(isLoading = true))
     val uiState: StateFlow<AlertsUiState> = _uiState.asStateFlow()
     private val _cityName = MutableStateFlow("Locating...")
     val cityName: StateFlow<String> = _cityName.asStateFlow()
+    val cityAndState = locationRepository.location
+        .filterNotNull()
+        .distinctUntilChanged { old, new ->
+            abs(old.latitude - new.latitude) < 0.01 &&
+                abs(old.longitude - new.longitude) < 0.01
+        }
+        .map { location -> locationRepository.lookupCityAndState(location) ?: "Current Location" }
+
     private val _locationGeoJson = MutableStateFlow(GeoJsonData.JsonString(EMPTY_FEATURE_COLLECTION))
     val locationGeoJson: StateFlow<GeoJsonData> = _locationGeoJson.asStateFlow()
 
@@ -96,13 +105,14 @@ class AlertsViewModel @Inject constructor(
 
         useDashboardPlaceholderData = enabled
         dashboardPlaceholderAssetName = assetName.takeIf { enabled }
+        fetchJob?.cancel()
         if (enabled) {
-            fetchJob?.cancel()
             locationRepository.stopTracking()
             _locationGeoJson.value = GeoJsonData.JsonString(EMPTY_FEATURE_COLLECTION)
             loadDashboardPlaceholderAlerts(assetName)
         } else {
             _cityName.value = "Locating..."
+            _uiState.value = AlertsUiState(isLoading = true)
             locationRepository.location.value?.let { loc ->
                 fetchAlerts(loc.latitude, loc.longitude)
             }
@@ -186,7 +196,7 @@ class AlertsViewModel @Inject constructor(
         viewModelScope.launch {
             while (true) {
                 delay(1 * 1 * 1000L)
-                if (useDashboardPlaceholderData) continue
+                if (useDashboardPlaceholderData || fetchJob?.isActive == true) continue
                 locationRepository.location.value?.let { loc ->
                     fetchAlerts(loc.latitude, loc.longitude)
                 }
@@ -199,9 +209,9 @@ class AlertsViewModel @Inject constructor(
 
         fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-
-            alertsRepository.fetchAlerts(latitude, longitude)
+            val result = alertsRepository.fetchAlerts(latitude, longitude)
+            ensureActive()
+            result
                 .onSuccess { alerts ->
                     _uiState.value = alerts.toAlertsUiState()
                 }
@@ -215,10 +225,11 @@ class AlertsViewModel @Inject constructor(
     }
 
     private fun loadDashboardPlaceholderAlerts(assetName: String) {
-        fetchJob?.cancel()
         fetchJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-            dashboardWeatherPlaceholderRepository.load(assetName)
+            _uiState.value = AlertsUiState(isLoading = true)
+            val result = dashboardWeatherPlaceholderRepository.load(assetName)
+            ensureActive()
+            result
                 .onSuccess { placeholder ->
                     _cityName.value = placeholder.cityName
                     _uiState.value = placeholder.alerts.toAlertsUiState()

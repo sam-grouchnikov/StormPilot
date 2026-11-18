@@ -621,11 +621,7 @@ private fun DailyOutlookRow(outlook: DailyWeatherOutlook) {
     ) {
         Text(
             text = outlook.day,
-            color = if (outlook.day.equals("Today", ignoreCase = true)) {
-                MaterialTheme.extendedColors.theme.vibrantPrimary
-            } else {
-                colorScheme.onSurface
-            },
+            color = colorScheme.onSurface,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.weight(0.85f),
@@ -672,35 +668,31 @@ private fun OutlookMetric(label: String, value: Double?) {
 
 @Composable
 private fun OutlookRiskPill(outlook: String) {
-    val colors = MaterialTheme.extendedColors.weather
     val scheme = MaterialTheme.colorScheme
     val risk = outlook.trim()
-    val neutralContainer = scheme.surfaceContainerHigh
-    val neutralContent = scheme.onSurfaceVariant
-    val (label, containerColor, contentColor) = when (risk.lowercase().substringBefore(' ')) {
-        "high" -> Triple("High", colors.outlookHighContainer, colors.outlookHighContent)
-        "mdt", "moderate" -> Triple("Moderate", colors.outlookModerateContainer, colors.outlookModerateContent)
-        "enh", "enhanced" -> Triple("Enhanced", colors.outlookEnhancedContainer, colors.outlookEnhancedContent)
-        "slgt", "slight" -> Triple("Slight", colors.outlookSlightContainer, colors.outlookSlightContent)
-        "mrgl", "marginal" -> Triple("Marginal", colors.outlookMarginalContainer, colors.outlookMarginalContent)
-        "tstm", "tstms", "general", "thunderstorm", "thunderstorms" ->
-            Triple("TSTMs", colors.outlookThunderstormContainer, colors.outlookThunderstormContent)
-        "", "none" -> Triple("None", neutralContainer, neutralContent)
-        else -> Triple(
-            if (risk.equals("No risk", ignoreCase = true)) "None" else risk,
-            neutralContainer,
-            neutralContent,
-        )
+    val label = when (risk.lowercase().substringBefore(' ')) {
+        "high" -> "High"
+        "mdt", "moderate" -> "Moderate"
+        "enh", "enhanced" -> "Enhanced"
+        "slgt", "slight" -> "Slight"
+        "mrgl", "marginal" -> "Marginal"
+        "tstm", "tstms", "general", "thunderstorm", "thunderstorms" -> "TSTMs"
+        "", "none" -> "None"
+        else -> if (risk.equals("No risk", ignoreCase = true)) "None" else risk
     }
 
-    Surface(shape = CircleShape, color = containerColor, contentColor = contentColor) {
+    Surface(
+        shape = CircleShape,
+        color = scheme.surfaceContainerHigh,
+        contentColor = scheme.onSurfaceVariant,
+    ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .widthIn(min = 62.dp)
-                .padding(horizontal = 9.dp, vertical = 4.dp),
+                .padding(horizontal = 12.dp, vertical = 4.dp),
         )
     }
 }

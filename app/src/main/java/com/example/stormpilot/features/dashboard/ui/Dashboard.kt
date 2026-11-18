@@ -96,36 +96,40 @@ fun TopIconRow(
     onOpenStormAiChat: () -> Unit,
     onOpenStormAiVoice: () -> Unit,
 ) {
-    val cityName by alertsViewModel.cityName.collectAsStateWithLifecycle()
-    val displayCityName = remember(cityName) { formatCityAndState(cityName) }
-    val wand = rememberStormAiWand()
-
+    val displayCityName by if (AppSettings.useDashboardPlaceholderData) {
+        alertsViewModel.cityName.collectAsStateWithLifecycle()
+    } else {
+        alertsViewModel.cityAndState.collectAsStateWithLifecycle(initialValue = "Locating...")
+    }
     Box(modifier = modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
-                .padding(top = 16.dp, bottom = 16.dp, start = 24.dp, end = 20.dp),
+                .padding(top = 20.dp, bottom = 12.dp, start = 24.dp, end = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Icon(
                 imageVector = Icons.Outlined.LocationOn,
                 contentDescription = "Location Icon",
-                tint = MaterialTheme.extendedColors.theme.vibrantPrimary,
+                tint = colorScheme.onSurface,
                 modifier = Modifier.size(28.dp)
             )
-            Text(
-                text = displayCityName,
-                color = colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
-                modifier = Modifier
-                    .padding(start = 6.dp)
-                    .weight(1f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            val locationModifier = Modifier.weight(1f).padding(start = 6.dp)
+            if (displayCityName == "Locating...") {
+                LoadingLocationLabel(locationModifier)
+            } else {
+                Text(
+                    text = displayCityName,
+                    color = colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    modifier = locationModifier,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
 
             Icon(
                 imageVector = Icons.Outlined.Notifications,
@@ -199,18 +203,5 @@ private fun rememberStormAiWand(): ImageVector {
                 ),
             )
             .build()
-    }
-}
-
-private fun formatCityAndState(cityName: String): String {
-    val parts = cityName
-        .split(',')
-        .map { it.trim() }
-        .filter { it.isNotEmpty() }
-
-    return if (parts.size >= 2) {
-        parts.take(2).joinToString(", ")
-    } else {
-        cityName
     }
 }

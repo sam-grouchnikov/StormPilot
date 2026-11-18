@@ -1,6 +1,5 @@
 package com.example.stormpilot.features.dashboard.ui.alerts.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.DeviceThermostat
@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.sp
 import com.example.stormpilot.R
 import com.example.stormpilot.features.shared.data.weather.CurrentWeather
 import com.example.stormpilot.features.shared.data.weather.StormSpec
-import com.example.stormpilot.ui.theme.extendedColors
 
 @Composable
 fun StormSpecsPanel(
@@ -40,7 +39,6 @@ fun StormSpecsPanel(
     current: CurrentWeather?,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
 ) {
-    val colors = MaterialTheme.extendedColors.weather
     val cape = stormSpecs.firstOrNull { it.label.trim().equals("CAPE", ignoreCase = true) }?.value
     val srh = stormSpecs.firstOrNull {
         it.label.trim().equals("SRH", ignoreCase = true) ||
@@ -49,15 +47,13 @@ fun StormSpecsPanel(
 
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StormSpecPill(
                 label = "Temperature",
                 value = current?.temperature?.let { "$it° F" },
                 icon = rememberVectorPainter(Icons.Outlined.DeviceThermostat),
-                iconColor = colors.temperatureIcon,
-                iconContainer = colors.temperatureIconContainer,
                 containerColor = containerColor,
                 modifier = Modifier.weight(1f),
             )
@@ -65,19 +61,15 @@ fun StormSpecsPanel(
                 label = "Cape",
                 value = cape,
                 icon = rememberVectorPainter(Icons.Outlined.Thermostat),
-                iconColor = colors.capeIcon,
-                iconContainer = colors.capeIconContainer,
                 containerColor = containerColor,
                 modifier = Modifier.weight(1f),
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StormSpecPill(
                 label = "0-1km SRH",
                 value = srh,
                 icon = rememberVectorPainter(Icons.Outlined.Air),
-                iconColor = colors.srhIcon,
-                iconContainer = colors.srhIconContainer,
                 containerColor = containerColor,
                 modifier = Modifier.weight(1f),
             )
@@ -85,8 +77,6 @@ fun StormSpecsPanel(
                 label = "Dew Point",
                 value = current?.dewPoint?.let { "$it° F" },
                 icon = painterResource(R.drawable.dew_point_24dp_32fc96_fill0_wght400_grad0_opsz24),
-                iconColor = colors.dewPointIcon,
-                iconContainer = colors.dewPointIconContainer,
                 containerColor = containerColor,
                 modifier = Modifier.weight(1f),
             )
@@ -99,23 +89,22 @@ private fun StormSpecPill(
     label: String,
     value: String?,
     icon: Painter,
-    iconColor: Color,
-    iconContainer: Color,
     containerColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    Surface(modifier = modifier, shape = CircleShape, color = containerColor) {
+    Surface(modifier = modifier, shape = RoundedCornerShape(40.dp), color = containerColor) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier.size(44.dp).background(iconContainer, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(painter = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
-            }
+                Icon(
+                    painter = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp),
+                )
+
             Column {
                 Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(3.dp))

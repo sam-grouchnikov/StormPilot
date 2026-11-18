@@ -1,5 +1,13 @@
 package com.example.stormpilot.features.map.ui.search
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -31,8 +39,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.stormpilot.ui.theme.extendedColors
 
+private const val ShortcutStaggerMillis = 55
+
 @Composable
-internal fun SearchShortcutRow(
+internal fun AnimatedVisibilityScope.SearchShortcutRow(
     containerColor: Color,
     onOpenStormAiChat: () -> Unit,
     onPlaceSearch: (String) -> Unit,
@@ -48,20 +58,28 @@ internal fun SearchShortcutRow(
             label = "Ask StormAI",
             icon = Icons.Rounded.AutoAwesome,
             containerColor = containerColor,
+            entranceIndex = 0,
             isStormAi = true,
             onClick = onOpenStormAiChat,
         )
-        SearchShortcutPill("Gas", Icons.Rounded.LocalGasStation, containerColor) { onPlaceSearch("gas") }
-        SearchShortcutPill("Hotel", Icons.Rounded.Hotel, containerColor) { onPlaceSearch("hotel") }
-        SearchShortcutPill("Food", Icons.Rounded.Restaurant, containerColor) { onPlaceSearch("restaurant") }
+        SearchShortcutPill("Gas", Icons.Rounded.LocalGasStation, containerColor, entranceIndex = 1) {
+            onPlaceSearch("gas")
+        }
+        SearchShortcutPill("Hotel", Icons.Rounded.Hotel, containerColor, entranceIndex = 2) {
+            onPlaceSearch("hotel")
+        }
+        SearchShortcutPill("Food", Icons.Rounded.Restaurant, containerColor, entranceIndex = 3) {
+            onPlaceSearch("restaurant")
+        }
     }
 }
 
 @Composable
-private fun SearchShortcutPill(
+private fun AnimatedVisibilityScope.SearchShortcutPill(
     label: String,
     icon: ImageVector,
     containerColor: Color,
+    entranceIndex: Int,
     isStormAi: Boolean = false,
     onClick: () -> Unit,
 ) {
@@ -89,8 +107,22 @@ private fun SearchShortcutPill(
         Modifier
     }
 
+    val entranceDelay = entranceIndex * ShortcutStaggerMillis
     Surface(
         onClick = onClick,
+        modifier = Modifier.animateEnterExit(
+            enter = fadeIn(tween(durationMillis = 170, delayMillis = entranceDelay)) +
+                scaleIn(
+                    initialScale = 0.88f,
+                    animationSpec = keyframes {
+                        durationMillis = 275
+                        delayMillis = entranceDelay
+                        0.88f at 0 using LinearOutSlowInEasing
+                        1.06f at 150 using FastOutSlowInEasing
+                    },
+                ),
+            exit = ExitTransition.None,
+        ),
         shape = CircleShape,
         color = containerColor,
         border = border,
